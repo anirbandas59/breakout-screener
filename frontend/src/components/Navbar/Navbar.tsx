@@ -3,25 +3,25 @@ import React from 'react';
 
 const Navbar: React.FC = () => {
   return (
-    <nav>
-      <ul className="flex space-x-6">
+    <nav className="bg-blue-800 text-white py-3">
+      <ul className="flex gap-4 justify-center space-x-8">
         <li>
-          <Link href="/" className="hover:underline text-lg">
+          <Link href="/" className="hover:underline text-base">
             Home
           </Link>
         </li>
         <li>
-          <Link href="/" className="hover:underline text-lg">
+          <Link href="/" className="hover:underline text-base">
             Reports
           </Link>
         </li>
         <li>
-          <Link href="/" className="hover:underline text-lg">
+          <Link href="/" className="hover:underline text-base">
             About
           </Link>
         </li>
         <li>
-          <Link href="/" className="hover:underline text-lg">
+          <Link href="/" className="hover:underline text-base">
             Settings
           </Link>
         </li>
