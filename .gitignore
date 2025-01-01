@@ -1,0 +1,11 @@
+
+# Dependencies
+node_modules
+venv/
+__pycache__/
+.vscode/
+.idea/
+
+# Backup files
+/*.bkp
+docs/.$wireframe.drawio.bkp
