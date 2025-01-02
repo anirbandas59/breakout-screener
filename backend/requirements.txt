@@ -4,3 +4,7 @@ pandas
 requests
 sqlalchemy
 selenium
+webdriver-manager
+python-dotenv
+psycopg2
+alembic

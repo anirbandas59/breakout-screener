@@ -74,7 +74,7 @@ const DataTable: React.FC = () => {
     <div className="overflow-auto shadow-md rounded-lg">
       <table className="min-w-full bg-white border border-gray-300">
         <thead>
-          <tr className="bg-blue-100 border-b">
+          <tr className="bg-blue-100 dark:bg-gray-900 border-b">
             {columnHeaders.map((header) => generateHeaderRow(header))}
           </tr>
         </thead>
@@ -82,7 +82,9 @@ const DataTable: React.FC = () => {
           {data.map((row: DataRow, rowIndex: number) => (
             <tr
               key={rowIndex}
-              className={`border-b ${rowIndex % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}
+              className={`border-b ${rowIndex % 2 === 0 ? 'bg-gray-50' : 'bg-white'} ${
+                rowIndex % 2 === 0 ? 'dark:bg-gray-700' : 'dark: bg-gray-600'
+              }`}
             >
               {[
                 row.group,
@@ -106,7 +108,7 @@ const DataTable: React.FC = () => {
                 <a
                   key={`chart_link_${row.scripts}`}
                   href={row.chart_link}
-                  className="text-blue-500 hover:underline"
+                  className="text-blue-700 dark:text-blue-300 hover:underline"
                 >
                   View Chart
                 </a>,

@@ -49,7 +49,7 @@ const InputForm: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100 p-6">
+    <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-400 p-6">
       {/* Input Fields */}
       <div className="flex gap-4 mb-6">
         <div className="flex-1">
@@ -61,7 +61,7 @@ const InputForm: React.FC = () => {
             id="date"
             value={date}
             onChange={handleDateChange}
-            className="w-full sm:p-2 p-3 border border-gray-300 rounded sm:text-xs text-sm"
+            className="w-full sm:p-2 p-3 border border-gray-300  rounded sm:text-xs text-sm dark:text-gray-500"
           />
         </div>
         <div className="flex-1">
@@ -73,7 +73,7 @@ const InputForm: React.FC = () => {
             id="startFrom"
             value={startFrom}
             onChange={handleStartFromChange}
-            className="w-full sm:p-2 p-3 border border-gray-300 rounded sm:text-xs text-sm"
+            className="w-full sm:p-2 p-3 border border-gray-300 rounded sm:text-xs text-sm dark:text-gray-500"
           />
         </div>
       </div>
@@ -121,7 +121,7 @@ const InputForm: React.FC = () => {
 
       {/* Text with Divider */}
       <div className="flex flex-col gap-2 mb-6">
-        <span className="text-xl text-gray-700">Stock Analysis</span>
+        <span className="text-xl">Stock Analysis</span>
         <Divider />
       </div>
 
