@@ -9,11 +9,11 @@ const Header: React.FC = () => {
       <div className="flex items-center gap-4">
         <div className="mx-4">
           <Image
-            className="dark:invert"
-            src="/vercel.svg"
+            className="dark:invert rounded-lg"
+            src="/b-header-logo.png"
             alt="Vercel logomark"
-            width={30}
-            height={30}
+            width={50}
+            height={50}
           />
         </div>
         <h1 className="font-serif text-3xl font-bold">Breakout Filtering Utility</h1>
