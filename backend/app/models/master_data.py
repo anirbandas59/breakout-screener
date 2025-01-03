@@ -2,8 +2,8 @@ from sqlalchemy import Column, Integer, String, Float, Date
 from app.db.session import Base
 
 
-class BreakoutData(Base):
-    __tablename__ = "breakout_data"
+class MasterBOData(Base):
+    __tablename__ = "master_breakout_data"
 
     id = Column(Integer, primary_key=True, index=True)
     script_name = Column(String, index=True)

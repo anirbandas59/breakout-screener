@@ -1,6 +1,7 @@
 import time
 import os
 import logging
+import pandas as pd
 
 from selenium.webdriver.common.by import By
 from sqlalchemy.orm import Session
@@ -92,5 +93,56 @@ def fetch_script_symbols(db: Session):
                 # print("------------------------------------------------------>")
                 # print(f"Error fetching script symbols: {e}")
 
+    finally:
+        driver.quit()
+
+
+def fetch_script_historical_data(script_name: str):
+
+    logging.basicConfig(level=logging.INFO)
+
+    yfin_hist_url = settings.yfin_hist_url.replace("SCRIPT", script_name)
+    print("Fetching data from %s", yfin_hist_url)
+
+    driver = get_chrome_driver()
+    driver.implicitly_wait(10)
+
+    try:
+        driver.get(yfin_hist_url)
+        table = driver.find_element(By.TAG_NAME, "table")
+
+        # Extract table headers
+        table_head = table.find_element(By.TAG_NAME, "thead")
+        headers = [th.text.strip()
+                   for th in table_head.find_elements(By.TAG_NAME, "th")]
+        # print(headers)
+
+        # Extract table rows
+        table_body = table.find_element(By.TAG_NAME, "tbody")
+        rows = table_body.find_elements(By.TAG_NAME, "tr")
+
+        # Parse table data
+        data = []
+        for row in rows:
+            cells = row.find_elements(By.TAG_NAME, "td")
+            if len(cells) == len(headers):  # Ensure the row has all columns
+                row_data = [cell.text.strip() for cell in cells]
+                data.append(row_data)
+
+        # Create a DataFrame
+        df = pd.DataFrame(data, columns=headers)
+        # print(df)
+
+        # Parse and set the Date column as index
+        df["Date"] = pd.to_datetime(
+            df["Date"], errors="coerce")  # Handle invalid dates
+        df = df.dropna(subset=["Date"]).set_index("Date")
+
+        # Convert numeric columns
+        for col in ["Open", "High", "Low", "Close", "Adj Close", "Volume"]:
+            df[col] = pd.to_numeric(
+                df[col].str.replace(",", ""), errors="coerce")
+
+        return df
     finally:
         driver.quit()

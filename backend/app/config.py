@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     nse_url_nifty_midsmallcap_400: str
     nse_url_nifty_smallcap_250: str
 
+    # YFinance URLs
+    yfin_hist_url: str
+
     @property
     def nse_urls(self):
         return [
@@ -33,8 +36,8 @@ class Settings(BaseSettings):
 settings = Settings()
 logging.basicConfig(level=logging.INFO)
 
-logging.info(settings.nse_urls)
+# logging.info(settings)
 
 # Access variables
-DATABASE_URL = os.getenv("DATABASE_URL")
-NSE_URL = os.getenv("NSE_URL")
+# DATABASE_URL = os.getenv("DATABASE_URL")
+# NSE_URL = os.getenv("NSE_URL")

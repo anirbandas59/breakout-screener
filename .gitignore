@@ -5,7 +5,7 @@ venv/
 __pycache__/
 .vscode/
 .idea/
-*.ini
+
 # Backup files
 /*.bkp
 docs/.$wireframe.drawio.bkp
