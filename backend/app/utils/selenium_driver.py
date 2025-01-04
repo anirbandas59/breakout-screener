@@ -5,6 +5,13 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 def get_chrome_driver():
+    """
+    Creates a headless chrome driver with a specific user agent and some options 
+    to avoid being detected as a bot.
+
+    Returns:
+        webdriver.Chrome: A headless chrome driver with the specified options.
+    """
     options = Options()
     options.add_argument(
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.199 Safari/537.36")

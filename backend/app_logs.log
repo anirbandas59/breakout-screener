@@ -1,0 +1,2 @@
+2025-01-04 15:54:51,048 - root - ERROR - Unhandled error during request http://127.0.0.1:8000/api/simulate_error ==>
+ Simulated error

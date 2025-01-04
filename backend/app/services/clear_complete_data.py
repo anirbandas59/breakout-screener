@@ -1,9 +1,8 @@
 import logging
 from sqlalchemy.orm import Session
-from sqlalchemy import update
+# from sqlalchemy import update
 
-from app.models.breakout_data import BreakoutData
-from app.models.master_data import MasterBOData
+from app.models import BreakoutData, MasterBOData
 
 
 def clear_complete_data(db: Session):
@@ -44,6 +43,7 @@ def clear_complete_data(db: Session):
             )
 
             db.add(master_record)
+            logging.info("%s added", record.script_name)
 
         else:
             existing_record.open = record.open
@@ -61,6 +61,8 @@ def clear_complete_data(db: Session):
             existing_record.breakout_indicator = record.breakout_indicator
             existing_record.candle_indicator = record.candle_indicator
             existing_record.volume_indicator = record.volume_indicator
+
+            logging.info("%s updated", record.script_name)
 
         db.commit()
 

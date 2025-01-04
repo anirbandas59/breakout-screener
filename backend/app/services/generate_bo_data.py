@@ -10,13 +10,17 @@ from app.utils.suspension_flag import SUSPEND_ANALYSIS
 # logging.basicConfig(level=logging.INFO)
 
 
-def generate_BOData(db: Session, analysis_date: str, pivot_val: float):
+def generate_BOData(db: Session, analysis_date: str, pivot_val: float) -> dict:
     """
     Generate breakout data for all scripts in the breakout_data table.
 
     Args:
         db (Session): SQLAlchemy session.
-        date (str): Date for which the analysis needs to run (format: YYYY-MM-DD).
+        analysis_date (str): Date for which the analysis needs to run (format: YYYY-MM-DD).
+        pivot_val (float): Percentage of the gap to be considered narrow.
+
+    Returns:
+        dict: Status of the analysis.
     """
     # global SUSPEND_ANALYSIS
 
@@ -28,11 +32,9 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float):
     # Validate the date format
     try:
         analysis_date_val = datetime.strptime(analysis_date, "%Y-%m-%d")
-        # analysis_date_val = datetime.strptime(analysis_date, "%Y-%m-%d").date()
-        logging.info(analysis_date_val)
     except ValueError:
         return {
-            "error: Invalid date format. Use YYYY-MM-DD"
+            "error": "Invalid date format. Use YYYY-MM-DD"
         }
 
     # Fetch all scripts
@@ -45,7 +47,7 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float):
         }
 
     logging.info("Starting analysis in generate_BOData")
-    for script in scripts:
+    for script in scripts[:5]:
         if SUSPEND_ANALYSIS.is_set():
             logging.warning(
                 "Analysis suspended. Halting analysis at script: %s", script.script_name)
@@ -64,7 +66,6 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float):
             logging.warning("No data found for %s. Skipping ...", script_name)
             continue
 
-        print(df.info())
         logging.info("Data fetched for script %s ==> %d rows",
                      script_name, df.size)
 
