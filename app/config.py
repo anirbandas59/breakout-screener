@@ -1,14 +1,19 @@
-import os
+# import os
 import logging
-from pydantic import ValidationError
+# from pydantic import ValidationError
 from pydantic_settings import BaseSettings
 # from dotenv import load_dotenv
 
 
 class Settings(BaseSettings):
+    """
+    Configuration class
+    """
+
     # App configurations
     app_hostname: str
     app_port: int
+    react_port: int
 
     # Database configuration
     database_url: str
@@ -23,8 +28,17 @@ class Settings(BaseSettings):
     # YFinance URLs
     yfin_hist_url: str
 
+    # Redis configuration
+    redis_url: str
+    celery_broker_url: str
+    celery_result_backend: str
+
+    # Timezone
+    app_timezone: str
+
     @property
     def nse_urls(self) -> list[str]:
+        """Returns a list"""
         return [
             self.nse_url_nifty_50,
             self.nse_url_nifty_200,
@@ -41,7 +55,7 @@ class Settings(BaseSettings):
 settings = Settings()
 logging.info("Environment variables loaded successfully. %s",
              settings.model_dump())
-# print(settings.model_dump())
+print(settings.model_dump())
 # print(settings.nse_urls)
 # except ValidationError as e:
 # try:
@@ -50,7 +64,7 @@ logging.info("Environment variables loaded successfully. %s",
 
 
 # Configure logging
-LOG_FILE = "app_logs.log"
+LOG_FILE = "app/logs/app_logs.log"
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",

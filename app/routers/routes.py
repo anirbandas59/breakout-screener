@@ -1,7 +1,10 @@
-# import json
+""" Application Routes """
 import logging
 from fastapi import APIRouter, Depends, HTTPException
+from celery.result import AsyncResult
 from sqlalchemy.orm import Session
+
+# from app.tasks import example_task
 from app.db.session import get_db
 from app.services import (
     fetch_script_symbols,
@@ -10,8 +13,13 @@ from app.services import (
     clear_chart_data,
     get_breakout_data,
 )
+from app.tasks import fetch_script_symbols_task
 from app.utils import get_current_date, suspend_action, validate_date
 from app.models import GenerateBODataRequest
+
+from app.celery import celery_app
+
+# =============================
 
 router = APIRouter()
 
@@ -37,14 +45,19 @@ def get_data(db: Session = Depends(get_db), page: int = 1, limit: int = 10):
             total, data = result["total"], result["data"]
 
         logging.info("Fetched processed breakout data successfully.")
-        return {"total": total, "data": data, "page": page, "limit": limit}
+        return {
+            "total": total,
+            "data": data,
+            "page": page,
+            "limit": limit
+        }
     except Exception as e:
         logging.error("Error fetching processed breakout data: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/fetch_script_symbols", status_code=200)
-def fetch_scripts(db: Session = Depends(get_db)):
+def fetch_scripts():
     """
     Fetch script symbols from NSE and save to database.
 
@@ -55,14 +68,14 @@ def fetch_scripts(db: Session = Depends(get_db)):
         JSON response indicating success or failure.
     """
     try:
-        logging.info("Starting to fetch script symbols...")
-        fetch_script_symbols(db)
+        logging.info("Triggering Celery task to fetch script symbols...")
+        task = fetch_script_symbols_task.apply_async()
 
-        logging.info("Script symbols fetched successfully.")
-        return {"message": "Script symbols fetched successfully"}
+        logging.info("Celery task triggered. Task ID: %s", task.id)
+        return {"message": "Task triggered successfully", "task_id": task.id}
 
     except Exception as e:
-        logging.error("Error fetching script symbols: %s", str(e))
+        logging.error("Error fetching Celery task: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -173,4 +186,27 @@ def api_suspend_action():
 
 @router.get('/simulate_error')
 def simulate_error():
+    """
+    Simulate an error
+    """
     raise Exception('Simulated error')
+
+
+@router.get("/task_status/{task_id}")
+async def task_status(task_id: str):
+    """
+    Monitor the status of a Celery task.
+    """
+
+    try:
+        task_result = AsyncResult(task_id, app=celery_app)
+        return {
+            "task_id": task_id,
+            "status": task_result.status,
+            "result": task_result.result if task_result.status == "SUCCESS" else None,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving task status {str(e)}"
+        ) from e

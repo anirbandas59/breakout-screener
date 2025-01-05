@@ -8,6 +8,7 @@ interface ReadOnlyFieldsProps {
   runningTime: string;
   fetchingTime: string;
   pivotGap: number;
+  onPivotChange: (value: number) => void;
 }
 
 const DisplayFields: React.FC<ReadOnlyFieldsProps> = ({
@@ -16,7 +17,16 @@ const DisplayFields: React.FC<ReadOnlyFieldsProps> = ({
   runningTime,
   fetchingTime,
   pivotGap,
+  onPivotChange,
 }) => {
+  const handlePivotChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const newValue = parseFloat(e.target.value);
+    console.log('Newvalue: ', newValue);
+    if (!Number.isNaN(newValue)) {
+      onPivotChange(newValue);
+    }
+  };
+
   return (
     <div className="bg-yellow-100 dark:bg-slate-500 rounded p-4 shadow-md w-full">
       <div className="mb-2 flex justify-between">
@@ -41,7 +51,14 @@ const DisplayFields: React.FC<ReadOnlyFieldsProps> = ({
       </div>
       <div className="mb-2 flex justify-between">
         <span className="font-medium text-sm sm:text-xs">Pivot %:</span>
-        <span className="text-blue-500 text-sm sm:text-xs dark:text-white">{pivotGap}</span>
+        {/* <span className="text-blue-500 text-sm sm:text-xs dark:text-white">{pivotGap}</span> */}
+        <input
+          type="number"
+          id="startFrom"
+          value={pivotGap}
+          onChange={handlePivotChange}
+          className="w-16 sm:p-2 p-3 border border-gray-300 rounded sm:text-xs text-sm dark:text-gray-500"
+        />
       </div>
     </div>
   );

@@ -8,3 +8,7 @@ webdriver-manager
 python-dotenv
 psycopg2
 alembic
+celery
+redis
+pydantic_settings
+invoke
