@@ -40,3 +40,40 @@ export const getCurrentDate = (): string => {
 
   return formattedDate;
 };
+
+export const formatDateTime = (dateString: string | null): string => {
+  if (!dateString) return '--';
+
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
+export const formatDuration = (start: string | null, end: string | null) => {
+  if (!start || !end) return '--:--:--';
+
+  const startTime = new Date(start).getTime();
+  const endTime = new Date(end).getTime();
+
+  // Calculate duration in milliseconds
+  const durationMs = endTime - startTime;
+
+  // Calculate hours, minutes, and seconds
+  const hours = Math.floor(durationMs / (1000 * 60 * 60))
+    .toString()
+    .padStart(2, '0');
+  const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60))
+    .toString()
+    .padStart(2, '0');
+  const seconds = Math.floor((durationMs % (1000 * 60)) / 1000)
+    .toString()
+    .padStart(2, '0');
+
+  return `${hours}:${minutes}:${seconds}`;
+};

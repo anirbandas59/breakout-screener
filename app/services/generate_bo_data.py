@@ -43,6 +43,7 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float) -> dict:
     if not scripts:
         logging.warning("No scripts available for analysis")
         return {
+            "status": "FAIL",
             "error": "No scripts available for analysis."
         }
 
@@ -52,7 +53,8 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float) -> dict:
             logging.warning(
                 "Analysis suspended. Halting analysis at script: %s", script.script_name)
             return {
-                "status": "Analysis suspended by user."
+                "status": "FAIL",
+                "error": "Analysis suspended by user."
             }
 
         script_name: str = script.script_name
@@ -154,7 +156,8 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float) -> dict:
         if SUSPEND_ANALYSIS.is_set():
             logging.warning("Suspension detected before database update")
             return {
-                "status": "Analysis suspended by user."
+                "status": "FAIL",
+                "error": "Analysis suspended by user."
             }
 
         # Update db record
@@ -194,5 +197,6 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float) -> dict:
 
     logging.info("BO Analysis completed successfully")
     return {
-        "status": "BO Analysis completed successfully"
+        "status": "SUCCESS",
+        "message": "BO Analysis completed successfully"
     }

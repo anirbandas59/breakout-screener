@@ -12,7 +12,7 @@ from app.utils import (
 from app.config import settings
 from app.routers import routes
 from app.db.session import Base, engine
-from app.tasks import example_task
+# from app.tasks import example_task
 
 # Initialize DB
 Base.metadata.create_all(bind=engine)
@@ -24,7 +24,7 @@ app = FastAPI()
 app.include_router(routes.router, prefix="/api")
 logging.info("Routers are set up.")
 
-print(f"{settings.app_hostname}:{settings.react_port}")
+# print(f"{settings.app_hostname}:{settings.react_port}")
 
 # Setup Middlewares
 app.add_middleware(
@@ -59,13 +59,13 @@ logging.info("App State configurations are set up.")
 # celery_app = celery_init_app(app)
 
 
-@app.post("/trigger_task")
-async def trigger_task(name: str):
-    """
-    Trigger a Celery task and return its task ID.
-    """
-    task = example_task.delay(name)
-    return {"task_id": task.id}
+# @app.post("/trigger_task")
+# async def trigger_task(name: str):
+#     """
+#     Trigger a Celery task and return its task ID.
+#     """
+#     task = example_task.delay(name)
+#     return {"task_id": task.id}
 
 
 # logging.info("Celery app is set up.")

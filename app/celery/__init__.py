@@ -1,5 +1,6 @@
 from celery import Celery
 from app.config import settings
+from app.celery.BaseTask import BaseTaskWithTiming, BaseTask
 
 
 def celery_init_app() -> Celery:
@@ -9,9 +10,10 @@ def celery_init_app() -> Celery:
     c_app = Celery(
         "CELERY",
         broker=settings.celery_broker_url,
-        backend=settings.celery_result_backend
-
+        backend=settings.celery_result_backend,
     )
+
+    c_app.Task = BaseTask
 
     return c_app
 

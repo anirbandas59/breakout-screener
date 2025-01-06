@@ -1,19 +1,19 @@
 """ Application Routes """
+
 import logging
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from celery.result import AsyncResult
 from sqlalchemy.orm import Session
 
-# from app.tasks import example_task
 from app.db.session import get_db
-from app.services import (
-    fetch_script_symbols,
-    generate_BOData,
-    clear_complete_data,
-    clear_chart_data,
-    get_breakout_data,
+from app.services import get_breakout_data
+from app.tasks import (
+    fetch_script_symbols_task,
+    generate_bo_data_task,
+    clear_chart_data_task,
+    clear_complete_data_task,
 )
-from app.tasks import fetch_script_symbols_task
 from app.utils import get_current_date, suspend_action, validate_date
 from app.models import GenerateBODataRequest
 
@@ -41,16 +41,17 @@ def get_data(db: Session = Depends(get_db), page: int = 1, limit: int = 10):
         logging.info("Fetching processed breakout data...")
         result = get_breakout_data(db, page, limit)
 
-        if result:
-            total, data = result["total"], result["data"]
+        # total, data = result["total"], result["data"]
+
+        response = {
+            "total": result["total"],
+            "data": result["data"],
+            "page": page,
+            "limit": limit,
+        }
 
         logging.info("Fetched processed breakout data successfully.")
-        return {
-            "total": total,
-            "data": data,
-            "page": page,
-            "limit": limit
-        }
+        return response
     except Exception as e:
         logging.error("Error fetching processed breakout data: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -72,7 +73,10 @@ def fetch_scripts():
         task = fetch_script_symbols_task.apply_async()
 
         logging.info("Celery task triggered. Task ID: %s", task.id)
-        return {"message": "Task triggered successfully", "task_id": task.id}
+        return {
+            "task_id": task.id,
+            "message": "Fetching Task triggered successfully",
+        }
 
     except Exception as e:
         logging.error("Error fetching Celery task: %s", str(e))
@@ -80,10 +84,7 @@ def fetch_scripts():
 
 
 @router.post("/generate_bodata", status_code=200)
-def generate_bodata(
-    request: GenerateBODataRequest,
-    db: Session = Depends(get_db)
-):
+def generate_bodata(request: GenerateBODataRequest):
     """
     Generate breakout data for all scripts in the breakout_data table.
 
@@ -99,8 +100,9 @@ def generate_bodata(
     pivot_val = request.pivot_val
 
     # Validate the date format
-    analysis_date_val = request.date if not validate_date(
-        request.date) else get_current_date()
+    analysis_date_val = (
+        request.date if not validate_date(request.date) else get_current_date()
+    )
 
     try:
         logging.info(
@@ -109,18 +111,22 @@ def generate_bodata(
             pivot_val,
         )
         # Call the function to generate the BO Data
-        response = generate_BOData(db, analysis_date_val, pivot_val)
-        logging.info("BO Data generation completed successfully.")
+        task = generate_bo_data_task.apply_async(
+            args=[analysis_date_val, pivot_val])
 
-        return response
+        return {
+            "task_id": task.id,
+            "message": "BO Data generation task started"
+        }
+
     except Exception as e:
         logging.error("Error during BO Data generation: %s", str(e))
         # Raise an HTTPException if the analysis fails
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.post("/clear_chart", status_code=200)
-def clear_chart(db: Session = Depends(get_db)):
+@router.post("/clear_chart", status_code=202)
+def clear_chart():
     """
     Clear chart data for a specific date
 
@@ -133,42 +139,39 @@ def clear_chart(db: Session = Depends(get_db)):
     today_date = get_current_date()
 
     logging.info("Clearing BO Data for date: %s", today_date)
-    record = clear_chart_data(db, today_date)
+    task = clear_chart_data_task.apply_async(args=[today_date])
 
-    if not record:
-        raise HTTPException(
-            status_code=404, detail=f"No record found for date '{today_date}'."
-        )
-
-    logging.info("BO Data clearing completed successfully.")
-    return {"message": f"Chart data for '{today_date}' cleared successfully."}
+    return {
+        "task_id": task.id,
+        "message": f"Chart data for '{today_date}' clear task initiated"
+    }
 
 
-@router.post("/clear_complete_data", status_code=200)
-def clear_complete_data_endpoint(db: Session = Depends(get_db)):
+@router.post("/clear_complete_data", status_code=202)
+def clear_complete_data():
     """
-    Clear all data from breakout_data and push to master_table.
-
-    Args:
-        db (Session): SQLAlchemy database session.
+    Initiates a task to clear all data from breakout_data and push to master_table.
 
     Returns:
-        JSON response indicating success.
+        JSON response with the task ID and status.
     """
-
     try:
-        logging.info("Clearing BO Data.")
-        clear_complete_data(db)
+        logging.info(
+            "Initiating task to clear complete data from breakout_data.")
 
-        logging.info("BO Data clearing completed successfully.")
+        # Start the Celery task and pass the task ID back to the client
+        task = clear_complete_data_task.apply_async()
+
         return {
-            "message": "All data cleared from breakout_data and moved to master_table."
+            "task_id": task.id,
+            "message": "Clear complete data task initiated."
         }
 
     except Exception as e:
-        logging.error("Error during BO Data generation: %s", str(e))
+        logging.error(
+            "Error initiating task to clear complete data: %s", str(e))
         raise HTTPException(
-            status_code=500, detail=f"An error occurred: {str(e)}"
+            status_code=500, detail=f"An error occurred while initiating the task: {str(e)}"
         ) from e
 
 
@@ -178,18 +181,18 @@ def api_suspend_action():
     try:
         logging.info("Suspending analysis...")
         suspend_action()
-        return {"message": "Analysis suspension triggered successfully"}
+        return {"status": "SUCCESS", "message": "Analysis suspension triggered successfully"}
     except RuntimeError as e:
         logging.error("Error suspending analysis: %s", str(e))
-        return {"message": "Failed to suspend analysis", "error": str(e)}
+        return {"status": "FAIL", "message": "Failed to suspend analysis", "error": str(e)}
 
 
-@router.get('/simulate_error')
+@router.get("/simulate_error")
 def simulate_error():
     """
     Simulate an error
     """
-    raise Exception('Simulated error')
+    raise Exception("Simulated error")
 
 
 @router.get("/task_status/{task_id}")
@@ -200,13 +203,15 @@ async def task_status(task_id: str):
 
     try:
         task_result = AsyncResult(task_id, app=celery_app)
-        return {
+
+        response = {
             "task_id": task_id,
             "status": task_result.status,
-            "result": task_result.result if task_result.status == "SUCCESS" else None,
+            "result": task_result.result,  # Actual result from the task
         }
+
+        return JSONResponse(response)
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Error retrieving task status {str(e)}"
+            status_code=500, detail=f"Error retrieving task status {str(e)}"
         ) from e

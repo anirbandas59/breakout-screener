@@ -10,7 +10,7 @@ def get_breakout_data(db: Session, page: int, limit: int):
         result = db.query(BreakoutData).order_by(
             BreakoutData.id.asc())
 
-        total = result.count()
+        total: int = result.count()
 
         logging.info(
             "Fetched %d records from database successfully.", total)

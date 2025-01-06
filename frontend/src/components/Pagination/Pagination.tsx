@@ -1,6 +1,7 @@
 import React, { ChangeEvent } from 'react';
 import ArrowBackIosRoundedIcon from '@mui/icons-material/ArrowBackIosRounded';
 import ArrowForwardIosRoundedIcon from '@mui/icons-material/ArrowForwardIosRounded';
+import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
 
 interface PaginationProps {
   date: string;
@@ -39,6 +40,9 @@ const Pagination: React.FC<PaginationProps> = ({
   return (
     <div className="flex items-center justify-between p-4">
       <div className="flex items-center gap-2">
+        <span className="icon-[mdi-light--home] text-xs hover:bg-blue-200 p-1 rounded-full">
+          <SyncRoundedIcon className="dark:text-white dark:hover:text-black" />
+        </span>
         <span className="dark:text-white text-sm sm:text-xs">
           Date <strong>{date}</strong>
         </span>

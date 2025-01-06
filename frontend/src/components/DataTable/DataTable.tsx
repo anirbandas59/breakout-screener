@@ -3,8 +3,8 @@
 import React, { useState, useEffect, JSX } from 'react';
 import Loader from '@/components/Loader/Loader';
 import Pagination from '@/components/Pagination/Pagination';
-import axiosInstance from '@/utils/axiosInstance';
-import { DataRow, DataResponse, DataTableProps } from '@/types/AppInterfaces';
+import { DataRow, DataTableProps } from '@/types/AppInterfaces';
+import { getData } from '@/services/api';
 
 // Helper function to generate header cells
 const generateHeaderRow = (columnName: string) => (
@@ -31,15 +31,10 @@ const DataTable: React.FC<DataTableProps> = ({ date, startRefresh }) => {
     setIsLoading(true);
 
     try {
-      const response = await axiosInstance.get<DataResponse>('/get_data', {
-        params: {
-          page,
-          limit,
-        },
-      });
+      const response = await getData(page, limit);
 
       // console.log(response.data);
-      const { total, data } = response.data;
+      const { total, data } = response;
 
       setData(data);
       setTotalPages(total);
@@ -52,6 +47,7 @@ const DataTable: React.FC<DataTableProps> = ({ date, startRefresh }) => {
 
   useEffect(() => {
     fetchData(page, limit);
+    console.log(startRefresh);
 
     if (startRefresh) {
       const interval = setInterval(() => {
@@ -155,7 +151,7 @@ const DataTable: React.FC<DataTableProps> = ({ date, startRefresh }) => {
             </tbody>
           </table>
         ) : (
-          <div className="flex justify-center p-4 ">
+          <div className="flex justify-center p-4 border border-gray-300 rounded-lg">
             <span className="dark:text-white text-sm sm:text-xs">No data to display &nbsp;</span>
           </div>
         )}
