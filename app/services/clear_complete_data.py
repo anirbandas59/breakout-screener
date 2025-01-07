@@ -12,7 +12,8 @@ def clear_complete_data(db: Session):
     """
     try:
         # Fetch all rows from breakout_data
-        breakout_records = db.query(BreakoutData).all()
+        breakout_records = db.query(BreakoutData).order_by(
+            BreakoutData.id.asc()).all()
 
         for record in breakout_records:
             # Check if the record exists in master_table

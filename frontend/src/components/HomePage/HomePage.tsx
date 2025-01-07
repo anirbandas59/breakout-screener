@@ -46,6 +46,8 @@ const HomePage: React.FC = () => {
       setRunningTime(formatDuration(start_time, now));
     }, 1000);
 
+    setTimerInterval(interval);
+
     pollTaskStatus(value, interval);
   };
 
