@@ -1,0 +1,54 @@
+# Development overrides for docker-compose
+# This file is automatically loaded when running docker-compose up
+version: '3.8'
+
+services:
+  backend:
+    environment:
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - RELOAD=true
+    volumes:
+      - ./backend:/app:cached
+      - backend_cache:/app/.cache
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        while ! nc -z postgres 5432; do sleep 1; done &&
+        echo 'Database is ready!' &&
+        uvicorn breakout_screener.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/src
+      "
+
+  frontend:
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./frontend:/app:cached
+      - frontend_node_modules:/app/node_modules
+      - frontend_next:/app/.next
+    command: >
+      sh -c "
+        echo 'Installing dependencies...' &&
+        npm install &&
+        echo 'Starting development server...' &&
+        npm run dev
+      "
+
+  postgres:
+    environment:
+      - POSTGRES_DB=trading_db
+      - POSTGRES_USER=trading_user
+      - POSTGRES_PASSWORD=tpassword
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+volumes:
+  backend_cache:
+  frontend_node_modules:
+  frontend_next:

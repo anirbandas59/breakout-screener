@@ -1,0 +1,41 @@
+# Common
+.git
+.gitignore
+README.md
+.env*
+.DS_Store
+*.log
+
+# Backend specific
+backend/__pycache__
+backend/.pytest_cache
+backend/.mypy_cache
+backend/.coverage
+backend/htmlcov
+backend/dist
+backend/build
+backend/*.egg-info
+backend/.venv
+backend/venv
+
+# Frontend specific
+frontend/node_modules
+frontend/.next
+frontend/out
+frontend/dist
+frontend/.vercel
+frontend/.env*.local
+
+# Logs
+logs/
+
+# Infrastructure
+infrastructure/terraform/.terraform
+infrastructure/terraform/*.tfstate
+infrastructure/terraform/*.tfstate.backup
+
+# Development tools
+.vscode
+.idea
+*.swp
+*.swo
