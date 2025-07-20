@@ -129,8 +129,6 @@ export function useBulkAnalyzeBreakoutData() {
 export function useExportBreakoutData() {
   return useMutation({
     mutationFn: (filters: BreakoutDataFilter & { format: string }) =>
-      apiClient.post('/breakout-data/export', filters, {
-        responseType: 'blob',
-      }),
+      apiClient.post('/breakout-data/export', filters),
   })
 }

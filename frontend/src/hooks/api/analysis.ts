@@ -47,8 +47,9 @@ export function useTaskStatus(taskId: string, enabled = true) {
     queryKey: analysisKeys.task(taskId),
     queryFn: () => apiClient.get<TaskResponse>(`/analysis/tasks/${taskId}/status`),
     enabled: !!taskId && enabled,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Continue polling if task is still running
+      const data = query?.state?.data
       if (data?.status === 'PENDING' || data?.status === 'IN_PROGRESS') {
         return 5000 // Poll every 5 seconds
       }

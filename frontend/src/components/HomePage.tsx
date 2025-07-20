@@ -91,8 +91,8 @@ export default function HomePage() {
       }
 
       // Update scripts analyzed count (if available in result)
-      if (result && 'processed_items' in result) {
-        setScriptsAnalyzed(result.processed_items || 0)
+      if (result && typeof result === 'object' && 'processed_items' in result) {
+        setScriptsAnalyzed((result as any).processed_items || 0)
       }
     }
   }, [taskStatus])
@@ -121,7 +121,8 @@ export default function HomePage() {
   }, [analysisDate, sortField, sortDirection])
 
   // Helper function to calculate duration
-  const calculateDuration = (start: string, end: string): string => {
+  const calculateDuration = (start: string | undefined, end: string | undefined): string => {
+    if (!start || !end) return '--:--:--'
     try {
       const startDate = new Date(start)
       const endDate = new Date(end)
