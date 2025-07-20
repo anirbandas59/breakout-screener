@@ -3,15 +3,20 @@ Main breakout analysis data model
 Enhanced version of V1 breakout_data with proper relationships and validation
 """
 
-from datetime import date
 from decimal import Decimal
-from typing import Optional
 
 from sqlalchemy import (
-    Column, String, Date, Boolean, BigInteger, Text, CheckConstraint, Index,
-    ForeignKey, UniqueConstraint
+    BigInteger,
+    Boolean,
+    CheckConstraint,
+    Column,
+    Date,
+    ForeignKey,
+    Index,
+    Text,
+    UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID, DECIMAL, ENUM
+from sqlalchemy.dialects.postgresql import DECIMAL, ENUM, UUID
 from sqlalchemy.orm import relationship, validates
 
 from .base import BaseModel
@@ -214,7 +219,7 @@ class BreakoutDataV2(BaseModel):
         Index("idx_breakout_data_v2_stock_date", "stock_id", "trade_date"),
         Index("idx_breakout_data_v2_trade_date_breakout", "trade_date", "breakout_indicator"),
         Index("idx_breakout_data_v2_volume_date", "volume", "trade_date"),
-        Index("idx_breakout_data_v2_composite_analysis", 
+        Index("idx_breakout_data_v2_composite_analysis",
               "trade_date", "breakout_indicator", "volume_indicator"),
 
         {"comment": "Main table for storing daily breakout analysis data with improved constraints"}
@@ -294,13 +299,13 @@ class BreakoutDataV2(BaseModel):
             chart_link=v1_record.get('link')
         )
 
-    def calculate_price_change_percent(self) -> Optional[Decimal]:
+    def calculate_price_change_percent(self) -> Decimal | None:
         """Calculate price change percentage from open to close"""
         if self.open_price and self.close_price:
             return ((self.close_price - self.open_price) / self.open_price) * 100
         return None
 
-    def calculate_volume_ratio_vs_avg(self, avg_volume: int) -> Optional[Decimal]:
+    def calculate_volume_ratio_vs_avg(self, avg_volume: int) -> Decimal | None:
         """Calculate volume ratio vs average (preserves V1 logic)"""
         if avg_volume and avg_volume > 0:
             return Decimal(self.volume) / Decimal(avg_volume)
@@ -310,33 +315,33 @@ class BreakoutDataV2(BaseModel):
         """Check if this is a confirmed breakout (V1 logic preserved)"""
         return self.breakout_indicator == BreakoutIndicatorEnum.BREAKOUT
 
-    def get_cpr_width(self) -> Optional[Decimal]:
+    def get_cpr_width(self) -> Decimal | None:
         """Calculate CPR width (for narrow gap analysis)"""
         if self.resistance_1 and self.support_1:
             return abs(self.resistance_1 - self.support_1)
         return None
 
-    def get_body_size(self) -> Optional[Decimal]:
+    def get_body_size(self) -> Decimal | None:
         """Calculate candle body size"""
         if self.open_price and self.close_price:
             return abs(self.close_price - self.open_price)
         return None
 
-    def get_upper_shadow(self) -> Optional[Decimal]:
+    def get_upper_shadow(self) -> Decimal | None:
         """Calculate upper shadow length"""
         if self.high_price and self.open_price and self.close_price:
             body_top = max(self.open_price, self.close_price)
             return self.high_price - body_top
         return None
 
-    def get_lower_shadow(self) -> Optional[Decimal]:
+    def get_lower_shadow(self) -> Decimal | None:
         """Calculate lower shadow length"""
         if self.low_price and self.open_price and self.close_price:
             body_bottom = min(self.open_price, self.close_price)
             return body_bottom - self.low_price
         return None
 
-    def to_dict(self, include_stock: bool = True, exclude_fields: Optional[list] = None) -> dict:
+    def to_dict(self, include_stock: bool = True, exclude_fields: list | None = None) -> dict:
         """
         Convert breakout data to dictionary with optional stock information.
 

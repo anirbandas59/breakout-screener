@@ -3,20 +3,20 @@ Database connection and session management for Breakout Screener V2
 Using SQLAlchemy 2.0 with async support
 """
 
-from typing import AsyncGenerator, Optional
-from sqlalchemy import event
+from collections.abc import AsyncGenerator
+
 from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
-    AsyncEngine
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.pool import NullPool, QueuePool
 from sqlalchemy.sql import text
 
 from .config import config
-from .logging import get_logger, log_database_operation
+from .logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -26,11 +26,11 @@ Base = declarative_base()
 
 class DatabaseManager:
     """Database connection manager with async support"""
-    
+
     def __init__(self):
-        self._engine: Optional[AsyncEngine] = None
-        self._session_factory: Optional[async_sessionmaker] = None
-    
+        self._engine: AsyncEngine | None = None
+        self._session_factory: async_sessionmaker | None = None
+
     async def initialize(self) -> None:
         """Initialize database engine and session factory"""
         try:
@@ -39,7 +39,7 @@ class DatabaseManager:
                 "echo": config.DEBUG,  # Log SQL queries in debug mode
                 "future": True,
             }
-            
+
             # Add pool settings only for production (QueuePool)
             if config.is_production():
                 engine_kwargs.update({
@@ -53,12 +53,12 @@ class DatabaseManager:
             else:
                 # Development uses NullPool (no connection pooling)
                 engine_kwargs["poolclass"] = NullPool
-            
+
             self._engine = create_async_engine(
                 config.DATABASE_URL,
                 **engine_kwargs
             )
-            
+
             # Create session factory
             self._session_factory = async_sessionmaker(
                 bind=self._engine,
@@ -67,37 +67,37 @@ class DatabaseManager:
                 autocommit=False,
                 autoflush=False,
             )
-            
+
             # Test connection
             await self.health_check()
-            
+
             logger.info("Database connection initialized successfully",
                        url=config.DATABASE_URL.split('@')[1] if '@' in config.DATABASE_URL else config.DATABASE_URL)
-            
+
         except Exception as e:
             logger.error("Failed to initialize database connection", error=str(e))
             raise
-    
+
     async def close(self) -> None:
         """Close database connections"""
         if self._engine:
             await self._engine.dispose()
             logger.info("Database connections closed")
-    
+
     @property
     def engine(self) -> AsyncEngine:
         """Get database engine"""
         if self._engine is None:
             raise RuntimeError("Database not initialized. Call initialize() first.")
         return self._engine
-    
+
     @property
     def session_factory(self) -> async_sessionmaker:
         """Get session factory"""
         if self._session_factory is None:
             raise RuntimeError("Database not initialized. Call initialize() first.")
         return self._session_factory
-    
+
     async def health_check(self) -> bool:
         """Check database connection health"""
         try:
@@ -107,7 +107,7 @@ class DatabaseManager:
         except Exception as e:
             logger.error("Database health check failed", error=str(e))
             return False
-    
+
     def get_session(self) -> AsyncSession:
         """Get database session"""
         return self.session_factory()
@@ -144,41 +144,41 @@ def get_db_session() -> AsyncSession:
 
 class DatabaseSession:
     """Context manager for database sessions"""
-    
+
     def __init__(self):
-        self.session: Optional[AsyncSession] = None
-    
+        self.session: AsyncSession | None = None
+
     async def __aenter__(self) -> AsyncSession:
         self.session = db_manager.get_session()
         return self.session
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.session:
             if exc_type:
                 await self.session.rollback()
-                logger.error("Session rolled back due to exception", 
+                logger.error("Session rolled back due to exception",
                            exception_type=exc_type.__name__ if exc_type else None)
             else:
                 await self.session.commit()
-            
+
             await self.session.close()
 
 
 class TransactionSession:
     """Context manager for database transactions"""
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
         self.transaction = None
-    
+
     async def __aenter__(self) -> AsyncSession:
         self.transaction = await self.session.begin()
         return self.session
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if exc_type:
             await self.transaction.rollback()
-            logger.error("Transaction rolled back", 
+            logger.error("Transaction rolled back",
                         exception_type=exc_type.__name__ if exc_type else None)
         else:
             await self.transaction.commit()

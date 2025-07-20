@@ -6,7 +6,7 @@ import logging
 import logging.handlers
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import structlog
 from structlog.stdlib import LoggerFactory
@@ -16,7 +16,7 @@ from .config import config
 
 def setup_logging() -> None:
     """Configure structured logging with proper formatting and rotation"""
-    
+
     # Configure structlog
     structlog.configure(
         processors=[
@@ -28,7 +28,7 @@ def setup_logging() -> None:
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            structlog.processors.JSONRenderer() if config.ENVIRONMENT == "production" 
+            structlog.processors.JSONRenderer() if config.ENVIRONMENT == "production"
             else structlog.dev.ConsoleRenderer(colors=True),
         ],
         context_class=dict,
@@ -36,14 +36,14 @@ def setup_logging() -> None:
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
-    
+
     # Configure standard library logging
     logging.basicConfig(
         level=getattr(logging, config.LOG_LEVEL),
         format=config.LOG_FORMAT,
         handlers=get_log_handlers(),
     )
-    
+
     # Set specific logger levels
     configure_logger_levels()
 
@@ -51,11 +51,11 @@ def setup_logging() -> None:
 def get_log_handlers() -> list:
     """Get list of log handlers based on environment"""
     handlers = []
-    
+
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(getattr(logging, config.LOG_LEVEL))
-    
+
     if config.ENVIRONMENT == "production":
         # JSON formatter for production
         console_formatter = logging.Formatter(
@@ -67,25 +67,25 @@ def get_log_handlers() -> list:
         console_formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
-    
+
     console_handler.setFormatter(console_formatter)
     handlers.append(console_handler)
-    
+
     # File handlers if not in testing mode
     if not config.TESTING:
         handlers.extend(get_file_handlers())
-    
+
     return handlers
 
 
 def get_file_handlers() -> list:
     """Get file handlers with rotation"""
     handlers = []
-    
+
     # Create logs directory
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
-    
+
     # Application log file with rotation
     app_log_file = log_dir / "app.log"
     app_handler = logging.handlers.RotatingFileHandler(
@@ -95,7 +95,7 @@ def get_file_handlers() -> list:
         encoding='utf-8'
     )
     app_handler.setLevel(getattr(logging, config.LOG_LEVEL))
-    
+
     # Error log file with rotation
     error_log_file = log_dir / "error.log"
     error_handler = logging.handlers.RotatingFileHandler(
@@ -105,19 +105,19 @@ def get_file_handlers() -> list:
         encoding='utf-8'
     )
     error_handler.setLevel(logging.ERROR)
-    
+
     # JSON formatter for file logs
     file_formatter = logging.Formatter(
         '{"timestamp": "%(asctime)s", "level": "%(levelname)s", '
         '"logger": "%(name)s", "message": "%(message)s", "module": "%(module)s", '
         '"function": "%(funcName)s", "line": %(lineno)d}'
     )
-    
+
     app_handler.setFormatter(file_formatter)
     error_handler.setFormatter(file_formatter)
-    
+
     handlers.extend([app_handler, error_handler])
-    
+
     return handlers
 
 
@@ -130,11 +130,11 @@ def configure_logger_levels() -> None:
     logging.getLogger("asyncio").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
     logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
-    
+
     # Set celery logging level
     logging.getLogger("celery").setLevel(logging.INFO)
     logging.getLogger("celery.task").setLevel(logging.INFO)
-    
+
     # Application loggers
     if config.DEBUG:
         logging.getLogger("breakout_screener").setLevel(logging.DEBUG)
@@ -149,7 +149,7 @@ def get_logger(name: str) -> structlog.stdlib.BoundLogger:
 
 class LoggerMixin:
     """Mixin to add logging capability to classes"""
-    
+
     @property
     def logger(self) -> structlog.stdlib.BoundLogger:
         """Get logger for this class"""
@@ -162,7 +162,7 @@ def log_function_call(func_name: str, **kwargs: Any) -> None:
     logger.info("Function called", function=func_name, parameters=kwargs)
 
 
-def log_api_request(method: str, path: str, status_code: int, 
+def log_api_request(method: str, path: str, status_code: int,
                    duration: float, **kwargs: Any) -> None:
     """Log API request details"""
     logger = get_logger("api_requests")
@@ -176,8 +176,8 @@ def log_api_request(method: str, path: str, status_code: int,
     )
 
 
-def log_database_operation(operation: str, table: str, 
-                          duration: Optional[float] = None, **kwargs: Any) -> None:
+def log_database_operation(operation: str, table: str,
+                          duration: float | None = None, **kwargs: Any) -> None:
     """Log database operation"""
     logger = get_logger("database")
     log_data = {
@@ -185,10 +185,10 @@ def log_database_operation(operation: str, table: str,
         "table": table,
         **kwargs
     }
-    
+
     if duration is not None:
         log_data["duration_ms"] = round(duration * 1000, 2)
-    
+
     logger.info("Database operation", **log_data)
 
 
@@ -206,7 +206,7 @@ def log_external_api_call(service: str, endpoint: str, status_code: int,
     )
 
 
-def log_error(error: Exception, context: Optional[Dict[str, Any]] = None) -> None:
+def log_error(error: Exception, context: dict[str, Any] | None = None) -> None:
     """Log error with context"""
     logger = get_logger("errors")
     logger.error(
@@ -218,7 +218,7 @@ def log_error(error: Exception, context: Optional[Dict[str, Any]] = None) -> Non
     )
 
 
-def log_security_event(event_type: str, details: Dict[str, Any]) -> None:
+def log_security_event(event_type: str, details: dict[str, Any]) -> None:
     """Log security-related events"""
     logger = get_logger("security")
     logger.warning(

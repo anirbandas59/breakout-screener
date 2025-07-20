@@ -2,8 +2,7 @@
 Base model with common fields and functionality for all models
 """
 
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from sqlalchemy import Column, DateTime, String, func
@@ -18,7 +17,7 @@ class BaseModel(Base):
     Base model class with common audit fields and functionality.
     All models inherit from this to get consistent audit trail and UUID primary keys.
     """
-    
+
     __abstract__ = True
 
     # Primary key as UUID for better distribution and security
@@ -37,7 +36,7 @@ class BaseModel(Base):
         nullable=False,
         comment="Timestamp when record was created"
     )
-    
+
     updated_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -45,14 +44,14 @@ class BaseModel(Base):
         nullable=False,
         comment="Timestamp when record was last updated"
     )
-    
+
     created_by = Column(
         String(100),
         default="system",
         nullable=False,
         comment="User or system that created the record"
     )
-    
+
     updated_by = Column(
         String(100),
         default="system",
@@ -74,7 +73,7 @@ class BaseModel(Base):
         """String representation of the model"""
         return f"<{self.__class__.__name__}(id={self.id})>"
 
-    def to_dict(self, exclude_fields: Optional[list] = None) -> dict:
+    def to_dict(self, exclude_fields: list | None = None) -> dict:
         """
         Convert model instance to dictionary.
         
@@ -86,11 +85,11 @@ class BaseModel(Base):
         """
         exclude_fields = exclude_fields or []
         result = {}
-        
+
         for column in self.__table__.columns:
             if column.name not in exclude_fields:
                 value = getattr(self, column.name)
-                
+
                 # Handle datetime serialization
                 if isinstance(value, datetime):
                     result[column.name] = value.isoformat()
@@ -102,7 +101,7 @@ class BaseModel(Base):
                     result[column.name] = value.value
                 else:
                     result[column.name] = value
-                    
+
         return result
 
     @classmethod
@@ -117,7 +116,7 @@ class BaseModel(Base):
         Args:
             user: Username or system identifier making the change
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         self.updated_at = now
         self.updated_by = user
 
@@ -128,7 +127,7 @@ class BaseModel(Base):
         Args:
             user: Username or system identifier creating the record
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         self.created_at = now
         self.updated_at = now
         self.created_by = user

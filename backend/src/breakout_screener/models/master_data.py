@@ -3,15 +3,25 @@ Master breakout data model for historical snapshots
 Enhanced version of V1 master_bo_data for auditing and comparison
 """
 
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .breakout_data import BreakoutDataV2
 
 from sqlalchemy import (
-    Column, String, Date, Boolean, BigInteger, Text, DateTime,
-    ForeignKey, Index
+    BigInteger,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    String,
+    Text,
 )
-from sqlalchemy.dialects.postgresql import UUID, DECIMAL, ENUM
+from sqlalchemy.dialects.postgresql import DECIMAL, ENUM, UUID
 from sqlalchemy.orm import relationship, validates
 
 from .base import BaseModel
@@ -218,8 +228,8 @@ class MasterBreakoutDataV2(BaseModel):
                 f"snapshot_date={self.snapshot_date})>")
 
     @classmethod
-    def from_breakout_data(cls, breakout_data: 'BreakoutDataV2', 
-                          snapshot_date: Optional[datetime] = None) -> 'MasterBreakoutDataV2':
+    def from_breakout_data(cls, breakout_data: 'BreakoutDataV2',
+                          snapshot_date: datetime | None = None) -> 'MasterBreakoutDataV2':
         """
         Create master record from breakout data.
         
@@ -296,7 +306,7 @@ class MasterBreakoutDataV2(BaseModel):
             source_table="v1_migration"
         )
 
-    def calculate_price_change_percent(self) -> Optional[Decimal]:
+    def calculate_price_change_percent(self) -> Decimal | None:
         """Calculate price change percentage from open to close"""
         if self.open_price and self.close_price:
             return ((self.close_price - self.open_price) / self.open_price) * 100
@@ -306,7 +316,7 @@ class MasterBreakoutDataV2(BaseModel):
         """Check if this is a confirmed breakout"""
         return self.breakout_indicator == BreakoutIndicatorEnum.BREAKOUT
 
-    def get_cpr_width(self) -> Optional[Decimal]:
+    def get_cpr_width(self) -> Decimal | None:
         """Calculate CPR width"""
         if self.resistance_1 and self.support_1:
             return abs(self.resistance_1 - self.support_1)
@@ -323,28 +333,28 @@ class MasterBreakoutDataV2(BaseModel):
             Dictionary of differences
         """
         differences = {}
-        
+
         # Compare key fields
         fields_to_compare = [
             'open_price', 'high_price', 'low_price', 'close_price',
-            'volume', 'cpr', 'resistance_1', 'resistance_2', 
+            'volume', 'cpr', 'resistance_1', 'resistance_2',
             'support_1', 'support_2', 'narrow_gap',
             'breakout_indicator', 'candle_indicator', 'volume_indicator'
         ]
-        
+
         for field in fields_to_compare:
             master_value = getattr(self, field)
             current_value = getattr(current_data, field)
-            
+
             if master_value != current_value:
                 differences[field] = {
                     'historical': master_value,
                     'current': current_value
                 }
-        
+
         return differences
 
-    def to_dict(self, include_stock: bool = True, exclude_fields: Optional[list] = None) -> dict:
+    def to_dict(self, include_stock: bool = True, exclude_fields: list | None = None) -> dict:
         """
         Convert master breakout data to dictionary.
         
@@ -357,20 +367,20 @@ class MasterBreakoutDataV2(BaseModel):
         """
         exclude_fields = exclude_fields or []
         result = super().to_dict(exclude_fields)
-        
+
         # Add calculated fields
         result['price_change_percent'] = float(self.calculate_price_change_percent() or 0)
         result['cpr_width'] = float(self.get_cpr_width() or 0)
         result['is_breakout_confirmed'] = self.is_breakout_confirmed()
-        
+
         # Add enum display values
         result['breakout_indicator_display'] = self.breakout_indicator.value
         result['candle_indicator_display'] = self.candle_indicator.value
         result['volume_indicator_display'] = self.volume_indicator.value
-        
+
         # Add snapshot metadata
         result['snapshot_age_days'] = (datetime.utcnow() - self.snapshot_date).days
-        
+
         if include_stock and self.stock:
             result['stock'] = {
                 'symbol': self.stock.symbol,
@@ -378,7 +388,7 @@ class MasterBreakoutDataV2(BaseModel):
                 'stock_group': self.stock.stock_group.value,
                 'stock_group_display': self.stock.group_display_name
             }
-        
+
         return result
 
     def to_v1_format(self) -> dict:
