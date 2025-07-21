@@ -26,12 +26,7 @@ UpdateSchemaType = TypeVar("UpdateSchemaType")
 class PaginationParams:
     """Pagination parameters for queries"""
 
-    def __init__(
-        self,
-        page: int = 1,
-        limit: int = 50,
-        max_limit: int = 1000
-    ):
+    def __init__(self, page: int = 1, limit: int = 50, max_limit: int = 1000):
         self.page = max(1, page)
         self.limit = min(max(1, limit), max_limit)
         self.offset = (self.page - 1) * self.limit
@@ -40,11 +35,7 @@ class PaginationParams:
 class SortParams:
     """Sorting parameters for queries"""
 
-    def __init__(
-        self,
-        sort_by: str = "created_at",
-        sort_order: str = "desc"
-    ):
+    def __init__(self, sort_by: str = "created_at", sort_order: str = "desc"):
         self.sort_by = sort_by
         self.sort_order = sort_order.lower()
 
@@ -61,16 +52,19 @@ class FilterParams:
 
 class RepositoryError(Exception):
     """Base repository exception"""
+
     pass
 
 
 class NotFoundError(RepositoryError):
     """Entity not found exception"""
+
     pass
 
 
 class ValidationError(RepositoryError):
     """Validation error exception"""
+
     pass
 
 
@@ -94,29 +88,27 @@ class BaseRepository(Generic[ModelType], ABC):
     # Core CRUD Operations
 
     async def create(
-        self,
-        obj_data: CreateSchemaType | dict[str, Any],
-        commit: bool = True
+        self, obj_data: CreateSchemaType | dict[str, Any], commit: bool = True
     ) -> ModelType:
         """
         Create a new entity
-        
+
         Args:
             obj_data: Data for creating the entity
             commit: Whether to commit the transaction
-            
+
         Returns:
             Created entity
-            
+
         Raises:
             ValidationError: If data validation fails
             RepositoryError: If creation fails
         """
         try:
             # Convert to dict if needed
-            if hasattr(obj_data, 'model_dump'):
+            if hasattr(obj_data, "model_dump"):
                 data = obj_data.model_dump(exclude_unset=True)
-            elif hasattr(obj_data, 'dict'):
+            elif hasattr(obj_data, "dict"):
                 data = obj_data.dict(exclude_unset=True)
             else:
                 data = obj_data
@@ -137,20 +129,20 @@ class BaseRepository(Generic[ModelType], ABC):
         except SQLAlchemyError as e:
             await self.session.rollback()
             self.logger.error("Failed to create entity", error=str(e))
-            raise RepositoryError(f"Failed to create {self.model_name}: {str(e)}")
+            raise RepositoryError(
+                f"Failed to create {self.model_name}: {str(e)}"
+            ) from e
 
     async def get_by_id(
-        self,
-        entity_id: UUID,
-        load_relationships: list[str] | None = None
+        self, entity_id: UUID, load_relationships: list[str] | None = None
     ) -> ModelType | None:
         """
         Get entity by ID
-        
+
         Args:
             entity_id: Entity UUID
             load_relationships: List of relationships to eager load
-            
+
         Returns:
             Entity if found, None otherwise
         """
@@ -161,7 +153,9 @@ class BaseRepository(Generic[ModelType], ABC):
             if load_relationships:
                 for relationship in load_relationships:
                     if hasattr(self.model, relationship):
-                        query = query.options(selectinload(getattr(self.model, relationship)))
+                        query = query.options(
+                            selectinload(getattr(self.model, relationship))
+                        )
 
             result = await self.session.execute(query)
             entity = result.scalar_one_or_none()
@@ -174,24 +168,26 @@ class BaseRepository(Generic[ModelType], ABC):
             return entity
 
         except SQLAlchemyError as e:
-            self.logger.error("Failed to get entity by ID", entity_id=entity_id, error=str(e))
-            raise RepositoryError(f"Failed to get {self.model_name} by ID: {str(e)}")
+            self.logger.error(
+                "Failed to get entity by ID", entity_id=entity_id, error=str(e)
+            )
+            raise RepositoryError(
+                f"Failed to get {self.model_name} by ID: {str(e)}"
+            ) from e
 
     async def get_by_id_or_raise(
-        self,
-        entity_id: UUID,
-        load_relationships: list[str] | None = None
+        self, entity_id: UUID, load_relationships: list[str] | None = None
     ) -> ModelType:
         """
         Get entity by ID or raise NotFoundError
-        
+
         Args:
             entity_id: Entity UUID
             load_relationships: List of relationships to eager load
-            
+
         Returns:
             Entity
-            
+
         Raises:
             NotFoundError: If entity not found
         """
@@ -204,19 +200,19 @@ class BaseRepository(Generic[ModelType], ABC):
         self,
         entity_id: UUID,
         obj_data: UpdateSchemaType | dict[str, Any],
-        commit: bool = True
+        commit: bool = True,
     ) -> ModelType:
         """
         Update entity by ID
-        
+
         Args:
             entity_id: Entity UUID
             obj_data: Update data
             commit: Whether to commit the transaction
-            
+
         Returns:
             Updated entity
-            
+
         Raises:
             NotFoundError: If entity not found
             RepositoryError: If update fails
@@ -226,9 +222,9 @@ class BaseRepository(Generic[ModelType], ABC):
             entity = await self.get_by_id_or_raise(entity_id)
 
             # Convert to dict if needed
-            if hasattr(obj_data, 'model_dump'):
+            if hasattr(obj_data, "model_dump"):
                 data = obj_data.model_dump(exclude_unset=True)
-            elif hasattr(obj_data, 'dict'):
+            elif hasattr(obj_data, "dict"):
                 data = obj_data.dict(exclude_unset=True)
             else:
                 data = obj_data
@@ -251,20 +247,24 @@ class BaseRepository(Generic[ModelType], ABC):
             raise
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("Failed to update entity", entity_id=entity_id, error=str(e))
-            raise RepositoryError(f"Failed to update {self.model_name}: {str(e)}")
+            self.logger.error(
+                "Failed to update entity", entity_id=entity_id, error=str(e)
+            )
+            raise RepositoryError(
+                f"Failed to update {self.model_name}: {str(e)}"
+            ) from e
 
     async def delete(self, entity_id: UUID, commit: bool = True) -> bool:
         """
         Delete entity by ID
-        
+
         Args:
             entity_id: Entity UUID
             commit: Whether to commit the transaction
-            
+
         Returns:
             True if deleted, False if not found
-            
+
         Raises:
             RepositoryError: If deletion fails
         """
@@ -286,21 +286,23 @@ class BaseRepository(Generic[ModelType], ABC):
 
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("Failed to delete entity", entity_id=entity_id, error=str(e))
-            raise RepositoryError(f"Failed to delete {self.model_name}: {str(e)}")
+            self.logger.error(
+                "Failed to delete entity", entity_id=entity_id, error=str(e)
+            )
+            raise RepositoryError(
+                f"Failed to delete {self.model_name}: {str(e)}"
+            ) from e
 
     async def delete_by_filter(
-        self,
-        filters: dict[str, Any],
-        commit: bool = True
+        self, filters: dict[str, Any], commit: bool = True
     ) -> int:
         """
         Delete entities by filter
-        
+
         Args:
             filters: Filter conditions
             commit: Whether to commit the transaction
-            
+
         Returns:
             Number of deleted entities
         """
@@ -322,13 +324,19 @@ class BaseRepository(Generic[ModelType], ABC):
             if commit:
                 await self.session.commit()
 
-            self.logger.info("Entities deleted by filter", count=deleted_count, filters=filters)
+            self.logger.info(
+                "Entities deleted by filter", count=deleted_count, filters=filters
+            )
             return deleted_count
 
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("Failed to delete entities by filter", filters=filters, error=str(e))
-            raise RepositoryError(f"Failed to delete {self.model_name} by filter: {str(e)}")
+            self.logger.error(
+                "Failed to delete entities by filter", filters=filters, error=str(e)
+            )
+            raise RepositoryError(
+                f"Failed to delete {self.model_name} by filter: {str(e)}"
+            ) from e
 
     # Query Operations
 
@@ -336,16 +344,16 @@ class BaseRepository(Generic[ModelType], ABC):
         self,
         pagination: PaginationParams | None = None,
         sort: SortParams | None = None,
-        load_relationships: list[str] | None = None
+        load_relationships: list[str] | None = None,
     ) -> list[ModelType]:
         """
         Get all entities with optional pagination and sorting
-        
+
         Args:
             pagination: Pagination parameters
             sort: Sort parameters
             load_relationships: List of relationships to eager load
-            
+
         Returns:
             List of entities
         """
@@ -369,7 +377,9 @@ class BaseRepository(Generic[ModelType], ABC):
             if load_relationships:
                 for relationship in load_relationships:
                     if hasattr(self.model, relationship):
-                        query = query.options(selectinload(getattr(self.model, relationship)))
+                        query = query.options(
+                            selectinload(getattr(self.model, relationship))
+                        )
 
             result = await self.session.execute(query)
             entities = result.scalars().all()
@@ -379,24 +389,26 @@ class BaseRepository(Generic[ModelType], ABC):
 
         except SQLAlchemyError as e:
             self.logger.error("Failed to get all entities", error=str(e))
-            raise RepositoryError(f"Failed to get all {self.model_name}: {str(e)}")
+            raise RepositoryError(
+                f"Failed to get all {self.model_name}: {str(e)}"
+            ) from e
 
     async def get_by_filter(
         self,
         filters: dict[str, Any],
         pagination: PaginationParams | None = None,
         sort: SortParams | None = None,
-        load_relationships: list[str] | None = None
+        load_relationships: list[str] | None = None,
     ) -> list[ModelType]:
         """
         Get entities by filter conditions
-        
+
         Args:
             filters: Filter conditions
             pagination: Pagination parameters
             sort: Sort parameters
             load_relationships: List of relationships to eager load
-            
+
         Returns:
             List of entities matching filters
         """
@@ -407,7 +419,7 @@ class BaseRepository(Generic[ModelType], ABC):
             conditions = []
             for key, value in filters.items():
                 if hasattr(self.model, key):
-                    if isinstance(value, (list, tuple)):
+                    if isinstance(value, list | tuple):
                         conditions.append(getattr(self.model, key).in_(value))
                     else:
                         conditions.append(getattr(self.model, key) == value)
@@ -432,25 +444,33 @@ class BaseRepository(Generic[ModelType], ABC):
             if load_relationships:
                 for relationship in load_relationships:
                     if hasattr(self.model, relationship):
-                        query = query.options(selectinload(getattr(self.model, relationship)))
+                        query = query.options(
+                            selectinload(getattr(self.model, relationship))
+                        )
 
             result = await self.session.execute(query)
             entities = result.scalars().all()
 
-            self.logger.debug("Retrieved entities by filter", count=len(entities), filters=filters)
+            self.logger.debug(
+                "Retrieved entities by filter", count=len(entities), filters=filters
+            )
             return list(entities)
 
         except SQLAlchemyError as e:
-            self.logger.error("Failed to get entities by filter", filters=filters, error=str(e))
-            raise RepositoryError(f"Failed to get {self.model_name} by filter: {str(e)}")
+            self.logger.error(
+                "Failed to get entities by filter", filters=filters, error=str(e)
+            )
+            raise RepositoryError(
+                f"Failed to get {self.model_name} by filter: {str(e)}"
+            ) from e
 
     async def count(self, filters: dict[str, Any] | None = None) -> int:
         """
         Count entities with optional filters
-        
+
         Args:
             filters: Optional filter conditions
-            
+
         Returns:
             Count of entities
         """
@@ -462,7 +482,7 @@ class BaseRepository(Generic[ModelType], ABC):
                 conditions = []
                 for key, value in filters.items():
                     if hasattr(self.model, key):
-                        if isinstance(value, (list, tuple)):
+                        if isinstance(value, list | tuple):
                             conditions.append(getattr(self.model, key).in_(value))
                         else:
                             conditions.append(getattr(self.model, key) == value)
@@ -478,15 +498,15 @@ class BaseRepository(Generic[ModelType], ABC):
 
         except SQLAlchemyError as e:
             self.logger.error("Failed to count entities", filters=filters, error=str(e))
-            raise RepositoryError(f"Failed to count {self.model_name}: {str(e)}")
+            raise RepositoryError(f"Failed to count {self.model_name}: {str(e)}") from e
 
     async def exists(self, entity_id: UUID) -> bool:
         """
         Check if entity exists by ID
-        
+
         Args:
             entity_id: Entity UUID
-            
+
         Returns:
             True if exists, False otherwise
         """
@@ -496,27 +516,31 @@ class BaseRepository(Generic[ModelType], ABC):
             count = result.scalar()
 
             exists = count > 0
-            self.logger.debug("Checked entity existence", entity_id=entity_id, exists=exists)
+            self.logger.debug(
+                "Checked entity existence", entity_id=entity_id, exists=exists
+            )
             return exists
 
         except SQLAlchemyError as e:
-            self.logger.error("Failed to check entity existence", entity_id=entity_id, error=str(e))
-            raise RepositoryError(f"Failed to check {self.model_name} existence: {str(e)}")
+            self.logger.error(
+                "Failed to check entity existence", entity_id=entity_id, error=str(e)
+            )
+            raise RepositoryError(
+                f"Failed to check {self.model_name} existence: {str(e)}"
+            ) from e
 
     # Bulk Operations
 
     async def bulk_create(
-        self,
-        objects_data: list[CreateSchemaType | dict[str, Any]],
-        commit: bool = True
+        self, objects_data: list[CreateSchemaType | dict[str, Any]], commit: bool = True
     ) -> list[ModelType]:
         """
         Bulk create entities
-        
+
         Args:
             objects_data: List of entity data
             commit: Whether to commit the transaction
-            
+
         Returns:
             List of created entities
         """
@@ -525,9 +549,9 @@ class BaseRepository(Generic[ModelType], ABC):
 
             for obj_data in objects_data:
                 # Convert to dict if needed
-                if hasattr(obj_data, 'model_dump'):
+                if hasattr(obj_data, "model_dump"):
                     data = obj_data.model_dump(exclude_unset=True)
-                elif hasattr(obj_data, 'dict'):
+                elif hasattr(obj_data, "dict"):
                     data = obj_data.dict(exclude_unset=True)
                 else:
                     data = obj_data
@@ -549,21 +573,23 @@ class BaseRepository(Generic[ModelType], ABC):
 
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("Failed to bulk create entities", count=len(objects_data), error=str(e))
-            raise RepositoryError(f"Failed to bulk create {self.model_name}: {str(e)}")
+            self.logger.error(
+                "Failed to bulk create entities", count=len(objects_data), error=str(e)
+            )
+            raise RepositoryError(
+                f"Failed to bulk create {self.model_name}: {str(e)}"
+            ) from e
 
     async def bulk_update(
-        self,
-        updates: list[dict[str, Any]],
-        commit: bool = True
+        self, updates: list[dict[str, Any]], commit: bool = True
     ) -> int:
         """
         Bulk update entities
-        
+
         Args:
             updates: List of update data with 'id' field
             commit: Whether to commit the transaction
-            
+
         Returns:
             Number of updated entities
         """
@@ -571,15 +597,19 @@ class BaseRepository(Generic[ModelType], ABC):
             updated_count = 0
 
             for update_data in updates:
-                if 'id' not in update_data:
+                if "id" not in update_data:
                     continue
 
-                entity_id = update_data.pop('id')
+                entity_id = update_data.pop("id")
 
                 # Add audit field
-                update_data['updated_at'] = datetime.utcnow()
+                update_data["updated_at"] = datetime.utcnow()
 
-                query = update(self.model).where(self.model.id == entity_id).values(**update_data)
+                query = (
+                    update(self.model)
+                    .where(self.model.id == entity_id)
+                    .values(**update_data)
+                )
                 result = await self.session.execute(query)
                 updated_count += result.rowcount
 
@@ -592,18 +622,20 @@ class BaseRepository(Generic[ModelType], ABC):
         except SQLAlchemyError as e:
             await self.session.rollback()
             self.logger.error("Failed to bulk update entities", error=str(e))
-            raise RepositoryError(f"Failed to bulk update {self.model_name}: {str(e)}")
+            raise RepositoryError(
+                f"Failed to bulk update {self.model_name}: {str(e)}"
+            ) from e
 
     # Transaction Management
 
     async def save(self, entity: ModelType, commit: bool = True) -> ModelType:
         """
         Save entity (add to session and optionally commit)
-        
+
         Args:
             entity: Entity to save
             commit: Whether to commit the transaction
-            
+
         Returns:
             Saved entity
         """
@@ -619,12 +651,18 @@ class BaseRepository(Generic[ModelType], ABC):
 
         except SQLAlchemyError as e:
             await self.session.rollback()
-            self.logger.error("Failed to save entity", entity_id=getattr(entity, 'id', None), error=str(e))
-            raise RepositoryError(f"Failed to save {self.model_name}: {str(e)}")
+            self.logger.error(
+                "Failed to save entity",
+                entity_id=getattr(entity, "id", None),
+                error=str(e),
+            )
+            raise RepositoryError(f"Failed to save {self.model_name}: {str(e)}") from e
 
     # Abstract methods for model-specific operations
 
     @abstractmethod
-    async def get_by_unique_field(self, field_name: str, field_value: Any) -> ModelType | None:
+    async def get_by_unique_field(
+        self, field_name: str, field_value: Any
+    ) -> ModelType | None:
         """Get entity by unique field - to be implemented by specific repositories"""
         pass

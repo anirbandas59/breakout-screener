@@ -156,6 +156,23 @@ class Config:
         "https://query1.finance.yahoo.com/v7/finance/download"
     )
 
+    # Chart Integration
+    CHART_BASE_URL: str = get_optional_env(
+        "CHART_BASE_URL",
+        "https://gocharting.com/terminal?Stocks="
+    )
+
+    @property
+    def NSE_URLS(self) -> dict[str, str]:
+        """Get all NSE URLs for data extraction"""
+        return {
+            "NIFTY_50": self.NSE_URL_NIFTY_50,
+            "NIFTY_200": self.NSE_URL_NIFTY_200,
+            "NIFTY_MIDCAP_150": self.NSE_URL_NIFTY_MIDCAP_150,
+            "NIFTY_MIDSMALLCAP_400": self.NSE_URL_NIFTY_MIDSMALLCAP_400,
+            "NIFTY_SMALLCAP_250": self.NSE_URL_NIFTY_SMALLCAP_250,
+        }
+
     # Logging Configuration
     LOG_LEVEL: str = get_optional_env("LOG_LEVEL", "INFO").upper()
     LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

@@ -5,9 +5,10 @@ Revises:
 Create Date: 2025-01-20 12:00:00.000000
 
 """
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '001'
@@ -22,7 +23,7 @@ def upgrade() -> None:
     op.execute("CREATE TYPE pivottype AS ENUM ('BULLISH', 'BEARISH', 'NEUTRAL')")
     op.execute("CREATE TYPE analysisstatus AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED')")
     op.execute("CREATE TYPE performancemetrictype AS ENUM ('ACCURACY', 'PRECISION', 'RECALL', 'F1_SCORE', 'RETURN_RATE', 'SHARPE_RATIO', 'MAX_DRAWDOWN', 'WIN_RATE', 'PROFIT_FACTOR', 'CUSTOM')")
-    
+
     # Create stocks table
     op.create_table('stocks',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
@@ -45,7 +46,7 @@ def upgrade() -> None:
     op.create_index('ix_stocks_symbol', 'stocks', ['symbol'])
     op.create_index('ix_stocks_is_active', 'stocks', ['is_active'])
     op.create_index('ix_stocks_market_cap', 'stocks', ['market_cap'])
-    
+
     # Create breakout_data table
     op.create_table('breakout_data',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
@@ -79,7 +80,7 @@ def upgrade() -> None:
     op.create_index('ix_breakout_data_trade_date', 'breakout_data', ['trade_date'])
     op.create_index('ix_breakout_data_breakout_status', 'breakout_data', ['breakout_status'])
     op.create_index('ix_breakout_data_is_analyzed', 'breakout_data', ['is_analyzed'])
-    
+
     # Create master_breakout_data table
     op.create_table('master_breakout_data',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
@@ -98,7 +99,7 @@ def upgrade() -> None:
     )
     op.create_index('ix_master_breakout_data_snapshot_date', 'master_breakout_data', ['snapshot_date'])
     op.create_index('ix_master_breakout_data_is_active', 'master_breakout_data', ['is_active'])
-    
+
     # Create analysis_sessions table
     op.create_table('analysis_sessions',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
@@ -118,7 +119,7 @@ def upgrade() -> None:
     )
     op.create_index('ix_analysis_sessions_analysis_date', 'analysis_sessions', ['analysis_date'])
     op.create_index('ix_analysis_sessions_status', 'analysis_sessions', ['status'])
-    
+
     # Create performance_metrics table
     op.create_table('performance_metrics',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
@@ -145,7 +146,7 @@ def downgrade() -> None:
     op.drop_table('master_breakout_data')
     op.drop_table('breakout_data')
     op.drop_table('stocks')
-    
+
     # Drop enum types
     op.execute("DROP TYPE IF EXISTS performancemetrictype")
     op.execute("DROP TYPE IF EXISTS analysisstatus")

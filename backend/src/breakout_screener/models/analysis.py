@@ -34,7 +34,7 @@ class AnalysisSession(BaseModel):
     session_name = Column(
         String(255),
         nullable=False,
-        comment="Human-readable name for the analysis session"
+        comment="Human-readable name for the analysis session",
     )
 
     # Session timing
@@ -43,13 +43,13 @@ class AnalysisSession(BaseModel):
         nullable=False,
         default=datetime.utcnow,
         index=True,
-        comment="When the analysis session started"
+        comment="When the analysis session started",
     )
 
     end_time = Column(
         DateTime(timezone=True),
         nullable=True,
-        comment="When the analysis session completed"
+        comment="When the analysis session completed",
     )
 
     # Session status
@@ -58,7 +58,7 @@ class AnalysisSession(BaseModel):
         default="RUNNING",
         nullable=False,
         index=True,
-        comment="Current status of the analysis session"
+        comment="Current status of the analysis session",
     )
 
     # Processing statistics
@@ -66,35 +66,35 @@ class AnalysisSession(BaseModel):
         Integer,
         default=0,
         nullable=False,
-        comment="Total number of stocks processed in this session"
+        comment="Total number of stocks processed in this session",
     )
 
     successful_analyses = Column(
         Integer,
         default=0,
         nullable=False,
-        comment="Number of successful analysis operations"
+        comment="Number of successful analysis operations",
     )
 
     failed_analyses = Column(
         Integer,
         default=0,
         nullable=False,
-        comment="Number of failed analysis operations"
+        comment="Number of failed analysis operations",
     )
 
     # Error tracking
     error_details = Column(
         JSONB,
         nullable=True,
-        comment="JSON structure containing error details and stack traces"
+        comment="JSON structure containing error details and stack traces",
     )
 
     # Configuration and metadata
     configuration = Column(
         JSONB,
         nullable=True,
-        comment="JSON structure containing session configuration parameters"
+        comment="JSON structure containing session configuration parameters",
     )
 
     # Relationships
@@ -102,48 +102,45 @@ class AnalysisSession(BaseModel):
         "PerformanceMetrics",
         back_populates="session",
         cascade="all, delete-orphan",
-        lazy="dynamic"
+        lazy="dynamic",
     )
 
     # Table constraints
     __table_args__ = (
         CheckConstraint(
             "status IN ('RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED')",
-            name="ck_analysis_sessions_valid_status"
+            name="ck_analysis_sessions_valid_status",
         ),
         CheckConstraint(
             "total_stocks_processed >= 0",
-            name="ck_analysis_sessions_total_stocks_non_negative"
+            name="ck_analysis_sessions_total_stocks_non_negative",
         ),
         CheckConstraint(
             "successful_analyses >= 0",
-            name="ck_analysis_sessions_successful_non_negative"
+            name="ck_analysis_sessions_successful_non_negative",
         ),
         CheckConstraint(
-            "failed_analyses >= 0",
-            name="ck_analysis_sessions_failed_non_negative"
+            "failed_analyses >= 0", name="ck_analysis_sessions_failed_non_negative"
         ),
         CheckConstraint(
             "end_time IS NULL OR end_time >= start_time",
-            name="ck_analysis_sessions_end_after_start"
+            name="ck_analysis_sessions_end_after_start",
         ),
-
         Index("idx_analysis_sessions_start_time", "start_time"),
         Index("idx_analysis_sessions_status_start", "status", "start_time"),
         Index("idx_analysis_sessions_session_name", "session_name"),
-
-        {"comment": "Tracking table for analysis runs and batch processing"}
+        {"comment": "Tracking table for analysis runs and batch processing"},
     )
 
-    @validates('status')
+    @validates("status")
     def validate_status(self, key, status):
         """Validate session status"""
-        valid_statuses = ['RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED']
+        valid_statuses = ["RUNNING", "COMPLETED", "FAILED", "CANCELLED"]
         if status not in valid_statuses:
             raise ValueError(f"Status must be one of {valid_statuses}: {status}")
         return status
 
-    @validates('session_name')
+    @validates("session_name")
     def validate_session_name(self, key, session_name):
         """Validate session name"""
         if not session_name or not session_name.strip():
@@ -151,13 +148,15 @@ class AnalysisSession(BaseModel):
         return session_name.strip()
 
     def __repr__(self) -> str:
-        return (f"<AnalysisSession(name={self.session_name}, status={self.status}, "
-                f"processed={self.total_stocks_processed})>")
+        return (
+            f"<AnalysisSession(name={self.session_name}, status={self.status}, "
+            f"processed={self.total_stocks_processed})>"
+        )
 
     def start_session(self, configuration: dict[str, Any] | None = None) -> None:
         """
         Mark session as started with optional configuration.
-        
+
         Args:
             configuration: Dictionary of configuration parameters
         """
@@ -171,7 +170,7 @@ class AnalysisSession(BaseModel):
     def complete_session(self, success: bool = True) -> None:
         """
         Mark session as completed.
-        
+
         Args:
             success: Whether the session completed successfully
         """
@@ -183,10 +182,12 @@ class AnalysisSession(BaseModel):
         self.end_time = datetime.utcnow()
         self.status = "CANCELLED"
 
-    def add_error(self, error: Exception, context: dict[str, Any] | None = None) -> None:
+    def add_error(
+        self, error: Exception, context: dict[str, Any] | None = None
+    ) -> None:
         """
         Add error information to the session.
-        
+
         Args:
             error: Exception that occurred
             context: Additional context information
@@ -198,7 +199,7 @@ class AnalysisSession(BaseModel):
             "timestamp": datetime.utcnow().isoformat(),
             "error_type": type(error).__name__,
             "error_message": str(error),
-            "context": context or {}
+            "context": context or {},
         }
 
         self.error_details.append(error_entry)
@@ -229,14 +230,16 @@ class AnalysisSession(BaseModel):
         """Check if session completed successfully"""
         return self.status == "COMPLETED"
 
-    def to_dict(self, include_metrics: bool = False, exclude_fields: list | None = None) -> dict:
+    def to_dict(
+        self, include_metrics: bool = False, exclude_fields: list | None = None
+    ) -> dict:
         """
         Convert analysis session to dictionary.
-        
+
         Args:
             include_metrics: Whether to include performance metrics
             exclude_fields: List of fields to exclude
-            
+
         Returns:
             Dictionary representation
         """
@@ -244,13 +247,13 @@ class AnalysisSession(BaseModel):
         result = super().to_dict(exclude_fields)
 
         # Add calculated fields
-        result['duration_seconds'] = self.get_duration_seconds()
-        result['success_rate_percent'] = self.get_success_rate()
-        result['is_running'] = self.is_running()
-        result['is_completed'] = self.is_completed()
+        result["duration_seconds"] = self.get_duration_seconds()
+        result["success_rate_percent"] = self.get_success_rate()
+        result["is_running"] = self.is_running()
+        result["is_completed"] = self.is_completed()
 
         if include_metrics:
-            result['performance_metrics_count'] = self.performance_metrics.count()
+            result["performance_metrics_count"] = self.performance_metrics.count()
 
         return result
 
@@ -268,19 +271,17 @@ class PerformanceMetrics(BaseModel):
         String(100),
         nullable=False,
         index=True,
-        comment="Name/type of the metric being recorded"
+        comment="Name/type of the metric being recorded",
     )
 
     metric_value = Column(
-        NUMERIC(15, 4),
-        nullable=True,
-        comment="Numerical value of the metric"
+        NUMERIC(15, 4), nullable=True, comment="Numerical value of the metric"
     )
 
     metric_unit = Column(
         String(20),
         nullable=True,
-        comment="Unit of measurement (seconds, percentage, count, etc.)"
+        comment="Unit of measurement (seconds, percentage, count, etc.)",
     )
 
     # Temporal information
@@ -289,7 +290,7 @@ class PerformanceMetrics(BaseModel):
         nullable=False,
         default=datetime.utcnow,
         index=True,
-        comment="When the metric was measured"
+        comment="When the metric was measured",
     )
 
     # Foreign key relationships
@@ -298,7 +299,7 @@ class PerformanceMetrics(BaseModel):
         ForeignKey("stocks.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
-        comment="Optional reference to specific stock"
+        comment="Optional reference to specific stock",
     )
 
     session_id = Column(
@@ -306,27 +307,19 @@ class PerformanceMetrics(BaseModel):
         ForeignKey("analysis_sessions.id", ondelete="CASCADE"),
         nullable=True,
         index=True,
-        comment="Optional reference to analysis session"
+        comment="Optional reference to analysis session",
     )
 
     # Additional metadata
     metric_metadata = Column(
-        JSONB,
-        nullable=True,
-        comment="Additional metadata and context for the metric"
+        JSONB, nullable=True, comment="Additional metadata and context for the metric"
     )
 
     # Relationships
-    stock = relationship(
-        "Stock",
-        back_populates="performance_metrics",
-        lazy="joined"
-    )
+    stock = relationship("Stock", back_populates="performance_metrics", lazy="joined")
 
     session = relationship(
-        "AnalysisSession",
-        back_populates="performance_metrics",
-        lazy="joined"
+        "AnalysisSession", back_populates="performance_metrics", lazy="joined"
     )
 
     # Table indexes
@@ -335,11 +328,10 @@ class PerformanceMetrics(BaseModel):
         Index("idx_performance_metrics_stock_date", "stock_id", "measurement_date"),
         Index("idx_performance_metrics_session_name", "session_id", "metric_name"),
         Index("idx_performance_metrics_value", "metric_value"),
-
-        {"comment": "Table for storing various performance and analytical metrics"}
+        {"comment": "Table for storing various performance and analytical metrics"},
     )
 
-    @validates('metric_name')
+    @validates("metric_name")
     def validate_metric_name(self, key, metric_name):
         """Validate metric name"""
         if not metric_name or not metric_name.strip():
@@ -347,22 +339,30 @@ class PerformanceMetrics(BaseModel):
         return metric_name.strip()
 
     def __repr__(self) -> str:
-        return (f"<PerformanceMetrics(name={self.metric_name}, value={self.metric_value}, "
-                f"date={self.measurement_date})>")
+        return (
+            f"<PerformanceMetrics(name={self.metric_name}, value={self.metric_value}, "
+            f"date={self.measurement_date})>"
+        )
 
     @classmethod
-    def create_system_metric(cls, name: str, value: Decimal, unit: str = None,
-                           session_id: str = None, metadata: dict[str, Any] = None) -> 'PerformanceMetrics':
+    def create_system_metric(
+        cls,
+        name: str,
+        value: Decimal,
+        unit: str = None,
+        session_id: str = None,
+        metadata: dict[str, Any] = None,
+    ) -> "PerformanceMetrics":
         """
         Create a system-level performance metric.
-        
+
         Args:
             name: Metric name (e.g., 'analysis_duration', 'memory_usage')
             value: Metric value
             unit: Unit of measurement
             session_id: Optional session reference
             metadata: Additional metadata
-            
+
         Returns:
             PerformanceMetrics instance
         """
@@ -371,22 +371,28 @@ class PerformanceMetrics(BaseModel):
             metric_value=value,
             metric_unit=unit,
             session_id=session_id,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
     @classmethod
-    def create_stock_metric(cls, name: str, value: Decimal, stock_id: str,
-                          unit: str = None, metadata: dict[str, Any] = None) -> 'PerformanceMetrics':
+    def create_stock_metric(
+        cls,
+        name: str,
+        value: Decimal,
+        stock_id: str,
+        unit: str = None,
+        metadata: dict[str, Any] = None,
+    ) -> "PerformanceMetrics":
         """
         Create a stock-specific metric.
-        
+
         Args:
             name: Metric name (e.g., 'breakout_score', 'volatility')
             value: Metric value
             stock_id: Stock reference
             unit: Unit of measurement
             metadata: Additional metadata
-            
+
         Returns:
             PerformanceMetrics instance
         """
@@ -395,17 +401,19 @@ class PerformanceMetrics(BaseModel):
             metric_value=value,
             metric_unit=unit,
             stock_id=stock_id,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
-    def to_dict(self, include_relationships: bool = False, exclude_fields: list | None = None) -> dict:
+    def to_dict(
+        self, include_relationships: bool = False, exclude_fields: list | None = None
+    ) -> dict:
         """
         Convert performance metric to dictionary.
-        
+
         Args:
             include_relationships: Whether to include stock/session info
             exclude_fields: List of fields to exclude
-            
+
         Returns:
             Dictionary representation
         """
@@ -414,56 +422,62 @@ class PerformanceMetrics(BaseModel):
 
         if include_relationships:
             if self.stock:
-                result['stock'] = {
-                    'symbol': self.stock.symbol,
-                    'company_name': self.stock.company_name
+                result["stock"] = {
+                    "symbol": self.stock.symbol,
+                    "company_name": self.stock.company_name,
                 }
 
             if self.session:
-                result['session'] = {
-                    'session_name': self.session.session_name,
-                    'status': self.session.status
+                result["session"] = {
+                    "session_name": self.session.session_name,
+                    "status": self.session.status,
                 }
 
         return result
 
     # Common metric creation helpers
     @classmethod
-    def record_analysis_duration(cls, duration_seconds: float, session_id: str = None) -> 'PerformanceMetrics':
+    def record_analysis_duration(
+        cls, duration_seconds: float, session_id: str = None
+    ) -> "PerformanceMetrics":
         """Record analysis duration metric"""
         return cls.create_system_metric(
             name="analysis_duration",
             value=Decimal(str(duration_seconds)),
             unit="seconds",
-            session_id=session_id
+            session_id=session_id,
         )
 
     @classmethod
-    def record_memory_usage(cls, memory_mb: float, session_id: str = None) -> 'PerformanceMetrics':
+    def record_memory_usage(
+        cls, memory_mb: float, session_id: str = None
+    ) -> "PerformanceMetrics":
         """Record memory usage metric"""
         return cls.create_system_metric(
             name="memory_usage",
             value=Decimal(str(memory_mb)),
             unit="mb",
-            session_id=session_id
+            session_id=session_id,
         )
 
     @classmethod
-    def record_breakout_confidence(cls, confidence: float, stock_id: str) -> 'PerformanceMetrics':
+    def record_breakout_confidence(
+        cls, confidence: float, stock_id: str
+    ) -> "PerformanceMetrics":
         """Record breakout confidence score"""
         return cls.create_stock_metric(
             name="breakout_confidence",
             value=Decimal(str(confidence)),
             stock_id=stock_id,
-            unit="score"
+            unit="score",
         )
 
     @classmethod
-    def record_volume_ratio(cls, ratio: float, stock_id: str) -> 'PerformanceMetrics':
+    def record_volume_ratio(cls, ratio: float, stock_id: str) -> "PerformanceMetrics":
         """Record volume ratio vs average"""
         return cls.create_stock_metric(
             name="volume_ratio",
             value=Decimal(str(ratio)),
             stock_id=stock_id,
-            unit="ratio"
+            unit="ratio",
         )

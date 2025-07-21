@@ -2,12 +2,11 @@
 Simple integration test for API health check
 """
 
-import pytest
-from fastapi.testclient import TestClient
-
 # Import the FastAPI app directly
 import sys
 from pathlib import Path
+
+from fastapi.testclient import TestClient
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
@@ -44,4 +43,4 @@ if __name__ == "__main__":
     test_health_check()
     test_api_docs()
     test_api_root()
-    print("All simple integration tests passed!")
+    print("All simple integration tests passed!")  # noqa: T201

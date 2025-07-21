@@ -35,7 +35,7 @@ class StockFilterParams(FilterParams):
         is_active: bool | None = None,
         market_cap_min: int | None = None,
         market_cap_max: int | None = None,
-        **kwargs
+        **kwargs,
     ):
         self.symbol = symbol
         self.company_name = company_name
@@ -60,7 +60,9 @@ class StockRepository(BaseRepository[Stock]):
 
     # Unique field implementations
 
-    async def get_by_unique_field(self, field_name: str, field_value: Any) -> Stock | None:
+    async def get_by_unique_field(
+        self, field_name: str, field_value: Any
+    ) -> Stock | None:
         """Get stock by unique field (symbol)"""
         if field_name == "symbol":
             return await self.get_by_symbol(field_value)
@@ -70,10 +72,10 @@ class StockRepository(BaseRepository[Stock]):
     async def get_by_symbol(self, symbol: str) -> Stock | None:
         """
         Get stock by symbol
-        
+
         Args:
             symbol: Stock symbol (e.g., 'RELIANCE', 'TCS')
-            
+
         Returns:
             Stock if found, None otherwise
         """
@@ -90,19 +92,21 @@ class StockRepository(BaseRepository[Stock]):
             return stock
 
         except Exception as e:
-            self.logger.error("Failed to get stock by symbol", symbol=symbol, error=str(e))
+            self.logger.error(
+                "Failed to get stock by symbol", symbol=symbol, error=str(e)
+            )
             raise
 
     async def get_by_symbol_or_raise(self, symbol: str) -> Stock:
         """
         Get stock by symbol or raise NotFoundError
-        
+
         Args:
             symbol: Stock symbol
-            
+
         Returns:
             Stock
-            
+
         Raises:
             NotFoundError: If stock not found
         """
@@ -114,17 +118,15 @@ class StockRepository(BaseRepository[Stock]):
     # Business-specific queries
 
     async def get_active_stocks(
-        self,
-        pagination: PaginationParams | None = None,
-        sort: SortParams | None = None
+        self, pagination: PaginationParams | None = None, sort: SortParams | None = None
     ) -> list[Stock]:
         """
         Get all active stocks
-        
+
         Args:
             pagination: Pagination parameters
             sort: Sort parameters
-            
+
         Returns:
             List of active stocks
         """
@@ -136,17 +138,17 @@ class StockRepository(BaseRepository[Stock]):
         stock_group: StockGroupEnum,
         active_only: bool = True,
         pagination: PaginationParams | None = None,
-        sort: SortParams | None = None
+        sort: SortParams | None = None,
     ) -> list[Stock]:
         """
         Get stocks by NSE group/index
-        
+
         Args:
             stock_group: NSE stock group (NIFTY_50, etc.)
             active_only: Whether to include only active stocks
             pagination: Pagination parameters
             sort: Sort parameters
-            
+
         Returns:
             List of stocks in the group
         """
@@ -160,16 +162,16 @@ class StockRepository(BaseRepository[Stock]):
         self,
         search_term: str,
         active_only: bool = True,
-        pagination: PaginationParams | None = None
+        pagination: PaginationParams | None = None,
     ) -> list[Stock]:
         """
         Search stocks by symbol or company name
-        
+
         Args:
             search_term: Search term to match against symbol/company name
             active_only: Whether to include only active stocks
             pagination: Pagination parameters
-            
+
         Returns:
             List of matching stocks
         """
@@ -179,19 +181,19 @@ class StockRepository(BaseRepository[Stock]):
             query = select(Stock).where(
                 or_(
                     Stock.symbol.ilike(search_pattern),
-                    Stock.company_name.ilike(search_pattern)
+                    Stock.company_name.ilike(search_pattern),
                 )
             )
 
             if active_only:
-                query = query.where(Stock.is_active == True)
+                query = query.where(Stock.is_active)
 
             # Sort by relevance (exact symbol match first, then symbol prefix, then name)
             query = query.order_by(
                 (Stock.symbol == search_term.upper()).desc(),
                 Stock.symbol.startswith(search_term.upper()).desc(),
                 Stock.symbol,
-                Stock.company_name
+                Stock.company_name,
             )
 
             if pagination:
@@ -200,11 +202,15 @@ class StockRepository(BaseRepository[Stock]):
             result = await self.session.execute(query)
             stocks = result.scalars().all()
 
-            self.logger.debug("Stocks search completed", search_term=search_term, count=len(stocks))
+            self.logger.debug(
+                "Stocks search completed", search_term=search_term, count=len(stocks)
+            )
             return list(stocks)
 
         except Exception as e:
-            self.logger.error("Failed to search stocks", search_term=search_term, error=str(e))
+            self.logger.error(
+                "Failed to search stocks", search_term=search_term, error=str(e)
+            )
             raise
 
     async def get_stocks_by_sector(
@@ -212,17 +218,17 @@ class StockRepository(BaseRepository[Stock]):
         sector: str,
         active_only: bool = True,
         pagination: PaginationParams | None = None,
-        sort: SortParams | None = None
+        sort: SortParams | None = None,
     ) -> list[Stock]:
         """
         Get stocks by sector
-        
+
         Args:
             sector: Sector name (e.g., 'Technology', 'Banking')
             active_only: Whether to include only active stocks
             pagination: Pagination parameters
             sort: Sort parameters
-            
+
         Returns:
             List of stocks in the sector
         """
@@ -238,18 +244,18 @@ class StockRepository(BaseRepository[Stock]):
         max_market_cap: int | None = None,
         active_only: bool = True,
         pagination: PaginationParams | None = None,
-        sort: SortParams | None = None
+        sort: SortParams | None = None,
     ) -> list[Stock]:
         """
         Get stocks by market cap range
-        
+
         Args:
             min_market_cap: Minimum market cap in rupees
             max_market_cap: Maximum market cap in rupees
             active_only: Whether to include only active stocks
             pagination: Pagination parameters
             sort: Sort parameters
-            
+
         Returns:
             List of stocks in the market cap range
         """
@@ -259,7 +265,7 @@ class StockRepository(BaseRepository[Stock]):
             conditions = []
 
             if active_only:
-                conditions.append(Stock.is_active == True)
+                conditions.append(Stock.is_active)
 
             if min_market_cap is not None:
                 conditions.append(Stock.market_cap >= min_market_cap)
@@ -293,7 +299,7 @@ class StockRepository(BaseRepository[Stock]):
                 "Stocks retrieved by market cap range",
                 min_cap=min_market_cap,
                 max_cap=max_market_cap,
-                count=len(stocks)
+                count=len(stocks),
             )
             return list(stocks)
 
@@ -302,7 +308,7 @@ class StockRepository(BaseRepository[Stock]):
                 "Failed to get stocks by market cap range",
                 min_cap=min_market_cap,
                 max_cap=max_market_cap,
-                error=str(e)
+                error=str(e),
             )
             raise
 
@@ -310,33 +316,38 @@ class StockRepository(BaseRepository[Stock]):
         self,
         from_date: date | None = None,
         to_date: date | None = None,
-        pagination: PaginationParams | None = None
+        pagination: PaginationParams | None = None,
     ) -> list[Stock]:
         """
         Get stocks that have breakout data in the specified date range
-        
+
         Args:
             from_date: Start date for breakout data
             to_date: End date for breakout data
             pagination: Pagination parameters
-            
+
         Returns:
             List of stocks with breakout data
         """
         try:
             query = select(Stock).join(Stock.breakout_data)
 
-            conditions = [Stock.is_active == True]
+            conditions = [Stock.is_active]
 
             if from_date:
-                conditions.append(Stock.breakout_data.any(
-                    Stock.breakout_data.property.mapper.class_.trade_date >= from_date
-                ))
+                conditions.append(
+                    Stock.breakout_data.any(
+                        Stock.breakout_data.property.mapper.class_.trade_date
+                        >= from_date
+                    )
+                )
 
             if to_date:
-                conditions.append(Stock.breakout_data.any(
-                    Stock.breakout_data.property.mapper.class_.trade_date <= to_date
-                ))
+                conditions.append(
+                    Stock.breakout_data.any(
+                        Stock.breakout_data.property.mapper.class_.trade_date <= to_date
+                    )
+                )
 
             if conditions:
                 query = query.where(and_(*conditions))
@@ -355,7 +366,7 @@ class StockRepository(BaseRepository[Stock]):
                 "Stocks with breakout data retrieved",
                 from_date=from_date,
                 to_date=to_date,
-                count=len(stocks)
+                count=len(stocks),
             )
             return list(stocks)
 
@@ -364,27 +375,31 @@ class StockRepository(BaseRepository[Stock]):
                 "Failed to get stocks with breakout data",
                 from_date=from_date,
                 to_date=to_date,
-                error=str(e)
+                error=str(e),
             )
             raise
 
     # Statistics and aggregation
 
-    async def get_stocks_count_by_group(self, active_only: bool = True) -> dict[str, int]:
+    async def get_stocks_count_by_group(
+        self, active_only: bool = True
+    ) -> dict[str, int]:
         """
         Get count of stocks by NSE group
-        
+
         Args:
             active_only: Whether to count only active stocks
-            
+
         Returns:
             Dictionary with group name as key and count as value
         """
         try:
-            query = select(Stock.stock_group, func.count(Stock.id)).group_by(Stock.stock_group)
+            query = select(Stock.stock_group, func.count(Stock.id)).group_by(
+                Stock.stock_group
+            )
 
             if active_only:
-                query = query.where(Stock.is_active == True)
+                query = query.where(Stock.is_active)
 
             result = await self.session.execute(query)
             group_counts = {}
@@ -399,13 +414,15 @@ class StockRepository(BaseRepository[Stock]):
             self.logger.error("Failed to get stock counts by group", error=str(e))
             raise
 
-    async def get_stocks_count_by_sector(self, active_only: bool = True) -> dict[str, int]:
+    async def get_stocks_count_by_sector(
+        self, active_only: bool = True
+    ) -> dict[str, int]:
         """
         Get count of stocks by sector
-        
+
         Args:
             active_only: Whether to count only active stocks
-            
+
         Returns:
             Dictionary with sector name as key and count as value
         """
@@ -413,7 +430,7 @@ class StockRepository(BaseRepository[Stock]):
             query = select(Stock.sector, func.count(Stock.id)).group_by(Stock.sector)
 
             if active_only:
-                query = query.where(Stock.is_active == True)
+                query = query.where(Stock.is_active)
 
             result = await self.session.execute(query)
             sector_counts = {}
@@ -432,19 +449,16 @@ class StockRepository(BaseRepository[Stock]):
     # V1 compatibility methods
 
     async def get_or_create_from_v1_data(
-        self,
-        script_name: str,
-        group_name: str,
-        company_name: str | None = None
+        self, script_name: str, group_name: str, company_name: str | None = None
     ) -> tuple[Stock, bool]:
         """
         Get existing stock or create from V1 data format
-        
+
         Args:
             script_name: V1 script_name (stock symbol)
             group_name: V1 group_name (NSE index)
             company_name: Optional company name
-            
+
         Returns:
             Tuple of (Stock, created) where created is True if stock was created
         """
@@ -461,7 +475,9 @@ class StockRepository(BaseRepository[Stock]):
             stock = Stock.from_v1_data(script_name, group_name, company_name)
             created_stock = await self.create(stock.to_dict())
 
-            self.logger.info("Stock created from V1 data", symbol=symbol, group=group_name)
+            self.logger.info(
+                "Stock created from V1 data", symbol=symbol, group=group_name
+            )
             return created_stock, True
 
         except Exception as e:
@@ -469,20 +485,19 @@ class StockRepository(BaseRepository[Stock]):
                 "Failed to get or create stock from V1 data",
                 script_name=script_name,
                 group_name=group_name,
-                error=str(e)
+                error=str(e),
             )
             raise
 
     async def bulk_create_from_v1_data(
-        self,
-        v1_stock_data: list[dict[str, str]]
+        self, v1_stock_data: list[dict[str, str]]
     ) -> list[Stock]:
         """
         Bulk create stocks from V1 data format
-        
+
         Args:
             v1_stock_data: List of V1 stock data dictionaries
-            
+
         Returns:
             List of created stocks
         """
@@ -490,9 +505,9 @@ class StockRepository(BaseRepository[Stock]):
             stocks_to_create = []
 
             for v1_data in v1_stock_data:
-                script_name = v1_data.get('script_name', '')
-                group_name = v1_data.get('group_name', '')
-                company_name = v1_data.get('company_name')
+                script_name = v1_data.get("script_name", "")
+                group_name = v1_data.get("group_name", "")
+                company_name = v1_data.get("company_name")
 
                 if not script_name or not group_name:
                     continue
@@ -505,7 +520,9 @@ class StockRepository(BaseRepository[Stock]):
                     continue
 
                 # Create stock data
-                stock_data = Stock.from_v1_data(script_name, group_name, company_name).to_dict()
+                stock_data = Stock.from_v1_data(
+                    script_name, group_name, company_name
+                ).to_dict()
                 stocks_to_create.append(stock_data)
 
             if not stocks_to_create:
@@ -515,7 +532,9 @@ class StockRepository(BaseRepository[Stock]):
             # Bulk create
             created_stocks = await self.bulk_create(stocks_to_create)
 
-            self.logger.info("Bulk created stocks from V1 data", count=len(created_stocks))
+            self.logger.info(
+                "Bulk created stocks from V1 data", count=len(created_stocks)
+            )
             return created_stocks
 
         except Exception as e:
@@ -529,17 +548,17 @@ class StockRepository(BaseRepository[Stock]):
         filters: StockFilterParams,
         pagination: PaginationParams | None = None,
         sort: SortParams | None = None,
-        load_relationships: list[str] | None = None
+        load_relationships: list[str] | None = None,
     ) -> list[Stock]:
         """
         Get stocks using advanced filter parameters
-        
+
         Args:
             filters: Advanced filter parameters
             pagination: Pagination parameters
             sort: Sort parameters
             load_relationships: List of relationships to eager load
-            
+
         Returns:
             List of filtered stocks
         """
@@ -595,7 +614,9 @@ class StockRepository(BaseRepository[Stock]):
             if load_relationships:
                 for relationship in load_relationships:
                     if hasattr(Stock, relationship):
-                        query = query.options(selectinload(getattr(Stock, relationship)))
+                        query = query.options(
+                            selectinload(getattr(Stock, relationship))
+                        )
 
             result = await self.session.execute(query)
             stocks = result.scalars().all()
@@ -608,15 +629,14 @@ class StockRepository(BaseRepository[Stock]):
             raise
 
     async def count_by_advanced_filter(
-        self,
-        filters: dict[str, Any] | None = None
+        self, filters: dict[str, Any] | None = None
     ) -> int:
         """
         Count stocks matching advanced filter parameters
-        
+
         Args:
             filters: Advanced filter parameters
-            
+
         Returns:
             Total count of matching stocks
         """
@@ -628,7 +648,7 @@ class StockRepository(BaseRepository[Stock]):
                 # Apply same filtering logic as get_by_advanced_filter
                 for key, value in filters.items():
                     if value is not None and hasattr(Stock, key):
-                        if key in ['symbol', 'company_name', 'sector']:
+                        if key in ["symbol", "company_name", "sector"]:
                             conditions.append(getattr(Stock, key).ilike(f"%{value}%"))
                         else:
                             conditions.append(getattr(Stock, key) == value)
@@ -647,17 +667,15 @@ class StockRepository(BaseRepository[Stock]):
             raise
 
     async def get_by_symbols(
-        self,
-        symbols: list[str],
-        load_relationships: list[str] | None = None
+        self, symbols: list[str], load_relationships: list[str] | None = None
     ) -> list[Stock]:
         """
         Get stocks by list of symbols
-        
+
         Args:
             symbols: List of stock symbols
             load_relationships: List of relationships to eager load
-            
+
         Returns:
             List of stocks matching the symbols
         """
@@ -672,14 +690,20 @@ class StockRepository(BaseRepository[Stock]):
             if load_relationships:
                 for relationship in load_relationships:
                     if hasattr(Stock, relationship):
-                        query = query.options(selectinload(getattr(Stock, relationship)))
+                        query = query.options(
+                            selectinload(getattr(Stock, relationship))
+                        )
 
             result = await self.session.execute(query)
             stocks = result.scalars().all()
 
-            self.logger.debug("Stocks retrieved by symbols", symbols=symbols, count=len(stocks))
+            self.logger.debug(
+                "Stocks retrieved by symbols", symbols=symbols, count=len(stocks)
+            )
             return list(stocks)
 
         except Exception as e:
-            self.logger.error("Failed to get stocks by symbols", symbols=symbols, error=str(e))
+            self.logger.error(
+                "Failed to get stocks by symbols", symbols=symbols, error=str(e)
+            )
             raise

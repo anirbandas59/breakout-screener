@@ -134,7 +134,7 @@ class BreakoutDataRepository(BaseRepository[BreakoutData]):
                 trade_date=trade_date,
                 error=str(e)
             )
-            raise
+            raise from e
 
     # Date range queries
 
@@ -221,7 +221,7 @@ class BreakoutDataRepository(BaseRepository[BreakoutData]):
                 symbols=symbols,
                 error=str(e)
             )
-            raise
+            raise from e
 
     async def get_latest_by_symbol(
         self,
@@ -269,7 +269,7 @@ class BreakoutDataRepository(BaseRepository[BreakoutData]):
                 limit=limit,
                 error=str(e)
             )
-            raise
+            raise from e
 
     # Business logic queries
 
@@ -344,7 +344,7 @@ class BreakoutDataRepository(BaseRepository[BreakoutData]):
                 to_date=to_date,
                 error=str(e)
             )
-            raise
+            raise from e
 
     async def get_unanalyzed_data(
         self,
@@ -406,7 +406,7 @@ class BreakoutDataRepository(BaseRepository[BreakoutData]):
                 to_date=to_date,
                 error=str(e)
             )
-            raise
+            raise from e
 
     # Advanced filtering
 
@@ -522,7 +522,7 @@ class BreakoutDataRepository(BaseRepository[BreakoutData]):
 
         except Exception as e:
             self.logger.error("Failed to get breakout data by advanced filter", error=str(e))
-            raise
+            raise from e
 
     # Aggregation queries
 
@@ -578,7 +578,7 @@ class BreakoutDataRepository(BaseRepository[BreakoutData]):
                 to_date=to_date,
                 error=str(e)
             )
-            raise
+            raise from e
 
     async def get_daily_breakout_summary(
         self,
@@ -651,7 +651,7 @@ class BreakoutDataRepository(BaseRepository[BreakoutData]):
                 to_date=to_date,
                 error=str(e)
             )
-            raise
+            raise from e
 
     # V1 compatibility methods
 
@@ -703,7 +703,7 @@ class BreakoutDataRepository(BaseRepository[BreakoutData]):
                 "Failed to get or create breakout data from V1 data",
                 error=str(e)
             )
-            raise
+            raise from e
 
     async def bulk_create_from_v1_data(
         self,
@@ -755,4 +755,175 @@ class BreakoutDataRepository(BaseRepository[BreakoutData]):
 
         except Exception as e:
             self.logger.error("Failed to bulk create breakout data from V1 data", error=str(e))
-            raise
+            raise from e
+
+    # Data management methods for tasks
+
+    async def get_by_stock_and_date(self, stock_id: UUID, trade_date: date) -> BreakoutData | None:
+        """
+        Get breakout data by stock ID and trade date
+        
+        Args:
+            stock_id: Stock UUID
+            trade_date: Trading date
+            
+        Returns:
+            BreakoutData if found, None otherwise
+        """
+        try:
+            query = select(BreakoutData).where(
+                and_(
+                    BreakoutData.stock_id == stock_id,
+                    BreakoutData.trade_date == trade_date
+                )
+            )
+
+            result = await self.session.execute(query)
+            breakout_data = result.scalars().first()
+
+            return breakout_data
+
+        except Exception as e:
+            self.logger.error(
+                "Failed to get breakout data by stock and date",
+                stock_id=stock_id,
+                trade_date=trade_date,
+                error=str(e)
+            )
+            raise from e
+
+    async def clear_analysis_fields_by_date(self, target_date: date) -> int:
+        """
+        Clear calculated analysis fields for a specific date (V1 behavior)
+        
+        Args:
+            target_date: Date to clear analysis fields for
+            
+        Returns:
+            Number of records affected
+        """
+        try:
+            from sqlalchemy import update
+
+            # Clear calculated fields while keeping symbol and group data
+            stmt = update(BreakoutData).where(
+                BreakoutData.trade_date == target_date
+            ).values(
+                cpr=None,
+                resistance_1=None,
+                resistance_2=None,
+                support_1=None,
+                support_2=None,
+                gap_percentage=None,
+                breakout_indicator=None,
+                candle_indicator=None,
+                volume_indicator=None,
+                previous_high=None,
+                analysis_summary=None,
+                is_analyzed=False
+            )
+
+            result = await self.session.execute(stmt)
+            affected_count = result.rowcount
+
+            self.logger.info(
+                "Cleared analysis fields for date",
+                date=target_date,
+                affected_count=affected_count
+            )
+
+            return affected_count
+
+        except Exception as e:
+            self.logger.error(
+                "Failed to clear analysis fields by date",
+                target_date=target_date,
+                error=str(e)
+            )
+            raise from e
+
+    async def delete_by_date(self, target_date: date) -> int:
+        """
+        Delete all records for a specific date
+        
+        Args:
+            target_date: Date to delete records for
+            
+        Returns:
+            Number of records deleted
+        """
+        try:
+            from sqlalchemy import delete
+
+            stmt = delete(BreakoutData).where(
+                BreakoutData.trade_date == target_date
+            )
+
+            result = await self.session.execute(stmt)
+            deleted_count = result.rowcount
+
+            self.logger.info(
+                "Deleted breakout data for date",
+                date=target_date,
+                deleted_count=deleted_count
+            )
+
+            return deleted_count
+
+        except Exception as e:
+            self.logger.error(
+                "Failed to delete breakout data by date",
+                target_date=target_date,
+                error=str(e)
+            )
+            raise from e
+
+    async def delete_by_date_range(
+        self,
+        start_date: date | None = None,
+        end_date: date | None = None
+    ) -> int:
+        """
+        Delete records within a date range
+        
+        Args:
+            start_date: Start date (inclusive)
+            end_date: End date (inclusive)
+            
+        Returns:
+            Number of records deleted
+        """
+        try:
+            from sqlalchemy import delete
+
+            conditions = []
+            if start_date:
+                conditions.append(BreakoutData.trade_date >= start_date)
+            if end_date:
+                conditions.append(BreakoutData.trade_date <= end_date)
+
+            if not conditions:
+                raise ValueError("At least one date parameter must be provided")
+
+            stmt = delete(BreakoutData).where(and_(*conditions))
+
+            result = await self.session.execute(stmt)
+            deleted_count = result.rowcount
+
+            self.logger.info(
+                "Deleted breakout data for date range",
+                start_date=start_date,
+                end_date=end_date,
+                deleted_count=deleted_count
+            )
+
+            return deleted_count
+
+        except Exception as e:
+            self.logger.error(
+                "Failed to delete breakout data by date range",
+                start_date=start_date,
+                end_date=end_date,
+                error=str(e)
+            )
+            raise from e

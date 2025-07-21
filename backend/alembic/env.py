@@ -1,8 +1,7 @@
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
@@ -63,12 +62,12 @@ def run_migrations_online() -> None:
     """
     # Get configuration and override database URL if needed
     configuration = config.get_section(config.config_ini_section, {})
-    
+
     # Use sync driver for migrations (asyncpg won't work with alembic)
     db_url = configuration.get('sqlalchemy.url', '')
     if 'asyncpg' in db_url:
         configuration['sqlalchemy.url'] = db_url.replace('+asyncpg', '+psycopg2')
-    
+
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",
@@ -77,7 +76,7 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, 
+            connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
             compare_server_default=True,

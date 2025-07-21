@@ -62,8 +62,12 @@ out/
 .nuxt/
 .output/
 .vercel/
+.ruff_cache/
 
 # Backend specific
 alembic/versions/*.py
 !alembic/versions/__init__.py
-Claude_Instructions*
+
+# Special files
+# Claude_*
+

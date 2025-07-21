@@ -42,22 +42,21 @@ class DatabaseManager:
 
             # Add pool settings only for production (QueuePool)
             if config.is_production():
-                engine_kwargs.update({
-                    "pool_size": config.CONNECTION_POOL_SIZE,
-                    "max_overflow": config.CONNECTION_POOL_MAX_OVERFLOW,
-                    "pool_timeout": config.CONNECTION_POOL_TIMEOUT,
-                    "pool_recycle": config.CONNECTION_POOL_RECYCLE,
-                    "pool_pre_ping": True,
-                    "poolclass": QueuePool,
-                })
+                engine_kwargs.update(
+                    {
+                        "pool_size": config.CONNECTION_POOL_SIZE,
+                        "max_overflow": config.CONNECTION_POOL_MAX_OVERFLOW,
+                        "pool_timeout": config.CONNECTION_POOL_TIMEOUT,
+                        "pool_recycle": config.CONNECTION_POOL_RECYCLE,
+                        "pool_pre_ping": True,
+                        "poolclass": QueuePool,
+                    }
+                )
             else:
                 # Development uses NullPool (no connection pooling)
                 engine_kwargs["poolclass"] = NullPool
 
-            self._engine = create_async_engine(
-                config.DATABASE_URL,
-                **engine_kwargs
-            )
+            self._engine = create_async_engine(config.DATABASE_URL, **engine_kwargs)
 
             # Create session factory
             self._session_factory = async_sessionmaker(
@@ -71,8 +70,12 @@ class DatabaseManager:
             # Test connection
             await self.health_check()
 
-            logger.info("Database connection initialized successfully",
-                       url=config.DATABASE_URL.split('@')[1] if '@' in config.DATABASE_URL else config.DATABASE_URL)
+            logger.info(
+                "Database connection initialized successfully",
+                url=config.DATABASE_URL.split("@")[1]
+                if "@" in config.DATABASE_URL
+                else config.DATABASE_URL,
+            )
 
         except Exception as e:
             logger.error("Failed to initialize database connection", error=str(e))
@@ -156,8 +159,10 @@ class DatabaseSession:
         if self.session:
             if exc_type:
                 await self.session.rollback()
-                logger.error("Session rolled back due to exception",
-                           exception_type=exc_type.__name__ if exc_type else None)
+                logger.error(
+                    "Session rolled back due to exception",
+                    exception_type=exc_type.__name__ if exc_type else None,
+                )
             else:
                 await self.session.commit()
 
@@ -178,8 +183,10 @@ class TransactionSession:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if exc_type:
             await self.transaction.rollback()
-            logger.error("Transaction rolled back",
-                        exception_type=exc_type.__name__ if exc_type else None)
+            logger.error(
+                "Transaction rolled back",
+                exception_type=exc_type.__name__ if exc_type else None,
+            )
         else:
             await self.transaction.commit()
             logger.debug("Transaction committed")
@@ -197,8 +204,8 @@ async def check_table_exists(table_name: str) -> bool:
     """Check if table exists in database"""
     query = """
     SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
+        SELECT FROM information_schema.tables
+        WHERE table_schema = 'public'
         AND table_name = :table_name
     );
     """

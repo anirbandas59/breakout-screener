@@ -2,12 +2,12 @@
 Tests for Stock Pydantic schemas
 """
 
-from datetime import date
 from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
 
+from breakout_screener.models.enums import StockGroupEnum
 from breakout_screener.schemas.stock import (
     StockCreate,
     StockFilter,
@@ -15,7 +15,6 @@ from breakout_screener.schemas.stock import (
     StockSearch,
     StockUpdate,
 )
-from breakout_screener.models.enums import StockGroupEnum
 
 
 class TestStockSchemas:

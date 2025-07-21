@@ -34,7 +34,7 @@ class MasterBreakoutDataFilterParams(FilterParams):
         data_source: str | None = None,
         is_active: bool | None = None,
         has_breakout_data: bool | None = None,
-        **kwargs
+        **kwargs,
     ):
         self.symbol = symbol
         self.snapshot_date_from = snapshot_date_from
@@ -58,39 +58,51 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
 
     # Unique field implementations
 
-    async def get_by_unique_field(self, field_name: str, field_value: Any) -> MasterBreakoutData | None:
+    async def get_by_unique_field(
+        self, field_name: str, field_value: Any
+    ) -> MasterBreakoutData | None:
         """Get master breakout data by unique field (symbol + snapshot_date combination)"""
         if field_name == "symbol_snapshot":
             # Expecting field_value to be a tuple (symbol, snapshot_date)
             if isinstance(field_value, tuple) and len(field_value) == 2:
-                return await self.get_by_symbol_and_snapshot_date(field_value[0], field_value[1])
+                return await self.get_by_symbol_and_snapshot_date(
+                    field_value[0], field_value[1]
+                )
             else:
-                raise ValueError("Field value for 'symbol_snapshot' must be a tuple (symbol, snapshot_date)")
+                raise ValueError(
+                    "Field value for 'symbol_snapshot' must be a tuple (symbol, snapshot_date)"
+                )
         else:
-            raise ValueError(f"Field '{field_name}' is not a unique field for MasterBreakoutData")
+            raise ValueError(
+                f"Field '{field_name}' is not a unique field for MasterBreakoutData"
+            )
 
     async def get_by_symbol_and_snapshot_date(
         self,
         symbol: str,
         snapshot_date: date,
-        load_relationships: list[str] | None = None
+        load_relationships: list[str] | None = None,
     ) -> MasterBreakoutData | None:
         """
         Get master breakout data by symbol and snapshot date
-        
+
         Args:
             symbol: Stock symbol
             snapshot_date: Snapshot date
             load_relationships: List of relationships to eager load
-            
+
         Returns:
             MasterBreakoutData if found, None otherwise
         """
         try:
-            query = select(MasterBreakoutData).join(MasterBreakoutData.stock).where(
-                and_(
-                    MasterBreakoutData.stock.has(symbol=symbol.upper()),
-                    MasterBreakoutData.snapshot_date == snapshot_date
+            query = (
+                select(MasterBreakoutData)
+                .join(MasterBreakoutData.stock)
+                .where(
+                    and_(
+                        MasterBreakoutData.stock.has(symbol=symbol.upper()),
+                        MasterBreakoutData.snapshot_date == snapshot_date,
+                    )
                 )
             )
 
@@ -98,15 +110,25 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
             if load_relationships:
                 for relationship in load_relationships:
                     if hasattr(MasterBreakoutData, relationship):
-                        query = query.options(selectinload(getattr(MasterBreakoutData, relationship)))
+                        query = query.options(
+                            selectinload(getattr(MasterBreakoutData, relationship))
+                        )
 
             result = await self.session.execute(query)
             master_data = result.scalar_one_or_none()
 
             if master_data:
-                self.logger.debug("MasterBreakoutData retrieved", symbol=symbol, snapshot_date=snapshot_date)
+                self.logger.debug(
+                    "MasterBreakoutData retrieved",
+                    symbol=symbol,
+                    snapshot_date=snapshot_date,
+                )
             else:
-                self.logger.debug("MasterBreakoutData not found", symbol=symbol, snapshot_date=snapshot_date)
+                self.logger.debug(
+                    "MasterBreakoutData not found",
+                    symbol=symbol,
+                    snapshot_date=snapshot_date,
+                )
 
             return master_data
 
@@ -115,7 +137,7 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
                 "Failed to get master breakout data by symbol and snapshot date",
                 symbol=symbol,
                 snapshot_date=snapshot_date,
-                error=str(e)
+                error=str(e),
             )
             raise
 
@@ -128,11 +150,11 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
         symbols: list[str] | None = None,
         pagination: PaginationParams | None = None,
         sort: SortParams | None = None,
-        load_relationships: list[str] | None = None
+        load_relationships: list[str] | None = None,
     ) -> list[MasterBreakoutData]:
         """
         Get master breakout data within date range
-        
+
         Args:
             from_date: Start date (inclusive)
             to_date: End date (inclusive)
@@ -140,7 +162,7 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
             pagination: Pagination parameters
             sort: Sort parameters
             load_relationships: List of relationships to eager load
-            
+
         Returns:
             List of master breakout data within date range
         """
@@ -148,7 +170,7 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
             query = select(MasterBreakoutData).where(
                 and_(
                     MasterBreakoutData.snapshot_date >= from_date,
-                    MasterBreakoutData.snapshot_date <= to_date
+                    MasterBreakoutData.snapshot_date <= to_date,
                 )
             )
 
@@ -179,7 +201,9 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
             if load_relationships:
                 for relationship in load_relationships:
                     if hasattr(MasterBreakoutData, relationship):
-                        query = query.options(selectinload(getattr(MasterBreakoutData, relationship)))
+                        query = query.options(
+                            selectinload(getattr(MasterBreakoutData, relationship))
+                        )
 
             result = await self.session.execute(query)
             master_data_list = result.scalars().all()
@@ -189,7 +213,7 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
                 from_date=from_date,
                 to_date=to_date,
                 symbols=symbols,
-                count=len(master_data_list)
+                count=len(master_data_list),
             )
             return list(master_data_list)
 
@@ -199,7 +223,7 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
                 from_date=from_date,
                 to_date=to_date,
                 symbols=symbols,
-                error=str(e)
+                error=str(e),
             )
             raise
 
@@ -207,16 +231,16 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
         self,
         symbol: str | None = None,
         limit: int = 100,
-        load_relationships: list[str] | None = None
+        load_relationships: list[str] | None = None,
     ) -> list[MasterBreakoutData]:
         """
         Get latest snapshot data
-        
+
         Args:
             symbol: Optional symbol to filter by
             limit: Number of latest records to return
             load_relationships: List of relationships to eager load
-            
+
         Returns:
             List of latest master breakout data
         """
@@ -234,7 +258,9 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
             if load_relationships:
                 for relationship in load_relationships:
                     if hasattr(MasterBreakoutData, relationship):
-                        query = query.options(selectinload(getattr(MasterBreakoutData, relationship)))
+                        query = query.options(
+                            selectinload(getattr(MasterBreakoutData, relationship))
+                        )
 
             result = await self.session.execute(query)
             master_data_list = result.scalars().all()
@@ -243,7 +269,7 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
                 "Latest master breakout data retrieved",
                 symbol=symbol,
                 limit=limit,
-                count=len(master_data_list)
+                count=len(master_data_list),
             )
             return list(master_data_list)
 
@@ -252,7 +278,7 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
                 "Failed to get latest master breakout data",
                 symbol=symbol,
                 limit=limit,
-                error=str(e)
+                error=str(e),
             )
             raise
 
@@ -262,21 +288,21 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
         self,
         snapshot_date: date | None = None,
         pagination: PaginationParams | None = None,
-        sort: SortParams | None = None
+        sort: SortParams | None = None,
     ) -> list[MasterBreakoutData]:
         """
         Get active snapshots for a specific date or latest
-        
+
         Args:
             snapshot_date: Optional snapshot date (defaults to latest)
             pagination: Pagination parameters
             sort: Sort parameters
-            
+
         Returns:
             List of active master breakout data
         """
         try:
-            query = select(MasterBreakoutData).where(MasterBreakoutData.is_active == True)
+            query = select(MasterBreakoutData).where(MasterBreakoutData.is_active)
 
             if snapshot_date:
                 query = query.where(MasterBreakoutData.snapshot_date == snapshot_date)
@@ -311,7 +337,7 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
             self.logger.debug(
                 "Active master breakout data retrieved",
                 snapshot_date=snapshot_date,
-                count=len(master_data_list)
+                count=len(master_data_list),
             )
             return list(master_data_list)
 
@@ -319,7 +345,7 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
             self.logger.error(
                 "Failed to get active master breakout data",
                 snapshot_date=snapshot_date,
-                error=str(e)
+                error=str(e),
             )
             raise
 
@@ -329,18 +355,18 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
         from_date: date | None = None,
         to_date: date | None = None,
         pagination: PaginationParams | None = None,
-        sort: SortParams | None = None
+        sort: SortParams | None = None,
     ) -> list[MasterBreakoutData]:
         """
         Get master breakout data by data source
-        
+
         Args:
             data_source: Data source identifier
             from_date: Optional start date
             to_date: Optional end date
             pagination: Pagination parameters
             sort: Sort parameters
-            
+
         Returns:
             List of master breakout data from specified source
         """
@@ -382,7 +408,7 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
                 data_source=data_source,
                 from_date=from_date,
                 to_date=to_date,
-                count=len(master_data_list)
+                count=len(master_data_list),
             )
             return list(master_data_list)
 
@@ -392,7 +418,7 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
                 data_source=data_source,
                 from_date=from_date,
                 to_date=to_date,
-                error=str(e)
+                error=str(e),
             )
             raise
 
@@ -403,17 +429,17 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
         filters: MasterBreakoutDataFilterParams,
         pagination: PaginationParams | None = None,
         sort: SortParams | None = None,
-        load_relationships: list[str] | None = None
+        load_relationships: list[str] | None = None,
     ) -> list[MasterBreakoutData]:
         """
         Get master breakout data using advanced filter parameters
-        
+
         Args:
             filters: Advanced filter parameters
             pagination: Pagination parameters
             sort: Sort parameters
             load_relationships: List of relationships to eager load
-            
+
         Returns:
             List of filtered master breakout data
         """
@@ -424,13 +450,19 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
             # Symbol filter (requires join with stock)
             if filters.symbol:
                 query = query.join(MasterBreakoutData.stock)
-                conditions.append(MasterBreakoutData.stock.has(symbol=filters.symbol.upper()))
+                conditions.append(
+                    MasterBreakoutData.stock.has(symbol=filters.symbol.upper())
+                )
 
             # Date range filters
             if filters.snapshot_date_from:
-                conditions.append(MasterBreakoutData.snapshot_date >= filters.snapshot_date_from)
+                conditions.append(
+                    MasterBreakoutData.snapshot_date >= filters.snapshot_date_from
+                )
             if filters.snapshot_date_to:
-                conditions.append(MasterBreakoutData.snapshot_date <= filters.snapshot_date_to)
+                conditions.append(
+                    MasterBreakoutData.snapshot_date <= filters.snapshot_date_to
+                )
 
             # Data source filter
             if filters.data_source:
@@ -475,71 +507,76 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
             if load_relationships:
                 for relationship in load_relationships:
                     if hasattr(MasterBreakoutData, relationship):
-                        query = query.options(selectinload(getattr(MasterBreakoutData, relationship)))
+                        query = query.options(
+                            selectinload(getattr(MasterBreakoutData, relationship))
+                        )
 
             result = await self.session.execute(query)
             master_data_list = result.scalars().all()
 
             self.logger.debug(
                 "MasterBreakoutData retrieved by advanced filter",
-                count=len(master_data_list)
+                count=len(master_data_list),
             )
             return list(master_data_list)
 
         except Exception as e:
-            self.logger.error("Failed to get master breakout data by advanced filter", error=str(e))
+            self.logger.error(
+                "Failed to get master breakout data by advanced filter", error=str(e)
+            )
             raise
 
     # Aggregation queries
 
-    async def get_snapshot_summary(
-        self,
-        snapshot_date: date
-    ) -> dict[str, Any]:
+    async def get_snapshot_summary(self, snapshot_date: date) -> dict[str, Any]:
         """
         Get summary statistics for a snapshot date
-        
+
         Args:
             snapshot_date: Snapshot date
-            
+
         Returns:
             Dictionary with summary statistics
         """
         try:
             query = select(
-                func.count(MasterBreakoutData.id).label('total_records'),
-                func.count(MasterBreakoutData.id).filter(
-                    MasterBreakoutData.is_active == True
-                ).label('active_records'),
-                func.count(MasterBreakoutData.id).filter(
-                    MasterBreakoutData.breakout_data_id.isnot(None)
-                ).label('with_breakout_data'),
-                func.count(func.distinct(MasterBreakoutData.data_source)).label('unique_sources')
+                func.count(MasterBreakoutData.id).label("total_records"),
+                func.count(MasterBreakoutData.id)
+                .filter(MasterBreakoutData.is_active)
+                .label("active_records"),
+                func.count(MasterBreakoutData.id)
+                .filter(MasterBreakoutData.breakout_data_id.isnot(None))
+                .label("with_breakout_data"),
+                func.count(func.distinct(MasterBreakoutData.data_source)).label(
+                    "unique_sources"
+                ),
             ).where(MasterBreakoutData.snapshot_date == snapshot_date)
 
             result = await self.session.execute(query)
             row = result.first()
 
             summary = {
-                'snapshot_date': snapshot_date,
-                'total_records': row.total_records if row else 0,
-                'active_records': row.active_records if row else 0,
-                'with_breakout_data': row.with_breakout_data if row else 0,
-                'unique_sources': row.unique_sources if row else 0,
-                'active_percentage': (
+                "snapshot_date": snapshot_date,
+                "total_records": row.total_records if row else 0,
+                "active_records": row.active_records if row else 0,
+                "with_breakout_data": row.with_breakout_data if row else 0,
+                "unique_sources": row.unique_sources if row else 0,
+                "active_percentage": (
                     (row.active_records / row.total_records * 100)
-                    if row and row.total_records > 0 else 0.0
+                    if row and row.total_records > 0
+                    else 0.0
                 ),
-                'breakout_data_percentage': (
+                "breakout_data_percentage": (
                     (row.with_breakout_data / row.total_records * 100)
-                    if row and row.total_records > 0 else 0.0
-                )
+                    if row and row.total_records > 0
+                    else 0.0
+                ),
             }
 
             self.logger.debug(
                 "Snapshot summary retrieved",
                 snapshot_date=snapshot_date,
-                summary=summary
+                summary=summary,
             )
             return summary
 
@@ -547,34 +584,32 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
             self.logger.error(
                 "Failed to get snapshot summary",
                 snapshot_date=snapshot_date,
-                error=str(e)
+                error=str(e),
             )
             raise
 
     async def get_data_source_summary(
-        self,
-        from_date: date | None = None,
-        to_date: date | None = None
+        self, from_date: date | None = None, to_date: date | None = None
     ) -> list[dict[str, Any]]:
         """
         Get summary by data source
-        
+
         Args:
             from_date: Optional start date
             to_date: Optional end date
-            
+
         Returns:
             List of data source summaries
         """
         try:
             query = select(
                 MasterBreakoutData.data_source,
-                func.count(MasterBreakoutData.id).label('total_records'),
-                func.count(MasterBreakoutData.id).filter(
-                    MasterBreakoutData.is_active == True
-                ).label('active_records'),
-                func.min(MasterBreakoutData.snapshot_date).label('earliest_date'),
-                func.max(MasterBreakoutData.snapshot_date).label('latest_date')
+                func.count(MasterBreakoutData.id).label("total_records"),
+                func.count(MasterBreakoutData.id)
+                .filter(MasterBreakoutData.is_active)
+                .label("active_records"),
+                func.min(MasterBreakoutData.snapshot_date).label("earliest_date"),
+                func.max(MasterBreakoutData.snapshot_date).label("latest_date"),
             ).group_by(MasterBreakoutData.data_source)
 
             # Add date filters if provided
@@ -594,15 +629,16 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
 
             for row in result:
                 summary = {
-                    'data_source': row.data_source,
-                    'total_records': row.total_records,
-                    'active_records': row.active_records,
-                    'earliest_date': row.earliest_date,
-                    'latest_date': row.latest_date,
-                    'active_percentage': (
+                    "data_source": row.data_source,
+                    "total_records": row.total_records,
+                    "active_records": row.active_records,
+                    "earliest_date": row.earliest_date,
+                    "latest_date": row.latest_date,
+                    "active_percentage": (
                         (row.active_records / row.total_records * 100)
-                        if row.total_records > 0 else 0.0
-                    )
+                        if row.total_records > 0
+                        else 0.0
+                    ),
                 }
                 summaries.append(summary)
 
@@ -610,7 +646,7 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
                 "Data source summary retrieved",
                 from_date=from_date,
                 to_date=to_date,
-                sources_count=len(summaries)
+                sources_count=len(summaries),
             )
             return summaries
 
@@ -619,61 +655,61 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
                 "Failed to get data source summary",
                 from_date=from_date,
                 to_date=to_date,
-                error=str(e)
+                error=str(e),
             )
             raise
 
     # V1 compatibility methods
 
     async def get_or_create_from_v1_data(
-        self,
-        v1_data: dict[str, Any],
-        stock_id: UUID,
-        snapshot_date: date | None = None
+        self, v1_data: dict[str, Any], stock_id: UUID, snapshot_date: date | None = None
     ) -> tuple[MasterBreakoutData, bool]:
         """
         Get existing master data or create from V1 data format
-        
+
         Args:
             v1_data: V1 master data dictionary
             stock_id: UUID of the related stock
             snapshot_date: Optional snapshot date (defaults to current date)
-            
+
         Returns:
             Tuple of (MasterBreakoutData, created) where created is True if data was created
         """
         try:
-            symbol = v1_data.get('script_name', '').strip().upper()
+            symbol = v1_data.get("script_name", "").strip().upper()
             snapshot_date = snapshot_date or date.today()
 
             if not symbol:
                 raise ValueError("V1 data must contain script_name")
 
             # Try to get existing data
-            existing_data = await self.get_by_symbol_and_snapshot_date(symbol, snapshot_date)
+            existing_data = await self.get_by_symbol_and_snapshot_date(
+                symbol, snapshot_date
+            )
             if existing_data:
                 self.logger.debug(
                     "Existing master data found for V1 data",
                     symbol=symbol,
-                    snapshot_date=snapshot_date
+                    snapshot_date=snapshot_date,
                 )
                 return existing_data, False
 
             # Create new master data from V1 data
-            master_data = MasterBreakoutData.from_v1_data(v1_data, stock_id, snapshot_date)
+            master_data = MasterBreakoutData.from_v1_data(
+                v1_data, stock_id, snapshot_date
+            )
             created_data = await self.create(master_data.to_dict())
 
             self.logger.info(
                 "MasterBreakoutData created from V1 data",
                 symbol=symbol,
-                snapshot_date=snapshot_date
+                snapshot_date=snapshot_date,
             )
             return created_data, True
 
         except Exception as e:
             self.logger.error(
-                "Failed to get or create master data from V1 data",
-                error=str(e)
+                "Failed to get or create master data from V1 data", error=str(e)
             )
             raise
 
@@ -681,16 +717,16 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
         self,
         v1_data_list: list[dict[str, Any]],
         stock_mapping: dict[str, UUID],
-        snapshot_date: date | None = None
+        snapshot_date: date | None = None,
     ) -> list[MasterBreakoutData]:
         """
         Bulk create master data from V1 data format
-        
+
         Args:
             v1_data_list: List of V1 master data dictionaries
             stock_mapping: Mapping of symbol to stock UUID
             snapshot_date: Optional snapshot date (defaults to current date)
-            
+
         Returns:
             List of created master data
         """
@@ -699,19 +735,23 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
             data_to_create = []
 
             for v1_data in v1_data_list:
-                symbol = v1_data.get('script_name', '').strip().upper()
+                symbol = v1_data.get("script_name", "").strip().upper()
 
                 if not symbol or symbol not in stock_mapping:
                     continue
 
                 # Check if data already exists
-                existing = await self.get_by_symbol_and_snapshot_date(symbol, snapshot_date)
+                existing = await self.get_by_symbol_and_snapshot_date(
+                    symbol, snapshot_date
+                )
                 if existing:
                     continue
 
                 # Create master data
                 stock_id = stock_mapping[symbol]
-                master_data = MasterBreakoutData.from_v1_data(v1_data, stock_id, snapshot_date)
+                master_data = MasterBreakoutData.from_v1_data(
+                    v1_data, stock_id, snapshot_date
+                )
                 data_to_create.append(master_data.to_dict())
 
             if not data_to_create:
@@ -724,10 +764,12 @@ class MasterBreakoutDataRepository(BaseRepository[MasterBreakoutData]):
             self.logger.info(
                 "Bulk created master data from V1 data",
                 count=len(created_data),
-                snapshot_date=snapshot_date
+                snapshot_date=snapshot_date,
             )
             return created_data
 
         except Exception as e:
-            self.logger.error("Failed to bulk create master data from V1 data", error=str(e))
+            self.logger.error(
+                "Failed to bulk create master data from V1 data", error=str(e)
+            )
             raise

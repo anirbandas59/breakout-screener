@@ -2,10 +2,9 @@
 Integration tests for Stock API endpoints
 """
 
+
 import pytest
-from uuid import UUID
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
 
 from breakout_screener.main import app
 
@@ -46,10 +45,10 @@ class TestStocksAPI:
             "sector": "Technology",
             "is_active": True
         }
-        
+
         response = client.post("/api/v1/stocks/", json=stock_data)
         assert response.status_code == 201
-        
+
         data = response.json()
         assert data["symbol"] == "TESTSTOCK"
         assert data["company_name"] == "Test Company Ltd"
@@ -67,11 +66,11 @@ class TestStocksAPI:
             "stock_group": "A",
             "is_active": True
         }
-        
+
         # Create first stock
         response1 = client.post("/api/v1/stocks/", json=stock_data)
         assert response1.status_code == 201
-        
+
         # Try to create duplicate
         stock_data["company_name"] = "Second Company"
         response2 = client.post("/api/v1/stocks/", json=stock_data)
@@ -87,16 +86,16 @@ class TestStocksAPI:
             "stock_group": "A",
             "is_active": True
         }
-        
+
         create_response = client.post("/api/v1/stocks/", json=stock_data)
         assert create_response.status_code == 201
         created_stock = create_response.json()
         stock_id = created_stock["id"]
-        
+
         # Get the stock by ID
         response = client.get(f"/api/v1/stocks/{stock_id}")
         assert response.status_code == 200
-        
+
         data = response.json()
         assert data["id"] == stock_id
         assert data["symbol"] == "GETTEST"
@@ -118,14 +117,14 @@ class TestStocksAPI:
             "stock_group": "B",
             "is_active": True
         }
-        
+
         create_response = client.post("/api/v1/stocks/", json=stock_data)
         assert create_response.status_code == 201
-        
+
         # Get by symbol
         response = client.get("/api/v1/stocks/symbol/SYMBOLTEST")
         assert response.status_code == 200
-        
+
         data = response.json()
         assert data["symbol"] == "SYMBOLTEST"
         assert data["company_name"] == "Symbol Test Company"
@@ -145,22 +144,22 @@ class TestStocksAPI:
             "stock_group": "A",
             "is_active": True
         }
-        
+
         create_response = client.post("/api/v1/stocks/", json=stock_data)
         assert create_response.status_code == 201
         created_stock = create_response.json()
         stock_id = created_stock["id"]
-        
+
         # Update the stock
         update_data = {
             "company_name": "Updated Company Name",
             "sector": "Updated Sector",
             "is_active": False
         }
-        
+
         response = client.put(f"/api/v1/stocks/{stock_id}", json=update_data)
         assert response.status_code == 200
-        
+
         data = response.json()
         assert data["company_name"] == "Updated Company Name"
         assert data["sector"] == "Updated Sector"
@@ -176,17 +175,17 @@ class TestStocksAPI:
             "stock_group": "A",
             "is_active": True
         }
-        
+
         create_response = client.post("/api/v1/stocks/", json=stock_data)
         assert create_response.status_code == 201
         created_stock = create_response.json()
         stock_id = created_stock["id"]
-        
+
         # Delete the stock
         response = client.delete(f"/api/v1/stocks/{stock_id}")
         assert response.status_code == 200
         assert "deleted successfully" in response.json()["message"]
-        
+
         # Verify it's deleted
         get_response = client.get(f"/api/v1/stocks/{stock_id}")
         assert get_response.status_code == 404
@@ -214,24 +213,24 @@ class TestStocksAPI:
                 "is_active": False
             }
         ]
-        
+
         # Create stocks
         for stock_data in stocks_data:
             response = client.post("/api/v1/stocks/", json=stock_data)
             assert response.status_code == 201
-        
+
         # Search by symbol pattern
         response = client.get("/api/v1/stocks/search/", params={"query": "SEARCH"})
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 2
-        
+
         # Search by company name
         response = client.get("/api/v1/stocks/search/", params={"query": "Test Company"})
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 2
-        
+
         # Search inactive stocks
         response = client.get("/api/v1/stocks/search/", params={
             "query": "OTHER",
@@ -267,30 +266,30 @@ class TestStocksAPI:
                 "is_active": False
             }
         ]
-        
+
         # Create stocks
         for stock_data in stocks_data:
             response = client.post("/api/v1/stocks/", json=stock_data)
             assert response.status_code == 201
-        
+
         # Filter by stock group
         response = client.get("/api/v1/stocks/", params={"stock_group": "A"})
         assert response.status_code == 200
         data = response.json()
         assert data["total"] >= 2  # At least our test stocks
-        
+
         # Filter by sector
         response = client.get("/api/v1/stocks/", params={"sector": "Technology"})
         assert response.status_code == 200
         data = response.json()
         assert data["total"] >= 2
-        
+
         # Filter by active status
         response = client.get("/api/v1/stocks/", params={"is_active": True})
         assert response.status_code == 200
         data = response.json()
         assert data["total"] >= 2
-        
+
         # Test pagination
         response = client.get("/api/v1/stocks/", params={"page": 1, "limit": 2})
         assert response.status_code == 200
@@ -302,7 +301,7 @@ class TestStocksAPI:
         """Test stock summary statistics"""
         response = client.get("/api/v1/stocks/summary/")
         assert response.status_code == 200
-        
+
         data = response.json()
         assert "total_stocks" in data
         assert "active_stocks" in data
@@ -335,13 +334,13 @@ class TestStocksAPI:
                 }
             ]
         }
-        
+
         response = client.post("/api/v1/stocks/bulk/", json=bulk_data)
         assert response.status_code == 200
-        
+
         data = response.json()
         assert len(data) == 3
-        
+
         # Verify all stocks were created
         for i, stock in enumerate(data):
             assert stock["symbol"] == f"BULK{i+1}"
@@ -352,7 +351,7 @@ class TestStocksAPI:
         # Missing required fields
         response = client.post("/api/v1/stocks/", json={})
         assert response.status_code == 422
-        
+
         # Invalid data types
         invalid_data = {
             "symbol": "",  # Empty symbol
@@ -360,10 +359,10 @@ class TestStocksAPI:
             "stock_group": "INVALID_GROUP",
             "is_active": "not_boolean"
         }
-        
+
         response = client.post("/api/v1/stocks/", json=invalid_data)
         assert response.status_code == 422
-        
+
         # Invalid UUID for get/update/delete operations
         response = client.get("/api/v1/stocks/invalid-uuid")
         assert response.status_code == 422

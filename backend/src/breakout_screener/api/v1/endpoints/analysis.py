@@ -34,14 +34,14 @@ logger = get_logger(__name__)
 
 
 async def get_analysis_session_repository(
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> AnalysisSessionRepository:
     """Dependency to get AnalysisSession repository"""
     return AnalysisSessionRepository(db)
 
 
 async def get_performance_metrics_repository(
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ) -> PerformanceMetricsRepository:
     """Dependency to get PerformanceMetrics repository"""
     return PerformanceMetricsRepository(db)
@@ -49,7 +49,10 @@ async def get_performance_metrics_repository(
 
 # Analysis Session Endpoints
 
-@router.get("/sessions/", response_model=AnalysisSessionList, summary="List analysis sessions")
+
+@router.get(
+    "/sessions/", response_model=AnalysisSessionList, summary="List analysis sessions"
+)
 async def list_analysis_sessions(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(50, ge=1, le=1000, description="Items per page"),
@@ -61,7 +64,7 @@ async def list_analysis_sessions(
 ):
     """
     Retrieve a paginated list of analysis sessions.
-    
+
     - **page**: Page number (1-based)
     - **limit**: Number of items per page (max 1000)
     - **sort_by**: Field to sort by
@@ -91,8 +94,12 @@ async def list_analysis_sessions(
             response_data = AnalysisSessionResponse.model_validate(session)
             response_data.is_running = session.status.value == "IN_PROGRESS"
             response_data.is_completed = session.status.value == "COMPLETED"
-            response_data.has_errors = session.error_count > 0 if session.error_count else False
-            response_data.metrics_count = len(session.performance_metrics) if session.performance_metrics else 0
+            response_data.has_errors = (
+                session.error_count > 0 if session.error_count else False
+            )
+            response_data.metrics_count = (
+                len(session.performance_metrics) if session.performance_metrics else 0
+            )
 
             # Calculate success rate
             if session.total_items and session.total_items > 0:
@@ -111,99 +118,121 @@ async def list_analysis_sessions(
         logger.error("Failed to list analysis sessions", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve analysis sessions: {str(e)}"
-        )
+            detail=f"Failed to retrieve analysis sessions: {str(e)}",
+        ) from e
 
 
-@router.get("/sessions/{session_id}", response_model=AnalysisSessionResponse,
-           summary="Get analysis session by ID")
+@router.get(
+    "/sessions/{session_id}",
+    response_model=AnalysisSessionResponse,
+    summary="Get analysis session by ID",
+)
 async def get_analysis_session(
     session_id: UUID,
     repository: AnalysisSessionRepository = Depends(get_analysis_session_repository),
 ):
     """
     Retrieve a specific analysis session by its ID.
-    
+
     - **session_id**: UUID of the analysis session to retrieve
     """
     try:
         session = await repository.get_by_id(
-            session_id,
-            load_relationships=["performance_metrics"]
+            session_id, load_relationships=["performance_metrics"]
         )
         if not session:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Analysis session with ID {session_id} not found"
+                detail=f"Analysis session with ID {session_id} not found",
             )
 
         response_data = AnalysisSessionResponse.model_validate(session)
         response_data.is_running = session.status.value == "IN_PROGRESS"
         response_data.is_completed = session.status.value == "COMPLETED"
-        response_data.has_errors = session.error_count > 0 if session.error_count else False
-        response_data.metrics_count = len(session.performance_metrics) if session.performance_metrics else 0
+        response_data.has_errors = (
+            session.error_count > 0 if session.error_count else False
+        )
+        response_data.metrics_count = (
+            len(session.performance_metrics) if session.performance_metrics else 0
+        )
 
         return response_data
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to get analysis session", session_id=session_id, error=str(e))
+        logger.error(
+            "Failed to get analysis session", session_id=session_id, error=str(e)
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve analysis session: {str(e)}"
-        )
+            detail=f"Failed to retrieve analysis session: {str(e)}",
+        ) from e
 
 
-@router.get("/sessions/name/{session_name}", response_model=AnalysisSessionResponse,
-           summary="Get analysis session by name")
+@router.get(
+    "/sessions/name/{session_name}",
+    response_model=AnalysisSessionResponse,
+    summary="Get analysis session by name",
+)
 async def get_analysis_session_by_name(
     session_name: str,
     repository: AnalysisSessionRepository = Depends(get_analysis_session_repository),
 ):
     """
     Retrieve an analysis session by its name.
-    
+
     - **session_name**: Name of the analysis session
     """
     try:
         session = await repository.get_by_session_name(
-            session_name,
-            load_relationships=["performance_metrics"]
+            session_name, load_relationships=["performance_metrics"]
         )
         if not session:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Analysis session with name '{session_name}' not found"
+                detail=f"Analysis session with name '{session_name}' not found",
             )
 
         response_data = AnalysisSessionResponse.model_validate(session)
         response_data.is_running = session.status.value == "IN_PROGRESS"
         response_data.is_completed = session.status.value == "COMPLETED"
-        response_data.has_errors = session.error_count > 0 if session.error_count else False
-        response_data.metrics_count = len(session.performance_metrics) if session.performance_metrics else 0
+        response_data.has_errors = (
+            session.error_count > 0 if session.error_count else False
+        )
+        response_data.metrics_count = (
+            len(session.performance_metrics) if session.performance_metrics else 0
+        )
 
         return response_data
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to get analysis session by name", session_name=session_name, error=str(e))
+        logger.error(
+            "Failed to get analysis session by name",
+            session_name=session_name,
+            error=str(e),
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve analysis session: {str(e)}"
-        )
+            detail=f"Failed to retrieve analysis session: {str(e)}",
+        ) from e
 
 
-@router.post("/sessions/", response_model=AnalysisSessionResponse,
-            status_code=status.HTTP_201_CREATED, summary="Create analysis session")
+@router.post(
+    "/sessions/",
+    response_model=AnalysisSessionResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create analysis session",
+)
 async def create_analysis_session(
     session_data: AnalysisSessionCreate,
     repository: AnalysisSessionRepository = Depends(get_analysis_session_repository),
 ):
     """
     Create a new analysis session.
-    
+
     - **session_name**: Unique session name
     - **analysis_date**: Date of the analysis
     - **status**: Initial status (defaults to PENDING)
@@ -212,11 +241,13 @@ async def create_analysis_session(
     """
     try:
         # Check if session with name already exists
-        existing_session = await repository.get_by_session_name(session_data.session_name)
+        existing_session = await repository.get_by_session_name(
+            session_data.session_name
+        )
         if existing_session:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"Analysis session with name '{session_data.session_name}' already exists"
+                detail=f"Analysis session with name '{session_data.session_name}' already exists",
             )
 
         created_session = await repository.create(session_data.model_dump())
@@ -227,15 +258,22 @@ async def create_analysis_session(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to create analysis session", session_name=session_data.session_name, error=str(e))
+        logger.error(
+            "Failed to create analysis session",
+            session_name=session_data.session_name,
+            error=str(e),
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create analysis session: {str(e)}"
-        )
+            detail=f"Failed to create analysis session: {str(e)}",
+        ) from e
 
 
-@router.put("/sessions/{session_id}", response_model=AnalysisSessionResponse,
-           summary="Update analysis session")
+@router.put(
+    "/sessions/{session_id}",
+    response_model=AnalysisSessionResponse,
+    summary="Update analysis session",
+)
 async def update_analysis_session(
     session_id: UUID,
     session_data: AnalysisSessionUpdate,
@@ -243,7 +281,7 @@ async def update_analysis_session(
 ):
     """
     Update an existing analysis session.
-    
+
     - **session_id**: UUID of the session to update
     - Provide only the fields you want to update
     """
@@ -252,7 +290,7 @@ async def update_analysis_session(
         if not existing_session:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Analysis session with ID {session_id} not found"
+                detail=f"Analysis session with ID {session_id} not found",
             )
 
         update_data = session_data.model_dump(exclude_unset=True)
@@ -264,24 +302,29 @@ async def update_analysis_session(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to update analysis session", session_id=session_id, error=str(e))
+        logger.error(
+            "Failed to update analysis session", session_id=session_id, error=str(e)
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update analysis session: {str(e)}"
-        )
+            detail=f"Failed to update analysis session: {str(e)}",
+        ) from e
 
 
-@router.delete("/sessions/{session_id}", response_model=SuccessResponse,
-              summary="Delete analysis session")
+@router.delete(
+    "/sessions/{session_id}",
+    response_model=SuccessResponse,
+    summary="Delete analysis session",
+)
 async def delete_analysis_session(
     session_id: UUID,
     repository: AnalysisSessionRepository = Depends(get_analysis_session_repository),
 ):
     """
     Delete an analysis session.
-    
+
     - **session_id**: UUID of the session to delete
-    
+
     Note: This will also delete all related performance metrics.
     """
     try:
@@ -289,12 +332,16 @@ async def delete_analysis_session(
         if not existing_session:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Analysis session with ID {session_id} not found"
+                detail=f"Analysis session with ID {session_id} not found",
             )
 
         await repository.delete(session_id)
 
-        logger.info("Analysis session deleted", session_id=session_id, session_name=existing_session.session_name)
+        logger.info(
+            "Analysis session deleted",
+            session_id=session_id,
+            session_name=existing_session.session_name,
+        )
         return SuccessResponse(
             message=f"Analysis session '{existing_session.session_name}' deleted successfully"
         )
@@ -302,16 +349,23 @@ async def delete_analysis_session(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to delete analysis session", session_id=session_id, error=str(e))
+        logger.error(
+            "Failed to delete analysis session", session_id=session_id, error=str(e)
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete analysis session: {str(e)}"
-        )
+            detail=f"Failed to delete analysis session: {str(e)}",
+        ) from e
 
 
 # Performance Metrics Endpoints
 
-@router.get("/metrics/", response_model=PerformanceMetricsList, summary="List performance metrics")
+
+@router.get(
+    "/metrics/",
+    response_model=PerformanceMetricsList,
+    summary="List performance metrics",
+)
 async def list_performance_metrics(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(50, ge=1, le=1000, description="Items per page"),
@@ -319,11 +373,13 @@ async def list_performance_metrics(
     sort_order: str = Query("desc", description="Sort order (asc/desc)"),
     session_id: UUID | None = Query(None, description="Filter by session ID"),
     metric_type: str | None = Query(None, description="Filter by metric type"),
-    repository: PerformanceMetricsRepository = Depends(get_performance_metrics_repository),
+    repository: PerformanceMetricsRepository = Depends(
+        get_performance_metrics_repository
+    ),
 ):
     """
     Retrieve a paginated list of performance metrics.
-    
+
     - **page**: Page number (1-based)
     - **limit**: Number of items per page (max 1000)
     - **session_id**: Filter by analysis session ID
@@ -364,19 +420,25 @@ async def list_performance_metrics(
         logger.error("Failed to list performance metrics", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve performance metrics: {str(e)}"
-        )
+            detail=f"Failed to retrieve performance metrics: {str(e)}",
+        ) from e
 
 
-@router.post("/metrics/", response_model=PerformanceMetricsResponse,
-            status_code=status.HTTP_201_CREATED, summary="Create performance metric")
+@router.post(
+    "/metrics/",
+    response_model=PerformanceMetricsResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create performance metric",
+)
 async def create_performance_metric(
     metric_data: PerformanceMetricsCreate,
-    repository: PerformanceMetricsRepository = Depends(get_performance_metrics_repository),
+    repository: PerformanceMetricsRepository = Depends(
+        get_performance_metrics_repository
+    ),
 ):
     """
     Create a new performance metric.
-    
+
     - **session_id**: UUID of the analysis session
     - **metric_type**: Type of performance metric
     - **metric_date**: Date of the metric
@@ -391,15 +453,22 @@ async def create_performance_metric(
         return PerformanceMetricsResponse.model_validate(created_metric)
 
     except Exception as e:
-        logger.error("Failed to create performance metric", metric_type=metric_data.metric_type, error=str(e))
+        logger.error(
+            "Failed to create performance metric",
+            metric_type=metric_data.metric_type,
+            error=str(e),
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create performance metric: {str(e)}"
-        )
+            detail=f"Failed to create performance metric: {str(e)}",
+        ) from e
 
 
-@router.get("/sessions/{session_id}/summary/", response_model=AnalysisSessionSummary,
-           summary="Get analysis session summary")
+@router.get(
+    "/sessions/{session_id}/summary/",
+    response_model=AnalysisSessionSummary,
+    summary="Get analysis session summary",
+)
 async def get_analysis_session_summary(
     from_date: date | None = Query(None, description="Summary from date"),
     to_date: date | None = Query(None, description="Summary to date"),
@@ -407,7 +476,7 @@ async def get_analysis_session_summary(
 ):
     """
     Get summary statistics for analysis sessions.
-    
+
     - **from_date**: Optional start date for summary
     - **to_date**: Optional end date for summary
     """
@@ -419,22 +488,27 @@ async def get_analysis_session_summary(
         logger.error("Failed to get analysis session summary", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get analysis session summary: {str(e)}"
-        )
+            detail=f"Failed to get analysis session summary: {str(e)}",
+        ) from e
 
 
-@router.get("/metrics/summary/", response_model=PerformanceMetricsSummary,
-           summary="Get performance metrics summary")
+@router.get(
+    "/metrics/summary/",
+    response_model=PerformanceMetricsSummary,
+    summary="Get performance metrics summary",
+)
 async def get_performance_metrics_summary(
     session_id: UUID | None = Query(None, description="Filter by session ID"),
     metric_type: str | None = Query(None, description="Filter by metric type"),
     from_date: date | None = Query(None, description="Summary from date"),
     to_date: date | None = Query(None, description="Summary to date"),
-    repository: PerformanceMetricsRepository = Depends(get_performance_metrics_repository),
+    repository: PerformanceMetricsRepository = Depends(
+        get_performance_metrics_repository
+    ),
 ):
     """
     Get summary statistics for performance metrics.
-    
+
     - **session_id**: Optional session filter
     - **metric_type**: Optional metric type filter
     - **from_date**: Optional start date
@@ -453,5 +527,5 @@ async def get_performance_metrics_summary(
         logger.error("Failed to get performance metrics summary", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get performance metrics summary: {str(e)}"
-        )
+            detail=f"Failed to get performance metrics summary: {str(e)}",
+        ) from e

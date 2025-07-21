@@ -18,45 +18,45 @@ def run_tests(
     markers: str = None,
 ) -> int:
     """Run tests with pytest"""
-    
+
     # Base pytest command
     cmd = ["python", "-m", "pytest"]
-    
+
     # Add test path
     cmd.append(test_path)
-    
+
     # Add verbosity
     if verbose:
         cmd.append("-v")
     else:
         cmd.append("-q")
-    
+
     # Add coverage
     if coverage:
         cmd.extend([
             "--cov=src/breakout_screener",
             "--cov-report=term-missing",
         ])
-        
+
         if html_coverage:
             cmd.append("--cov-report=html:htmlcov")
-    
+
     # Add pattern matching
     if pattern:
         cmd.extend(["-k", pattern])
-    
+
     # Add markers
     if markers:
         cmd.extend(["-m", markers])
-    
+
     # Add async support
     cmd.extend(["--asyncio-mode=auto"])
-    
+
     # Show local variables on failure
     cmd.append("--tb=short")
-    
+
     print(f"Running command: {' '.join(cmd)}")
-    
+
     # Run tests
     try:
         result = subprocess.run(cmd, cwd=Path(__file__).parent.parent)
@@ -72,14 +72,14 @@ def run_tests(
 def run_linting() -> int:
     """Run linting checks"""
     print("Running linting checks...")
-    
+
     commands = [
         # Ruff linting
         ["python", "-m", "ruff", "check", "src/", "tests/"],
         # Ruff formatting check
         ["python", "-m", "ruff", "format", "--check", "src/", "tests/"],
     ]
-    
+
     for cmd in commands:
         print(f"Running: {' '.join(cmd)}")
         try:
@@ -89,7 +89,7 @@ def run_linting() -> int:
         except Exception as e:
             print(f"Error running linting: {e}")
             return 1
-    
+
     print("✅ All linting checks passed")
     return 0
 
@@ -97,9 +97,9 @@ def run_linting() -> int:
 def run_type_checking() -> int:
     """Run type checking with mypy"""
     print("Running type checking...")
-    
+
     cmd = ["python", "-m", "mypy", "src/breakout_screener", "--ignore-missing-imports"]
-    
+
     try:
         result = subprocess.run(cmd, cwd=Path(__file__).parent.parent)
         if result.returncode == 0:
@@ -113,80 +113,80 @@ def run_type_checking() -> int:
 def main():
     """Main test runner"""
     parser = argparse.ArgumentParser(description="Run tests for Breakout Screener V2")
-    
+
     parser.add_argument(
         "test_path",
         nargs="?",
         default="tests/",
         help="Path to tests (default: tests/)"
     )
-    
+
     parser.add_argument(
         "--coverage",
         "-c",
         action="store_true",
         help="Run tests with coverage report"
     )
-    
+
     parser.add_argument(
         "--html-coverage",
         action="store_true",
         help="Generate HTML coverage report"
     )
-    
+
     parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
         help="Verbose output"
     )
-    
+
     parser.add_argument(
         "--pattern",
         "-k",
         help="Run tests matching pattern"
     )
-    
+
     parser.add_argument(
         "--markers",
         "-m",
         help="Run tests with specific markers"
     )
-    
+
     parser.add_argument(
         "--lint",
         action="store_true",
         help="Run linting checks"
     )
-    
+
     parser.add_argument(
         "--type-check",
         action="store_true",
         help="Run type checking"
     )
-    
+
     parser.add_argument(
         "--all",
         action="store_true",
         help="Run tests, linting, and type checking"
     )
-    
+
     args = parser.parse_args()
-    
+
     exit_code = 0
-    
+
     # Run linting if requested
     if args.lint or args.all:
         lint_result = run_linting()
         if lint_result != 0:
             exit_code = lint_result
-    
+
     # Run type checking if requested
     if args.type_check or args.all:
         type_result = run_type_checking()
         if type_result != 0:
             exit_code = type_result
-    
+
     # Run tests (always run unless only linting/type checking requested)
     if not (args.lint and not args.all) and not (args.type_check and not args.all):
         test_result = run_tests(
@@ -199,12 +199,12 @@ def main():
         )
         if test_result != 0:
             exit_code = test_result
-    
+
     if exit_code == 0:
         print("✅ All checks passed!")
     else:
         print("❌ Some checks failed!")
-    
+
     sys.exit(exit_code)
 
 

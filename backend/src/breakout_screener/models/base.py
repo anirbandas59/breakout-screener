@@ -26,7 +26,7 @@ class BaseModel(Base):
         primary_key=True,
         default=uuid4,
         index=True,
-        comment="Unique identifier for the record"
+        comment="Unique identifier for the record",
     )
 
     # Audit fields for tracking record lifecycle
@@ -34,7 +34,7 @@ class BaseModel(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
-        comment="Timestamp when record was created"
+        comment="Timestamp when record was created",
     )
 
     updated_at = Column(
@@ -42,21 +42,21 @@ class BaseModel(Base):
         server_default=func.now(),
         onupdate=func.now(),
         nullable=False,
-        comment="Timestamp when record was last updated"
+        comment="Timestamp when record was last updated",
     )
 
     created_by = Column(
         String(100),
         default="system",
         nullable=False,
-        comment="User or system that created the record"
+        comment="User or system that created the record",
     )
 
     updated_by = Column(
         String(100),
         default="system",
         nullable=False,
-        comment="User or system that last updated the record"
+        comment="User or system that last updated the record",
     )
 
     @declared_attr
@@ -66,8 +66,9 @@ class BaseModel(Base):
         CamelCase -> snake_case conversion
         """
         import re
-        name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
+
+        name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", cls.__name__)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
     def __repr__(self) -> str:
         """String representation of the model"""
@@ -76,10 +77,10 @@ class BaseModel(Base):
     def to_dict(self, exclude_fields: list | None = None) -> dict:
         """
         Convert model instance to dictionary.
-        
+
         Args:
             exclude_fields: List of field names to exclude from output
-            
+
         Returns:
             Dictionary representation of the model
         """
@@ -94,10 +95,10 @@ class BaseModel(Base):
                 if isinstance(value, datetime):
                     result[column.name] = value.isoformat()
                 # Handle UUID serialization
-                elif hasattr(value, '__str__') and str(type(value)).find('UUID') != -1:
+                elif hasattr(value, "__str__") and str(type(value)).find("UUID") != -1:
                     result[column.name] = str(value)
                 # Handle enum serialization
-                elif hasattr(value, 'value'):
+                elif hasattr(value, "value"):
                     result[column.name] = value.value
                 else:
                     result[column.name] = value
@@ -112,7 +113,7 @@ class BaseModel(Base):
     def update_audit_fields(self, user: str = "system") -> None:
         """
         Update audit fields for the record
-        
+
         Args:
             user: Username or system identifier making the change
         """
@@ -123,7 +124,7 @@ class BaseModel(Base):
     def set_creation_audit(self, user: str = "system") -> None:
         """
         Set creation audit fields for new records
-        
+
         Args:
             user: Username or system identifier creating the record
         """
