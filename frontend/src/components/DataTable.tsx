@@ -1,13 +1,13 @@
 'use client'
 
 import React, { useState } from 'react'
-import { 
-  ChevronUpIcon, 
-  ChevronDownIcon, 
+import {
+  ChevronUpIcon,
+  ChevronDownIcon,
   ExternalLinkIcon,
   TrendingUpIcon,
   TrendingDownIcon,
-  MinusIcon
+  MinusIcon,
 } from 'lucide-react'
 
 import {
@@ -33,8 +33,9 @@ interface DataTableProps {
   onRowClick?: (item: BreakoutDataResponse) => void
 }
 
-type SortableField = keyof Pick<BreakoutDataResponse, 
-  | 'stock_symbol' 
+type SortableField = keyof Pick<
+  BreakoutDataResponse,
+  | 'stock_symbol'
   | 'trade_date'
   | 'close_price'
   | 'volume'
@@ -55,9 +56,19 @@ const COLUMN_HEADERS: Array<{
   { key: 'breakout_status', label: 'Breakout', sortable: true },
   { key: 'candle_indicator', label: 'Candle', sortable: true },
   { key: 'volume_indicator', label: 'Volume', sortable: true },
-  { key: 'close_price', label: 'Close', sortable: true, className: 'text-right' },
+  {
+    key: 'close_price',
+    label: 'Close',
+    sortable: true,
+    className: 'text-right',
+  },
   { key: 'volume', label: 'Volume', sortable: true, className: 'text-right' },
-  { key: 'breakout_strength', label: 'Strength', sortable: true, className: 'text-center' },
+  {
+    key: 'breakout_strength',
+    label: 'Strength',
+    sortable: true,
+    className: 'text-center',
+  },
   { key: 'actions', label: 'Chart', sortable: false, className: 'text-center' },
 ]
 
@@ -72,7 +83,9 @@ function getBreakoutStatusIcon(status: string) {
   }
 }
 
-function getBreakoutStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+function getBreakoutStatusVariant(
+  status: string
+): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
     case 'BULLISH_BREAKOUT':
       return 'default'
@@ -83,7 +96,9 @@ function getBreakoutStatusVariant(status: string): "default" | "secondary" | "de
   }
 }
 
-function getCandleIndicatorVariant(indicator: string): "default" | "secondary" | "destructive" | "outline" {
+function getCandleIndicatorVariant(
+  indicator: string
+): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (indicator) {
     case 'BULLISH':
     case 'HAMMER':
@@ -96,7 +111,9 @@ function getCandleIndicatorVariant(indicator: string): "default" | "secondary" |
   }
 }
 
-function getVolumeIndicatorVariant(indicator: string): "default" | "secondary" | "destructive" | "outline" {
+function getVolumeIndicatorVariant(
+  indicator: string
+): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (indicator) {
     case 'HIGH_VOLUME':
     case 'UNUSUAL_VOLUME':
@@ -118,8 +135,8 @@ export default function DataTable({
 }: DataTableProps) {
   const handleSort = (field: SortableField) => {
     if (!onSort) return
-    
-    const newDirection = 
+
+    const newDirection =
       sortField === field && sortDirection === 'asc' ? 'desc' : 'asc'
     onSort(field, newDirection)
   }
@@ -145,9 +162,11 @@ export default function DataTable({
 
   const renderSortIcon = (field: SortableField) => {
     if (sortField !== field) return null
-    return sortDirection === 'asc' ? 
-      <ChevronUpIcon className="h-4 w-4" /> : 
+    return sortDirection === 'asc' ? (
+      <ChevronUpIcon className="h-4 w-4" />
+    ) : (
       <ChevronDownIcon className="h-4 w-4" />
+    )
   }
 
   if (isLoading) {
@@ -159,7 +178,7 @@ export default function DataTable({
         <CardContent>
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-12 bg-muted animate-pulse rounded" />
+              <div key={i} className="h-12 animate-pulse rounded bg-muted" />
             ))}
           </div>
         </CardContent>
@@ -190,14 +209,19 @@ export default function DataTable({
             <TableHeader>
               <TableRow>
                 {COLUMN_HEADERS.map((header) => (
-                  <TableHead 
-                    key={header.key} 
+                  <TableHead
+                    key={header.key}
                     className={`${header.className || ''} ${header.sortable ? 'cursor-pointer select-none hover:bg-muted/50' : ''}`}
-                    onClick={() => header.sortable && onSort && handleSort(header.key as SortableField)}
+                    onClick={() =>
+                      header.sortable &&
+                      onSort &&
+                      handleSort(header.key as SortableField)
+                    }
                   >
                     <div className="flex items-center space-x-1">
                       <span>{header.label}</span>
-                      {header.sortable && renderSortIcon(header.key as SortableField)}
+                      {header.sortable &&
+                        renderSortIcon(header.key as SortableField)}
                     </div>
                   </TableHead>
                 ))}
@@ -205,7 +229,7 @@ export default function DataTable({
             </TableHeader>
             <TableBody>
               {data.map((item, index) => (
-                <TableRow 
+                <TableRow
                   key={item.id || index}
                   className={onRowClick ? 'cursor-pointer' : ''}
                   onClick={() => onRowClick?.(item)}
@@ -213,13 +237,13 @@ export default function DataTable({
                   <TableCell className="font-medium">
                     {item.stock_symbol || 'N/A'}
                   </TableCell>
-                  
+
                   <TableCell>
                     {new Date(item.trade_date).toLocaleDateString('en-IN')}
                   </TableCell>
-                  
+
                   <TableCell>
-                    <Badge 
+                    <Badge
                       variant={getBreakoutStatusVariant(item.breakout_status)}
                       className="flex items-center space-x-1"
                     >
@@ -229,27 +253,31 @@ export default function DataTable({
                       </span>
                     </Badge>
                   </TableCell>
-                  
+
                   <TableCell>
-                    <Badge variant={getCandleIndicatorVariant(item.candle_indicator)}>
+                    <Badge
+                      variant={getCandleIndicatorVariant(item.candle_indicator)}
+                    >
                       {item.candle_indicator}
                     </Badge>
                   </TableCell>
-                  
+
                   <TableCell>
-                    <Badge variant={getVolumeIndicatorVariant(item.volume_indicator)}>
+                    <Badge
+                      variant={getVolumeIndicatorVariant(item.volume_indicator)}
+                    >
                       {item.volume_indicator.replace('_', ' ')}
                     </Badge>
                   </TableCell>
-                  
+
                   <TableCell className="text-right font-mono">
                     {formatCurrency(item.close_price)}
                   </TableCell>
-                  
+
                   <TableCell className="text-right font-mono">
                     {formatVolume(item.volume)}
                   </TableCell>
-                  
+
                   <TableCell className="text-center">
                     {item.breakout_strength ? (
                       <div className="flex items-center justify-center">
@@ -261,7 +289,7 @@ export default function DataTable({
                       <span className="text-muted-foreground">--</span>
                     )}
                   </TableCell>
-                  
+
                   <TableCell className="text-center">
                     <Button
                       variant="ghost"

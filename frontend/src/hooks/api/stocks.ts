@@ -20,7 +20,7 @@ export const stockKeys = {
   details: () => [...stockKeys.all, 'detail'] as const,
   detail: (id: string) => [...stockKeys.details(), id] as const,
   search: (query: string) => [...stockKeys.all, 'search', query] as const,
-  breakoutData: (stockId: string, filters?: BreakoutDataFilter) => 
+  breakoutData: (stockId: string, filters?: BreakoutDataFilter) =>
     [...stockKeys.detail(stockId), 'breakout-data', filters] as const,
 }
 
@@ -44,16 +44,24 @@ export function useStock(id: string) {
 export function useStockSearch(query: string) {
   return useQuery({
     queryKey: stockKeys.search(query),
-    queryFn: () => apiClient.get<StockList>('/stocks/search', { query, limit: 10 }),
+    queryFn: () =>
+      apiClient.get<StockList>('/stocks/search', { query, limit: 10 }),
     enabled: query.length >= 2,
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
-export function useStockBreakoutData(stockId: string, filters: BreakoutDataFilter = {}) {
+export function useStockBreakoutData(
+  stockId: string,
+  filters: BreakoutDataFilter = {}
+) {
   return useQuery({
     queryKey: stockKeys.breakoutData(stockId, filters),
-    queryFn: () => apiClient.get<BreakoutDataList>(`/stocks/${stockId}/breakout-data`, filters),
+    queryFn: () =>
+      apiClient.get<BreakoutDataList>(
+        `/stocks/${stockId}/breakout-data`,
+        filters
+      ),
     enabled: !!stockId,
     placeholderData: (previousData) => previousData,
   })
@@ -78,7 +86,9 @@ export function useUpdateStock() {
     mutationFn: ({ id, data }: { id: string; data: any }) =>
       apiClient.put<StockResponse>(`/stocks/${id}`, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: stockKeys.detail(variables.id) })
+      queryClient.invalidateQueries({
+        queryKey: stockKeys.detail(variables.id),
+      })
       queryClient.invalidateQueries({ queryKey: stockKeys.lists() })
     },
   })

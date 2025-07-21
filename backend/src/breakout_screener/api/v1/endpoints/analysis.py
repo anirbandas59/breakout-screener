@@ -3,7 +3,6 @@ Analysis API endpoints (AnalysisSession and PerformanceMetrics)
 """
 
 from datetime import date
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -11,8 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.database import get_db
 from ....core.logging import get_logger
-from ....repositories.analysis import AnalysisSessionRepository, PerformanceMetricsRepository
-from ....schemas.base import ListResponse, PaginationParams, SortParams, SuccessResponse
+from ....repositories.analysis import (
+    AnalysisSessionRepository,
+    PerformanceMetricsRepository,
+)
 from ....schemas.analysis import (
     AnalysisSessionCreate,
     AnalysisSessionFilter,
@@ -25,8 +26,8 @@ from ....schemas.analysis import (
     PerformanceMetricsList,
     PerformanceMetricsResponse,
     PerformanceMetricsSummary,
-    PerformanceMetricsUpdate,
 )
+from ....schemas.base import PaginationParams, SortParams, SuccessResponse
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -54,8 +55,8 @@ async def list_analysis_sessions(
     limit: int = Query(50, ge=1, le=1000, description="Items per page"),
     sort_by: str = Query("analysis_date", description="Field to sort by"),
     sort_order: str = Query("desc", description="Sort order (asc/desc)"),
-    status: Optional[str] = Query(None, description="Filter by status"),
-    session_name: Optional[str] = Query(None, description="Filter by session name"),
+    status: str | None = Query(None, description="Filter by status"),
+    session_name: str | None = Query(None, description="Filter by session name"),
     repository: AnalysisSessionRepository = Depends(get_analysis_session_repository),
 ):
     """
@@ -71,19 +72,19 @@ async def list_analysis_sessions(
     try:
         pagination = PaginationParams(page=page, limit=limit)
         sort = SortParams(sort_by=sort_by, sort_order=sort_order)
-        
+
         filters = AnalysisSessionFilter(
             status=status,
             session_name=session_name,
         )
-        
+
         sessions = await repository.get_by_advanced_filter(
             filters=filters,
             pagination=pagination,
             sort=sort,
             load_relationships=["performance_metrics"],
         )
-        
+
         # Create response with computed fields
         items = []
         for session in sessions:
@@ -92,20 +93,20 @@ async def list_analysis_sessions(
             response_data.is_completed = session.status.value == "COMPLETED"
             response_data.has_errors = session.error_count > 0 if session.error_count else False
             response_data.metrics_count = len(session.performance_metrics) if session.performance_metrics else 0
-            
+
             # Calculate success rate
             if session.total_items and session.total_items > 0:
                 success_count = session.success_count or 0
                 response_data.success_rate = (success_count / session.total_items) * 100
-            
+
             items.append(response_data)
-        
+
         return AnalysisSessionList.create(
             items=items,
             total=len(items),  # This would need a proper count method
             pagination=pagination,
         )
-        
+
     except Exception as e:
         logger.error("Failed to list analysis sessions", error=str(e))
         raise HTTPException(
@@ -114,7 +115,7 @@ async def list_analysis_sessions(
         )
 
 
-@router.get("/sessions/{session_id}", response_model=AnalysisSessionResponse, 
+@router.get("/sessions/{session_id}", response_model=AnalysisSessionResponse,
            summary="Get analysis session by ID")
 async def get_analysis_session(
     session_id: UUID,
@@ -135,15 +136,15 @@ async def get_analysis_session(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Analysis session with ID {session_id} not found"
             )
-        
+
         response_data = AnalysisSessionResponse.model_validate(session)
         response_data.is_running = session.status.value == "IN_PROGRESS"
         response_data.is_completed = session.status.value == "COMPLETED"
         response_data.has_errors = session.error_count > 0 if session.error_count else False
         response_data.metrics_count = len(session.performance_metrics) if session.performance_metrics else 0
-        
+
         return response_data
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -175,15 +176,15 @@ async def get_analysis_session_by_name(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Analysis session with name '{session_name}' not found"
             )
-        
+
         response_data = AnalysisSessionResponse.model_validate(session)
         response_data.is_running = session.status.value == "IN_PROGRESS"
         response_data.is_completed = session.status.value == "COMPLETED"
         response_data.has_errors = session.error_count > 0 if session.error_count else False
         response_data.metrics_count = len(session.performance_metrics) if session.performance_metrics else 0
-        
+
         return response_data
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -194,7 +195,7 @@ async def get_analysis_session_by_name(
         )
 
 
-@router.post("/sessions/", response_model=AnalysisSessionResponse, 
+@router.post("/sessions/", response_model=AnalysisSessionResponse,
             status_code=status.HTTP_201_CREATED, summary="Create analysis session")
 async def create_analysis_session(
     session_data: AnalysisSessionCreate,
@@ -217,12 +218,12 @@ async def create_analysis_session(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Analysis session with name '{session_data.session_name}' already exists"
             )
-        
+
         created_session = await repository.create(session_data.model_dump())
-        
+
         logger.info("Analysis session created", session_name=session_data.session_name)
         return AnalysisSessionResponse.model_validate(created_session)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -233,7 +234,7 @@ async def create_analysis_session(
         )
 
 
-@router.put("/sessions/{session_id}", response_model=AnalysisSessionResponse, 
+@router.put("/sessions/{session_id}", response_model=AnalysisSessionResponse,
            summary="Update analysis session")
 async def update_analysis_session(
     session_id: UUID,
@@ -253,13 +254,13 @@ async def update_analysis_session(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Analysis session with ID {session_id} not found"
             )
-        
+
         update_data = session_data.model_dump(exclude_unset=True)
         updated_session = await repository.update(session_id, update_data)
-        
+
         logger.info("Analysis session updated", session_id=session_id)
         return AnalysisSessionResponse.model_validate(updated_session)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -270,7 +271,7 @@ async def update_analysis_session(
         )
 
 
-@router.delete("/sessions/{session_id}", response_model=SuccessResponse, 
+@router.delete("/sessions/{session_id}", response_model=SuccessResponse,
               summary="Delete analysis session")
 async def delete_analysis_session(
     session_id: UUID,
@@ -290,14 +291,14 @@ async def delete_analysis_session(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Analysis session with ID {session_id} not found"
             )
-        
+
         await repository.delete(session_id)
-        
+
         logger.info("Analysis session deleted", session_id=session_id, session_name=existing_session.session_name)
         return SuccessResponse(
             message=f"Analysis session '{existing_session.session_name}' deleted successfully"
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -316,8 +317,8 @@ async def list_performance_metrics(
     limit: int = Query(50, ge=1, le=1000, description="Items per page"),
     sort_by: str = Query("metric_date", description="Field to sort by"),
     sort_order: str = Query("desc", description="Sort order (asc/desc)"),
-    session_id: Optional[UUID] = Query(None, description="Filter by session ID"),
-    metric_type: Optional[str] = Query(None, description="Filter by metric type"),
+    session_id: UUID | None = Query(None, description="Filter by session ID"),
+    metric_type: str | None = Query(None, description="Filter by metric type"),
     repository: PerformanceMetricsRepository = Depends(get_performance_metrics_repository),
 ):
     """
@@ -331,19 +332,19 @@ async def list_performance_metrics(
     try:
         pagination = PaginationParams(page=page, limit=limit)
         sort = SortParams(sort_by=sort_by, sort_order=sort_order)
-        
+
         filters = PerformanceMetricsFilter(
             session_id=session_id,
             metric_type=metric_type,
         )
-        
+
         metrics = await repository.get_by_advanced_filter(
             filters=filters,
             pagination=pagination,
             sort=sort,
             load_relationships=["session"],
         )
-        
+
         # Create response with session information
         items = []
         for metric in metrics:
@@ -352,13 +353,13 @@ async def list_performance_metrics(
                 response_data.session_name = metric.session.session_name
                 response_data.session_status = metric.session.status.value
             items.append(response_data)
-        
+
         return PerformanceMetricsList.create(
             items=items,
             total=len(items),  # This would need a proper count method
             pagination=pagination,
         )
-        
+
     except Exception as e:
         logger.error("Failed to list performance metrics", error=str(e))
         raise HTTPException(
@@ -385,10 +386,10 @@ async def create_performance_metric(
     """
     try:
         created_metric = await repository.create(metric_data.model_dump())
-        
+
         logger.info("Performance metric created", metric_type=metric_data.metric_type)
         return PerformanceMetricsResponse.model_validate(created_metric)
-        
+
     except Exception as e:
         logger.error("Failed to create performance metric", metric_type=metric_data.metric_type, error=str(e))
         raise HTTPException(
@@ -400,8 +401,8 @@ async def create_performance_metric(
 @router.get("/sessions/{session_id}/summary/", response_model=AnalysisSessionSummary,
            summary="Get analysis session summary")
 async def get_analysis_session_summary(
-    from_date: Optional[date] = Query(None, description="Summary from date"),
-    to_date: Optional[date] = Query(None, description="Summary to date"),
+    from_date: date | None = Query(None, description="Summary from date"),
+    to_date: date | None = Query(None, description="Summary to date"),
     repository: AnalysisSessionRepository = Depends(get_analysis_session_repository),
 ):
     """
@@ -413,7 +414,7 @@ async def get_analysis_session_summary(
     try:
         summary = await repository.get_session_summary(from_date, to_date)
         return AnalysisSessionSummary(**summary)
-        
+
     except Exception as e:
         logger.error("Failed to get analysis session summary", error=str(e))
         raise HTTPException(
@@ -425,10 +426,10 @@ async def get_analysis_session_summary(
 @router.get("/metrics/summary/", response_model=PerformanceMetricsSummary,
            summary="Get performance metrics summary")
 async def get_performance_metrics_summary(
-    session_id: Optional[UUID] = Query(None, description="Filter by session ID"),
-    metric_type: Optional[str] = Query(None, description="Filter by metric type"),
-    from_date: Optional[date] = Query(None, description="Summary from date"),
-    to_date: Optional[date] = Query(None, description="Summary to date"),
+    session_id: UUID | None = Query(None, description="Filter by session ID"),
+    metric_type: str | None = Query(None, description="Filter by metric type"),
+    from_date: date | None = Query(None, description="Summary from date"),
+    to_date: date | None = Query(None, description="Summary to date"),
     repository: PerformanceMetricsRepository = Depends(get_performance_metrics_repository),
 ):
     """
@@ -447,7 +448,7 @@ async def get_performance_metrics_summary(
             to_date=to_date,
         )
         return PerformanceMetricsSummary(**summary)
-        
+
     except Exception as e:
         logger.error("Failed to get performance metrics summary", error=str(e))
         raise HTTPException(

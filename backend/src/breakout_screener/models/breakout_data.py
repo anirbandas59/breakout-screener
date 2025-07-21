@@ -6,6 +6,7 @@ Enhanced version of V1 breakout_data with proper relationships and validation
 from decimal import Decimal
 
 from sqlalchemy import (
+    DECIMAL,
     BigInteger,
     Boolean,
     CheckConstraint,
@@ -16,7 +17,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import DECIMAL, ENUM, UUID
+from sqlalchemy.dialects.postgresql import ENUM, UUID
 from sqlalchemy.orm import relationship, validates
 
 from .base import BaseModel
@@ -404,3 +405,7 @@ class BreakoutDataV2(BaseModel):
             'volume_indicator': self.volume_indicator.value,
             'link': self.chart_link
         }
+
+
+# Alias for backward compatibility
+BreakoutData = BreakoutDataV2

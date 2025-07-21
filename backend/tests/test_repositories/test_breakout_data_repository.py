@@ -36,7 +36,7 @@ class TestBreakoutDataRepository:
         assert created_breakout.stock_id == sample_stock.id
         assert created_breakout.trade_date == sample_breakout_data["trade_date"]
         assert created_breakout.close_price == sample_breakout_data["close_price"]
-        assert created_breakout.breakout_status == sample_breakout_data["breakout_status"]
+        assert created_breakout.breakout_indicator == sample_breakout_data["breakout_indicator"]
 
     @pytest.mark.asyncio
     async def test_get_by_symbol_and_date(

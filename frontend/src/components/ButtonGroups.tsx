@@ -2,13 +2,13 @@
 
 import React from 'react'
 import { Button } from '@/components/ui/button'
-import { 
-  Play, 
-  Square, 
-  Trash2, 
-  Download, 
+import {
+  Play,
+  Square,
+  Trash2,
+  Download,
   RefreshCw,
-  Loader2
+  Loader2,
 } from 'lucide-react'
 
 interface ButtonGroupsProps {

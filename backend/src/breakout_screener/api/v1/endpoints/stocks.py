@@ -2,7 +2,6 @@
 Stock API endpoints
 """
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -11,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.database import get_db
 from ....core.logging import get_logger
 from ....repositories.stock import StockRepository
-from ....schemas.base import ListResponse, PaginationParams, SortParams, SuccessResponse
+from ....schemas.base import PaginationParams, SortParams, SuccessResponse
 from ....schemas.stock import (
     StockBulkCreate,
     StockCreate,
@@ -40,11 +39,11 @@ async def list_stocks(
     limit: int = Query(50, ge=1, le=1000, description="Items per page"),
     sort_by: str = Query("symbol", description="Field to sort by"),
     sort_order: str = Query("asc", description="Sort order (asc/desc)"),
-    symbol: Optional[str] = Query(None, description="Filter by symbol (partial match)"),
-    company_name: Optional[str] = Query(None, description="Filter by company name"),
-    stock_group: Optional[str] = Query(None, description="Filter by stock group"),
-    sector: Optional[str] = Query(None, description="Filter by sector"),
-    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    symbol: str | None = Query(None, description="Filter by symbol (partial match)"),
+    company_name: str | None = Query(None, description="Filter by company name"),
+    stock_group: str | None = Query(None, description="Filter by stock group"),
+    sector: str | None = Query(None, description="Filter by sector"),
+    is_active: bool | None = Query(None, description="Filter by active status"),
     repository: StockRepository = Depends(get_stock_repository),
 ):
     """
@@ -64,7 +63,7 @@ async def list_stocks(
         # Create pagination and sorting parameters
         pagination = PaginationParams(page=page, limit=limit)
         sort = SortParams(sort_by=sort_by, sort_order=sort_order)
-        
+
         # Create filter parameters
         filters = StockFilter(
             symbol=symbol,
@@ -73,24 +72,24 @@ async def list_stocks(
             sector=sector,
             is_active=is_active,
         )
-        
+
         # Get filtered stocks
         stocks = await repository.get_by_advanced_filter(
             filters=filters,
             pagination=pagination,
             sort=sort,
         )
-        
+
         # Get total count for pagination metadata
         total_count = await repository.count_by_advanced_filter(filters)
-        
+
         # Create response
         return StockList.create(
             items=[StockResponse.model_validate(stock) for stock in stocks],
             total=total_count,
             pagination=pagination,
         )
-        
+
     except Exception as e:
         logger.error("Failed to list stocks", error=str(e))
         raise HTTPException(
@@ -116,9 +115,9 @@ async def get_stock(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Stock with ID {stock_id} not found"
             )
-        
+
         return StockResponse.model_validate(stock)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -146,9 +145,9 @@ async def get_stock_by_symbol(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Stock with symbol '{symbol}' not found"
             )
-        
+
         return StockResponse.model_validate(stock)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -182,13 +181,13 @@ async def create_stock(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Stock with symbol '{stock_data.symbol}' already exists"
             )
-        
+
         # Create the stock
         created_stock = await repository.create(stock_data.model_dump())
-        
+
         logger.info("Stock created successfully", symbol=stock_data.symbol)
         return StockResponse.model_validate(created_stock)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -219,7 +218,7 @@ async def update_stock(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Stock with ID {stock_id} not found"
             )
-        
+
         # If symbol is being updated, check for conflicts
         if stock_data.symbol and stock_data.symbol != existing_stock.symbol:
             symbol_conflict = await repository.get_by_symbol(stock_data.symbol)
@@ -228,14 +227,14 @@ async def update_stock(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=f"Stock with symbol '{stock_data.symbol}' already exists"
                 )
-        
+
         # Update the stock
         update_data = stock_data.model_dump(exclude_unset=True)
         updated_stock = await repository.update(stock_id, update_data)
-        
+
         logger.info("Stock updated successfully", stock_id=stock_id)
         return StockResponse.model_validate(updated_stock)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -266,15 +265,15 @@ async def delete_stock(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Stock with ID {stock_id} not found"
             )
-        
+
         # Delete the stock
         await repository.delete(stock_id)
-        
+
         logger.info("Stock deleted successfully", stock_id=stock_id, symbol=existing_stock.symbol)
         return SuccessResponse(
             message=f"Stock '{existing_stock.symbol}' deleted successfully"
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -305,15 +304,15 @@ async def search_stocks(
             active_only=active_only,
             limit=limit,
         )
-        
+
         stocks = await repository.search_stocks(
             query=search_params.query,
             active_only=search_params.active_only,
             limit=search_params.limit,
         )
-        
+
         return [StockResponse.model_validate(stock) for stock in stocks]
-        
+
     except Exception as e:
         logger.error("Failed to search stocks", query=query, error=str(e))
         raise HTTPException(
@@ -336,11 +335,11 @@ async def get_stock_summary(
         total_stocks = await repository.count()
         active_stocks = await repository.count_active()
         inactive_stocks = total_stocks - active_stocks
-        
+
         # Get breakdowns
         groups_breakdown = await repository.count_by_group()
         sectors_breakdown = await repository.count_by_sector()
-        
+
         # Calculate market cap statistics
         # This would require additional repository methods for aggregation
         market_cap_stats = {
@@ -349,7 +348,7 @@ async def get_stock_summary(
             "avg": None,
             "median": None,
         }
-        
+
         summary = StockSummary(
             total_stocks=total_stocks,
             active_stocks=active_stocks,
@@ -358,9 +357,9 @@ async def get_stock_summary(
             sectors_breakdown=sectors_breakdown,
             market_cap_stats=market_cap_stats,
         )
-        
+
         return summary
-        
+
     except Exception as e:
         logger.error("Failed to get stock summary", error=str(e))
         raise HTTPException(
@@ -385,21 +384,21 @@ async def bulk_create_stocks(
         # Check for symbol conflicts
         symbols_to_check = [stock.symbol for stock in bulk_data.stocks]
         existing_stocks = await repository.get_by_symbols(symbols_to_check)
-        
+
         if existing_stocks:
             conflicting_symbols = [stock.symbol for stock in existing_stocks]
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Stocks with symbols already exist: {', '.join(conflicting_symbols)}"
             )
-        
+
         # Create all stocks
         stock_data_list = [stock.model_dump() for stock in bulk_data.stocks]
         created_stocks = await repository.bulk_create(stock_data_list)
-        
+
         logger.info("Bulk created stocks", count=len(created_stocks))
         return [StockResponse.model_validate(stock) for stock in created_stocks]
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -426,7 +425,7 @@ async def import_stocks(
     try:
         # This would implement the actual import logic
         # For now, return a placeholder response
-        
+
         result = StockImportResult(
             total_processed=len(import_data.data),
             successful_imports=0,
@@ -435,10 +434,10 @@ async def import_stocks(
             errors=[],
             imported_stocks=[],
         )
-        
+
         logger.info("Stock import completed", source=import_data.source, total=len(import_data.data))
         return result
-        
+
     except Exception as e:
         logger.error("Failed to import stocks", source=import_data.source, error=str(e))
         raise HTTPException(

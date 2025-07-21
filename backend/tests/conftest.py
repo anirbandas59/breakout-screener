@@ -3,31 +3,31 @@ Test configuration and fixtures for Breakout Screener V2
 """
 
 import asyncio
-import os
 import sys
+from collections.abc import AsyncGenerator, Generator
 from datetime import date, datetime
 from pathlib import Path
-from typing import AsyncGenerator, Generator
 from uuid import uuid4
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.pool import StaticPool
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from breakout_screener.core.database import Base
-from breakout_screener.models.analysis import AnalysisSession, PerformanceMetrics
-from breakout_screener.models.breakout_data import BreakoutData
+from breakout_screener.models.analysis import AnalysisSession
+from breakout_screener.models.breakout_data import BreakoutDataV2
 from breakout_screener.models.enums import (
     AnalysisStatusEnum,
-    BreakoutStatusEnum,
+    BreakoutIndicatorEnum,
+    CandleIndicatorEnum,
     PerformanceMetricTypeEnum,
-    PivotTypeEnum,
+    VolumeIndicatorEnum,
 )
-from breakout_screener.models.master_data import MasterBreakoutData
+
+# from breakout_screener.models.master_data import MasterBreakoutDataV2
 from breakout_screener.models.stock import Stock
 from breakout_screener.repositories.analysis import (
     AnalysisSessionRepository,
@@ -37,9 +37,10 @@ from breakout_screener.repositories.breakout_data import BreakoutDataRepository
 from breakout_screener.repositories.master_data import MasterBreakoutDataRepository
 from breakout_screener.repositories.stock import StockRepository
 
-
-# Test database URL - using in-memory SQLite for tests
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Test database URL - using PostgreSQL test database
+TEST_DATABASE_URL = (
+    "postgresql+asyncpg://trading_user:tpassword@localhost:5432/trading_db_test"
+)
 
 
 @pytest.fixture(scope="session")
@@ -56,20 +57,31 @@ async def test_engine():
     engine = create_async_engine(
         TEST_DATABASE_URL,
         echo=False,
-        poolclass=StaticPool,
-        connect_args={"check_same_thread": False},
     )
-    
-    # Create all tables
+
+    # Tables already exist in test database, just clean data
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    
+        # Clean up existing data before each test
+        await conn.execute(text("TRUNCATE TABLE performance_metrics CASCADE;"))
+        await conn.execute(text("TRUNCATE TABLE analysis_sessions CASCADE;"))
+        await conn.execute(text("TRUNCATE TABLE master_breakout_data_v2 CASCADE;"))
+        await conn.execute(text("TRUNCATE TABLE breakout_data_v2 CASCADE;"))
+        await conn.execute(text("TRUNCATE TABLE master_breakout_data CASCADE;"))
+        await conn.execute(text("TRUNCATE TABLE breakout_data CASCADE;"))
+        await conn.execute(text("TRUNCATE TABLE stocks CASCADE;"))
+
     yield engine
-    
-    # Clean up
+
+    # Clean up after test
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-    
+        await conn.execute(text("TRUNCATE TABLE performance_metrics CASCADE;"))
+        await conn.execute(text("TRUNCATE TABLE analysis_sessions CASCADE;"))
+        await conn.execute(text("TRUNCATE TABLE master_breakout_data_v2 CASCADE;"))
+        await conn.execute(text("TRUNCATE TABLE breakout_data_v2 CASCADE;"))
+        await conn.execute(text("TRUNCATE TABLE master_breakout_data CASCADE;"))
+        await conn.execute(text("TRUNCATE TABLE breakout_data CASCADE;"))
+        await conn.execute(text("TRUNCATE TABLE stocks CASCADE;"))
+
     await engine.dispose()
 
 
@@ -114,6 +126,8 @@ async def performance_metrics_repository(test_session) -> PerformanceMetricsRepo
 @pytest.fixture
 def sample_stock_data():
     """Sample stock data for testing"""
+    from breakout_screener.models.enums import StockGroupEnum
+
     return {
         "symbol": "TESTSTOCK",
         "company_name": "Test Stock Company",
@@ -122,9 +136,8 @@ def sample_stock_data():
         "market_cap": 10000000000,
         "is_active": True,
         "listing_date": date(2020, 1, 1),
-        "stock_group": "A",
-        "face_value": 10.0,
-        "isin": "INE123456789",
+        "stock_group": StockGroupEnum.NIFTY_50,
+        "isin_code": "INE123456789",
     }
 
 
@@ -137,21 +150,20 @@ def sample_breakout_data():
         "high_price": 110.0,
         "low_price": 95.0,
         "close_price": 105.0,
+        "previous_high": 108.0,
         "volume": 1000000,
-        "tc": 107.5,
-        "bc": 97.5,
-        "pivot": 102.5,
-        "r1": 112.5,
-        "r2": 122.5,
-        "r3": 132.5,
-        "s1": 92.5,
-        "s2": 82.5,
-        "s3": 72.5,
-        "breakout_status": BreakoutStatusEnum.UPSIDE_BREAKOUT,
-        "pivot_type": PivotTypeEnum.BULLISH,
-        "is_analyzed": True,
-        "analysis_status": AnalysisStatusEnum.COMPLETED,
-        "notes": "Test breakout data",
+        "cpr": 102.5,
+        "resistance_1": 107.5,
+        "resistance_2": 112.5,
+        "support_1": 97.5,
+        "support_2": 92.5,
+        "narrow_gap": False,
+        "breakout_indicator": BreakoutIndicatorEnum.BREAKOUT,
+        "candle_indicator": CandleIndicatorEnum.BULLISH,
+        "volume_indicator": VolumeIndicatorEnum.HIGH_VOLUME,
+        "chart_link": "https://example.com/chart",
+        "analysis_notes": "Test breakout data",
+        "confidence_score": 0.85,
     }
 
 
@@ -159,10 +171,17 @@ def sample_breakout_data():
 def sample_master_data():
     """Sample master breakout data for testing"""
     return {
-        "snapshot_date": date(2023, 12, 1),
-        "data_source": "NSE",
-        "is_active": True,
-        "metadata": {"source": "test", "version": "1.0"},
+        "trade_date": date(2023, 12, 1),
+        "open_price": 100.0,
+        "high_price": 110.0,
+        "low_price": 95.0,
+        "close_price": 105.0,
+        "volume": 1000000,
+        "cpr": 102.5,
+        "resistance_1": 107.5,
+        "support_1": 97.5,
+        "narrow_gap": False,
+        "source_table": "test_source",
     }
 
 
@@ -189,7 +208,7 @@ def sample_performance_metrics():
         "metric_name": "Model Accuracy",
         "metric_value": 0.85,
         "metric_date": date(2023, 12, 1),
-        "metadata": {"model_version": "1.0", "dataset_size": 1000},
+        "metric_metadata": {"model_version": "1.0", "dataset_size": 1000},
     }
 
 
@@ -217,7 +236,7 @@ async def sample_breakout(
 async def sample_master(
     master_data_repository: MasterBreakoutDataRepository,
     sample_stock: Stock,
-    sample_breakout: BreakoutData,
+    sample_breakout: BreakoutDataV2,
     sample_master_data,
 ):
     """Create a sample master breakout data for testing"""

@@ -606,10 +606,10 @@ class StockRepository(BaseRepository[Stock]):
         except Exception as e:
             self.logger.error("Failed to get stocks by advanced filter", error=str(e))
             raise
-    
+
     async def count_by_advanced_filter(
         self,
-        filters: Optional[Dict[str, Any]] = None
+        filters: dict[str, Any] | None = None
     ) -> int:
         """
         Count stocks matching advanced filter parameters
@@ -623,7 +623,7 @@ class StockRepository(BaseRepository[Stock]):
         try:
             query = select(func.count(Stock.id))
             conditions = []
-            
+
             if filters:
                 # Apply same filtering logic as get_by_advanced_filter
                 for key, value in filters.items():
@@ -632,24 +632,24 @@ class StockRepository(BaseRepository[Stock]):
                             conditions.append(getattr(Stock, key).ilike(f"%{value}%"))
                         else:
                             conditions.append(getattr(Stock, key) == value)
-            
+
             if conditions:
                 query = query.where(and_(*conditions))
-            
+
             result = await self.session.execute(query)
             count = result.scalar() or 0
-            
+
             self.logger.debug("Stock count by advanced filter", count=count)
             return count
-            
+
         except Exception as e:
             self.logger.error("Failed to count stocks by advanced filter", error=str(e))
             raise
-    
+
     async def get_by_symbols(
         self,
         symbols: list[str],
-        load_relationships: Optional[list[str]] = None
+        load_relationships: list[str] | None = None
     ) -> list[Stock]:
         """
         Get stocks by list of symbols
@@ -664,22 +664,22 @@ class StockRepository(BaseRepository[Stock]):
         try:
             if not symbols:
                 return []
-            
+
             symbol_list = [s.upper() for s in symbols]
             query = select(Stock).where(Stock.symbol.in_(symbol_list))
-            
+
             # Add eager loading
             if load_relationships:
                 for relationship in load_relationships:
                     if hasattr(Stock, relationship):
                         query = query.options(selectinload(getattr(Stock, relationship)))
-            
+
             result = await self.session.execute(query)
             stocks = result.scalars().all()
-            
+
             self.logger.debug("Stocks retrieved by symbols", symbols=symbols, count=len(stocks))
             return list(stocks)
-            
+
         except Exception as e:
             self.logger.error("Failed to get stocks by symbols", symbols=symbols, error=str(e))
             raise

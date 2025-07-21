@@ -17,7 +17,8 @@ import type {
 export const analysisKeys = {
   all: ['analysis'] as const,
   sessions: () => [...analysisKeys.all, 'sessions'] as const,
-  sessionsList: (filters: AnalysisSessionFilter) => [...analysisKeys.sessions(), 'list', filters] as const,
+  sessionsList: (filters: AnalysisSessionFilter) =>
+    [...analysisKeys.sessions(), 'list', filters] as const,
   session: (id: string) => [...analysisKeys.sessions(), id] as const,
   tasks: () => [...analysisKeys.all, 'tasks'] as const,
   task: (id: string) => [...analysisKeys.tasks(), id] as const,
@@ -28,7 +29,8 @@ export const analysisKeys = {
 export function useAnalysisSessions(filters: AnalysisSessionFilter = {}) {
   return useQuery({
     queryKey: analysisKeys.sessionsList(filters),
-    queryFn: () => apiClient.get<AnalysisSessionList>('/analysis/sessions/', filters),
+    queryFn: () =>
+      apiClient.get<AnalysisSessionList>('/analysis/sessions/', filters),
     placeholderData: (previousData) => previousData,
   })
 }
@@ -36,7 +38,8 @@ export function useAnalysisSessions(filters: AnalysisSessionFilter = {}) {
 export function useAnalysisSession(id: string) {
   return useQuery({
     queryKey: analysisKeys.session(id),
-    queryFn: () => apiClient.get<AnalysisSessionResponse>(`/analysis/sessions/${id}`),
+    queryFn: () =>
+      apiClient.get<AnalysisSessionResponse>(`/analysis/sessions/${id}`),
     enabled: !!id,
   })
 }
@@ -45,7 +48,8 @@ export function useAnalysisSession(id: string) {
 export function useTaskStatus(taskId: string, enabled = true) {
   return useQuery({
     queryKey: analysisKeys.task(taskId),
-    queryFn: () => apiClient.get<TaskResponse>(`/analysis/tasks/${taskId}/status`),
+    queryFn: () =>
+      apiClient.get<TaskResponse>(`/analysis/tasks/${taskId}/status`),
     enabled: !!taskId && enabled,
     refetchInterval: (query) => {
       // Continue polling if task is still running
@@ -104,7 +108,8 @@ export function useClearChartData() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: () => apiClient.post<TaskResponse>('/analysis/clear-chart-data'),
+    mutationFn: () =>
+      apiClient.post<TaskResponse>('/analysis/clear-chart-data'),
     onSuccess: () => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['breakout-data'] })
@@ -116,7 +121,8 @@ export function useClearCompleteData() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: () => apiClient.post<TaskResponse>('/analysis/clear-complete-data'),
+    mutationFn: () =>
+      apiClient.post<TaskResponse>('/analysis/clear-complete-data'),
     onSuccess: () => {
       // Invalidate all data queries
       queryClient.invalidateQueries({ queryKey: ['stocks'] })
@@ -154,7 +160,9 @@ export function useUpdateAnalysisSession() {
     mutationFn: ({ id, data }: { id: string; data: any }) =>
       apiClient.put<AnalysisSessionResponse>(`/analysis/sessions/${id}`, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: analysisKeys.session(variables.id) })
+      queryClient.invalidateQueries({
+        queryKey: analysisKeys.session(variables.id),
+      })
       queryClient.invalidateQueries({ queryKey: analysisKeys.sessions() })
     },
   })

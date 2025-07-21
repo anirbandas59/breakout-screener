@@ -3,7 +3,6 @@ BreakoutData API endpoints
 """
 
 from datetime import date
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -12,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.database import get_db
 from ....core.logging import get_logger
 from ....repositories.breakout_data import BreakoutDataRepository
-from ....schemas.base import ListResponse, PaginationParams, SortParams, SuccessResponse
+from ....schemas.base import PaginationParams, SortParams, SuccessResponse
 from ....schemas.breakout_data import (
     BreakoutDataCreate,
     BreakoutDataFilter,
@@ -40,11 +39,11 @@ async def list_breakout_data(
     limit: int = Query(50, ge=1, le=1000, description="Items per page"),
     sort_by: str = Query("trade_date", description="Field to sort by"),
     sort_order: str = Query("desc", description="Sort order (asc/desc)"),
-    symbol: Optional[str] = Query(None, description="Filter by stock symbol"),
-    trade_date_from: Optional[date] = Query(None, description="Trade date from"),
-    trade_date_to: Optional[date] = Query(None, description="Trade date to"),
-    breakout_status: Optional[str] = Query(None, description="Filter by breakout status"),
-    is_analyzed: Optional[bool] = Query(None, description="Filter by analysis status"),
+    symbol: str | None = Query(None, description="Filter by stock symbol"),
+    trade_date_from: date | None = Query(None, description="Trade date from"),
+    trade_date_to: date | None = Query(None, description="Trade date to"),
+    breakout_status: str | None = Query(None, description="Filter by breakout status"),
+    is_analyzed: bool | None = Query(None, description="Filter by analysis status"),
     repository: BreakoutDataRepository = Depends(get_breakout_data_repository),
 ):
     """
@@ -64,7 +63,7 @@ async def list_breakout_data(
         # Create pagination and sorting parameters
         pagination = PaginationParams(page=page, limit=limit)
         sort = SortParams(sort_by=sort_by, sort_order=sort_order)
-        
+
         # Create filter parameters
         filters = BreakoutDataFilter(
             symbol=symbol,
@@ -73,7 +72,7 @@ async def list_breakout_data(
             breakout_status=breakout_status,
             is_analyzed=is_analyzed,
         )
-        
+
         # Get filtered breakout data
         breakout_data = await repository.get_by_advanced_filter(
             filters=filters,
@@ -81,10 +80,10 @@ async def list_breakout_data(
             sort=sort,
             load_relationships=["stock"],
         )
-        
+
         # Get total count for pagination metadata
         total_count = len(breakout_data)  # This would need a proper count method
-        
+
         # Create response with stock information
         items = []
         for data in breakout_data:
@@ -93,13 +92,13 @@ async def list_breakout_data(
                 response_data.stock_symbol = data.stock.symbol
                 response_data.stock_company_name = data.stock.company_name
             items.append(response_data)
-        
+
         return BreakoutDataList.create(
             items=items,
             total=total_count,
             pagination=pagination,
         )
-        
+
     except Exception as e:
         logger.error("Failed to list breakout data", error=str(e))
         raise HTTPException(
@@ -120,7 +119,7 @@ async def get_breakout_data(
     """
     try:
         breakout_data = await repository.get_by_id(
-            breakout_data_id, 
+            breakout_data_id,
             load_relationships=["stock"]
         )
         if not breakout_data:
@@ -128,14 +127,14 @@ async def get_breakout_data(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Breakout data with ID {breakout_data_id} not found"
             )
-        
+
         response_data = BreakoutDataResponse.model_validate(breakout_data)
         if breakout_data.stock:
             response_data.stock_symbol = breakout_data.stock.symbol
             response_data.stock_company_name = breakout_data.stock.company_name
-        
+
         return response_data
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -146,7 +145,7 @@ async def get_breakout_data(
         )
 
 
-@router.get("/symbol/{symbol}/date/{trade_date}", response_model=BreakoutDataResponse, 
+@router.get("/symbol/{symbol}/date/{trade_date}", response_model=BreakoutDataResponse,
            summary="Get breakout data by symbol and date")
 async def get_breakout_data_by_symbol_and_date(
     symbol: str,
@@ -161,7 +160,7 @@ async def get_breakout_data_by_symbol_and_date(
     """
     try:
         breakout_data = await repository.get_by_symbol_and_date(
-            symbol, 
+            symbol,
             trade_date,
             load_relationships=["stock"]
         )
@@ -170,21 +169,21 @@ async def get_breakout_data_by_symbol_and_date(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Breakout data for '{symbol}' on {trade_date} not found"
             )
-        
+
         response_data = BreakoutDataResponse.model_validate(breakout_data)
         if breakout_data.stock:
             response_data.stock_symbol = breakout_data.stock.symbol
             response_data.stock_company_name = breakout_data.stock.company_name
-        
+
         return response_data
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(
-            "Failed to get breakout data by symbol and date", 
-            symbol=symbol, 
-            trade_date=trade_date, 
+            "Failed to get breakout data by symbol and date",
+            symbol=symbol,
+            trade_date=trade_date,
             error=str(e)
         )
         raise HTTPException(
@@ -193,7 +192,7 @@ async def get_breakout_data_by_symbol_and_date(
         )
 
 
-@router.post("/", response_model=BreakoutDataResponse, status_code=status.HTTP_201_CREATED, 
+@router.post("/", response_model=BreakoutDataResponse, status_code=status.HTTP_201_CREATED,
             summary="Create new breakout data")
 async def create_breakout_data(
     breakout_data: BreakoutDataCreate,
@@ -213,11 +212,11 @@ async def create_breakout_data(
     try:
         # Validate OHLC constraints
         breakout_data.validate_ohlc_constraints()
-        
+
         # Check if data already exists for this stock and date
         existing_data = await repository.get_by_symbol_and_date(
             # This would need the symbol from stock_id - simplified for now
-            "CHECK", 
+            "CHECK",
             breakout_data.trade_date
         )
         if existing_data:
@@ -225,13 +224,13 @@ async def create_breakout_data(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Breakout data already exists for this stock on {breakout_data.trade_date}"
             )
-        
+
         # Create the breakout data
         created_data = await repository.create(breakout_data.model_dump())
-        
+
         logger.info("Breakout data created successfully", trade_date=breakout_data.trade_date)
         return BreakoutDataResponse.model_validate(created_data)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -262,14 +261,14 @@ async def update_breakout_data(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Breakout data with ID {breakout_data_id} not found"
             )
-        
+
         # Update the breakout data
         update_data = breakout_data.model_dump(exclude_unset=True)
         updated_data = await repository.update(breakout_data_id, update_data)
-        
+
         logger.info("Breakout data updated successfully", breakout_data_id=breakout_data_id)
         return BreakoutDataResponse.model_validate(updated_data)
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -298,15 +297,15 @@ async def delete_breakout_data(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Breakout data with ID {breakout_data_id} not found"
             )
-        
+
         # Delete the breakout data
         await repository.delete(breakout_data_id)
-        
+
         logger.info("Breakout data deleted successfully", breakout_data_id=breakout_data_id)
         return SuccessResponse(
             message=f"Breakout data for {existing_data.trade_date} deleted successfully"
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -319,8 +318,8 @@ async def delete_breakout_data(
 
 @router.get("/summary/", response_model=BreakoutDataSummary, summary="Get breakout data summary")
 async def get_breakout_data_summary(
-    from_date: Optional[date] = Query(None, description="Summary from date"),
-    to_date: Optional[date] = Query(None, description="Summary to date"),
+    from_date: date | None = Query(None, description="Summary from date"),
+    to_date: date | None = Query(None, description="Summary to date"),
     repository: BreakoutDataRepository = Depends(get_breakout_data_repository),
 ):
     """
@@ -334,14 +333,14 @@ async def get_breakout_data_summary(
     try:
         # Get breakout counts by status
         breakout_counts = await repository.get_breakout_counts_by_status(from_date, to_date)
-        
+
         # Calculate summary statistics
         total_records = sum(breakout_counts.values())
         breakout_percentage = 0.0
         if total_records > 0:
             no_breakout_count = breakout_counts.get("NO_BREAKOUT", 0)
             breakout_percentage = ((total_records - no_breakout_count) / total_records) * 100
-        
+
         summary = BreakoutDataSummary(
             total_records=total_records,
             analyzed_records=0,  # This would need additional query
@@ -357,9 +356,9 @@ async def get_breakout_data_summary(
             total_volume=None,  # This would need additional query
             analysis_success_rate=100.0,  # Placeholder
         )
-        
+
         return summary
-        
+
     except Exception as e:
         logger.error("Failed to get breakout data summary", error=str(e))
         raise HTTPException(
@@ -368,7 +367,7 @@ async def get_breakout_data_summary(
         )
 
 
-@router.get("/summary/daily/", response_model=list[DailyBreakoutSummary], 
+@router.get("/summary/daily/", response_model=list[DailyBreakoutSummary],
            summary="Get daily breakout summaries")
 async def get_daily_breakout_summaries(
     from_date: date = Query(..., description="Start date for daily summaries"),
@@ -385,7 +384,7 @@ async def get_daily_breakout_summaries(
     """
     try:
         daily_summaries = await repository.get_daily_breakout_summary(from_date, to_date)
-        
+
         # Convert to response format
         response_summaries = []
         for summary in daily_summaries:
@@ -403,9 +402,9 @@ async def get_daily_breakout_summaries(
                 volume_indicators={},  # Would need additional query
             )
             response_summaries.append(daily_summary)
-        
+
         return response_summaries
-        
+
     except Exception as e:
         logger.error("Failed to get daily breakout summaries", error=str(e))
         raise HTTPException(
@@ -418,8 +417,8 @@ async def get_daily_breakout_summaries(
 async def get_unanalyzed_breakout_data(
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(50, ge=1, le=1000, description="Items per page"),
-    from_date: Optional[date] = Query(None, description="From date"),
-    to_date: Optional[date] = Query(None, description="To date"),
+    from_date: date | None = Query(None, description="From date"),
+    to_date: date | None = Query(None, description="To date"),
     repository: BreakoutDataRepository = Depends(get_breakout_data_repository),
 ):
     """
@@ -432,22 +431,22 @@ async def get_unanalyzed_breakout_data(
     """
     try:
         pagination = PaginationParams(page=page, limit=limit)
-        
+
         unanalyzed_data = await repository.get_unanalyzed_data(
             from_date=from_date,
             to_date=to_date,
             pagination=pagination,
         )
-        
+
         # Create response
         items = [BreakoutDataResponse.model_validate(data) for data in unanalyzed_data]
-        
+
         return BreakoutDataList.create(
             items=items,
             total=len(items),  # This would need a proper count method
             pagination=pagination,
         )
-        
+
     except Exception as e:
         logger.error("Failed to get unanalyzed breakout data", error=str(e))
         raise HTTPException(

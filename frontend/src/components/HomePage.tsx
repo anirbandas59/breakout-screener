@@ -28,7 +28,7 @@ interface AnalysisFormData {
 
 export default function HomePage() {
   // State management
-  const [analysisDate, setAnalysisDate] = useState(() => 
+  const [analysisDate, setAnalysisDate] = useState(() =>
     format(new Date(), 'yyyy-MM-dd')
   )
   const [currentTaskId, setCurrentTaskId] = useState<string>('')
@@ -53,10 +53,8 @@ export default function HomePage() {
   })
 
   // API hooks
-  const { data: breakoutData, isLoading: isLoadingData } = useBreakoutDataRealtime(
-    dataFilters,
-    isAnalysisRunning
-  )
+  const { data: breakoutData, isLoading: isLoadingData } =
+    useBreakoutDataRealtime(dataFilters, isAnalysisRunning)
 
   const generateBreakoutMutation = useGenerateBreakoutData()
   const fetchScriptsMutation = useFetchScripts()
@@ -72,9 +70,7 @@ export default function HomePage() {
     if (taskStatus) {
       const { status, result } = taskStatus
 
-      setIsAnalysisRunning(
-        status === 'PENDING' || status === 'IN_PROGRESS'
-      )
+      setIsAnalysisRunning(status === 'PENDING' || status === 'IN_PROGRESS')
 
       if (result?.start_time) {
         setStartTime(result.start_time)
@@ -111,7 +107,7 @@ export default function HomePage() {
 
   // Update data filters when date or sorting changes
   useEffect(() => {
-    setDataFilters(prev => ({
+    setDataFilters((prev) => ({
       ...prev,
       trade_date_from: analysisDate,
       trade_date_to: analysisDate,
@@ -121,17 +117,20 @@ export default function HomePage() {
   }, [analysisDate, sortField, sortDirection])
 
   // Helper function to calculate duration
-  const calculateDuration = (start: string | undefined, end: string | undefined): string => {
+  const calculateDuration = (
+    start: string | undefined,
+    end: string | undefined
+  ): string => {
     if (!start || !end) return '--:--:--'
     try {
       const startDate = new Date(start)
       const endDate = new Date(end)
       const diffMs = endDate.getTime() - startDate.getTime()
-      
+
       const hours = Math.floor(diffMs / (1000 * 60 * 60))
       const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
       const seconds = Math.floor((diffMs % (1000 * 60)) / 1000)
-      
+
       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
     } catch {
       return '--:--:--'
@@ -151,23 +150,26 @@ export default function HomePage() {
   // Event handlers
   const handleAnalysisSubmit = (data: AnalysisFormData) => {
     setAnalysisDate(data.analysisDate)
-    
-    generateBreakoutMutation.mutate({
-      date: data.analysisDate,
-      pivot_val: data.pivotGap / 100, // Convert percentage to decimal
-    }, {
-      onSuccess: (response) => {
-        setCurrentTaskId(response.task_id)
-        setIsAnalysisRunning(true)
-        setStartTime(new Date().toISOString())
-        setScriptsAnalyzed(0)
-        setRunningTime('00:00:00')
+
+    generateBreakoutMutation.mutate(
+      {
+        date: data.analysisDate,
+        pivot_val: data.pivotGap / 100, // Convert percentage to decimal
       },
-      onError: (error) => {
-        console.error('Failed to start analysis:', error)
-        setIsAnalysisRunning(false)
+      {
+        onSuccess: (response) => {
+          setCurrentTaskId(response.task_id)
+          setIsAnalysisRunning(true)
+          setStartTime(new Date().toISOString())
+          setScriptsAnalyzed(0)
+          setRunningTime('00:00:00')
+        },
+        onError: (error) => {
+          console.error('Failed to start analysis:', error)
+          setIsAnalysisRunning(false)
+        },
       }
-    })
+    )
   }
 
   const handleDateChange = (date: string) => {
@@ -179,7 +181,7 @@ export default function HomePage() {
       onSuccess: () => {
         setIsAnalysisRunning(false)
         setCurrentTaskId('')
-      }
+      },
     })
   }
 
@@ -187,7 +189,7 @@ export default function HomePage() {
     fetchScriptsMutation.mutate(undefined, {
       onSuccess: (response) => {
         setCurrentTaskId(response.task_id)
-      }
+      },
     })
   }
 
@@ -195,7 +197,7 @@ export default function HomePage() {
     clearChartMutation.mutate(undefined, {
       onSuccess: (response) => {
         setCurrentTaskId(response.task_id)
-      }
+      },
     })
   }
 
@@ -207,7 +209,7 @@ export default function HomePage() {
         setStartTime('')
         setRunningTime('')
         setScriptFetchedOn('')
-      }
+      },
     })
   }
 
@@ -219,8 +221,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
-      <main className="container mx-auto px-4 py-6 space-y-6">
+
+      <main className="container mx-auto space-y-6 px-4 py-6">
         {/* Analysis Configuration */}
         <InputForm
           analysisDate={analysisDate}

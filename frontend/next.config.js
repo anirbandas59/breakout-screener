@@ -13,7 +13,7 @@ const nextConfig = {
         source: '/api/:path*',
         destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/:path*`,
       },
-    ];
+    ]
   },
   async headers() {
     return [
@@ -34,22 +34,22 @@ const nextConfig = {
           },
         ],
       },
-    ];
+    ]
   },
   // Enable static optimization
   output: 'standalone',
-  
+
   // Image optimization
   images: {
     domains: ['localhost'],
     formats: ['image/webp', 'image/avif'],
   },
-  
+
   // Webpack configuration
   webpack: (config, { dev, isServer }) => {
     // Add custom webpack config if needed
-    return config;
+    return config
   },
-};
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

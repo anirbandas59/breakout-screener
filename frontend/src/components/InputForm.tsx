@@ -98,9 +98,12 @@ export default function InputForm({
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(handleFormSubmit)}
+            className="space-y-6"
+          >
             {/* Input Fields Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <FormField
                 control={form.control}
                 name="analysisDate"
@@ -133,7 +136,9 @@ export default function InputForm({
                         min="0.1"
                         max="10"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        onChange={(e) =>
+                          field.onChange(parseFloat(e.target.value) || 0)
+                        }
                         disabled={isAnalysisRunning}
                         className="w-full"
                       />
@@ -157,14 +162,14 @@ export default function InputForm({
                         type="number"
                         min="1"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || 1)
+                        }
                         disabled={isAnalysisRunning}
                         className="w-full"
                       />
                     </FormControl>
-                    <FormDescription>
-                      Starting stock index
-                    </FormDescription>
+                    <FormDescription>Starting stock index</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -173,8 +178,8 @@ export default function InputForm({
 
             {/* Analysis Status Section */}
             <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold mb-4">Analysis Status</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <h3 className="mb-4 text-lg font-semibold">Analysis Status</h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-muted-foreground">
                     Scripts Analyzed
@@ -188,16 +193,14 @@ export default function InputForm({
                   <Label className="text-sm font-medium text-muted-foreground">
                     Start Time
                   </Label>
-                  <div className="text-sm">
-                    {startTime || '--:--:--'}
-                  </div>
+                  <div className="text-sm">{startTime || '--:--:--'}</div>
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-muted-foreground">
                     Running Time
                   </Label>
-                  <div className="text-sm font-mono">
+                  <div className="font-mono text-sm">
                     {runningTime || '--:--:--'}
                   </div>
                 </div>
@@ -206,9 +209,7 @@ export default function InputForm({
                   <Label className="text-sm font-medium text-muted-foreground">
                     Completed At
                   </Label>
-                  <div className="text-sm">
-                    {scriptFetchedOn || '--'}
-                  </div>
+                  <div className="text-sm">{scriptFetchedOn || '--'}</div>
                 </div>
               </div>
             </div>

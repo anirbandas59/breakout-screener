@@ -36,14 +36,14 @@ export enum StockGroupEnum {
   NIFTY_100 = 'NIFTY_100',
   NIFTY_500 = 'NIFTY_500',
   MIDCAP = 'MIDCAP',
-  SMALLCAP = 'SMALLCAP'
+  SMALLCAP = 'SMALLCAP',
 }
 
 export enum BreakoutStatusEnum {
   NO_BREAKOUT = 'NO_BREAKOUT',
   BULLISH_BREAKOUT = 'BULLISH_BREAKOUT',
   BEARISH_BREAKOUT = 'BEARISH_BREAKOUT',
-  SIDEWAYS = 'SIDEWAYS'
+  SIDEWAYS = 'SIDEWAYS',
 }
 
 export enum CandleIndicatorEnum {
@@ -52,21 +52,21 @@ export enum CandleIndicatorEnum {
   DOJI = 'DOJI',
   HAMMER = 'HAMMER',
   SHOOTING_STAR = 'SHOOTING_STAR',
-  NEUTRAL = 'NEUTRAL'
+  NEUTRAL = 'NEUTRAL',
 }
 
 export enum VolumeIndicatorEnum {
   HIGH_VOLUME = 'HIGH_VOLUME',
   AVERAGE_VOLUME = 'AVERAGE_VOLUME',
   LOW_VOLUME = 'LOW_VOLUME',
-  UNUSUAL_VOLUME = 'UNUSUAL_VOLUME'
+  UNUSUAL_VOLUME = 'UNUSUAL_VOLUME',
 }
 
 export enum PivotTypeEnum {
   CLASSICAL = 'CLASSICAL',
   FIBONACCI = 'FIBONACCI',
   CAMARILLA = 'CAMARILLA',
-  WOODIE = 'WOODIE'
+  WOODIE = 'WOODIE',
 }
 
 export enum AnalysisStatusEnum {
@@ -74,7 +74,7 @@ export enum AnalysisStatusEnum {
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
 }
 
 export enum PerformanceMetricTypeEnum {
@@ -82,7 +82,7 @@ export enum PerformanceMetricTypeEnum {
   PRECISION = 'PRECISION',
   RECALL = 'RECALL',
   F1_SCORE = 'F1_SCORE',
-  SUCCESS_RATE = 'SUCCESS_RATE'
+  SUCCESS_RATE = 'SUCCESS_RATE',
 }
 
 // Stock schemas
@@ -191,7 +191,9 @@ export interface AnalysisSessionBase {
   tags?: string[]
 }
 
-export interface AnalysisSessionResponse extends AnalysisSessionBase, BaseResponse {
+export interface AnalysisSessionResponse
+  extends AnalysisSessionBase,
+    BaseResponse {
   is_running: boolean
   is_completed: boolean
   has_errors: boolean
@@ -202,7 +204,8 @@ export interface AnalysisSessionResponse extends AnalysisSessionBase, BaseRespon
   estimated_completion_time?: string
 }
 
-export interface AnalysisSessionList extends ListResponse<AnalysisSessionResponse> {}
+export interface AnalysisSessionList
+  extends ListResponse<AnalysisSessionResponse> {}
 
 export interface AnalysisSessionFilter extends FilterParams {
   session_name?: string
@@ -231,14 +234,17 @@ export interface PerformanceMetricsBase {
   tags?: string[]
 }
 
-export interface PerformanceMetricsResponse extends PerformanceMetricsBase, BaseResponse {
+export interface PerformanceMetricsResponse
+  extends PerformanceMetricsBase,
+    BaseResponse {
   session_name?: string
   session_status?: string
   is_latest: boolean
   days_ago?: number
 }
 
-export interface PerformanceMetricsList extends ListResponse<PerformanceMetricsResponse> {}
+export interface PerformanceMetricsList
+  extends ListResponse<PerformanceMetricsResponse> {}
 
 // API request/response types
 export interface ApiResponse<T = any> {

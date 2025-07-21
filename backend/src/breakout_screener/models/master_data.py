@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from .breakout_data import BreakoutDataV2
 
 from sqlalchemy import (
+    DECIMAL,
     BigInteger,
     Boolean,
     Column,
@@ -21,7 +22,7 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.dialects.postgresql import DECIMAL, ENUM, UUID
+from sqlalchemy.dialects.postgresql import ENUM, UUID
 from sqlalchemy.orm import relationship, validates
 
 from .base import BaseModel
@@ -419,3 +420,7 @@ class MasterBreakoutDataV2(BaseModel):
             'volume_indicator': self.volume_indicator.value,
             'link': self.chart_link
         }
+
+
+# Alias for backward compatibility
+MasterBreakoutData = MasterBreakoutDataV2

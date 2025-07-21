@@ -310,7 +310,7 @@ class PerformanceMetrics(BaseModel):
     )
 
     # Additional metadata
-    metadata = Column(
+    metric_metadata = Column(
         JSONB,
         nullable=True,
         comment="Additional metadata and context for the metric"

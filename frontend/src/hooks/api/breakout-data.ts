@@ -14,10 +14,12 @@ import type {
 export const breakoutDataKeys = {
   all: ['breakout-data'] as const,
   lists: () => [...breakoutDataKeys.all, 'list'] as const,
-  list: (filters: BreakoutDataFilter) => [...breakoutDataKeys.lists(), filters] as const,
+  list: (filters: BreakoutDataFilter) =>
+    [...breakoutDataKeys.lists(), filters] as const,
   details: () => [...breakoutDataKeys.all, 'detail'] as const,
   detail: (id: string) => [...breakoutDataKeys.details(), id] as const,
-  summary: (filters?: BreakoutDataFilter) => [...breakoutDataKeys.all, 'summary', filters] as const,
+  summary: (filters?: BreakoutDataFilter) =>
+    [...breakoutDataKeys.all, 'summary', filters] as const,
   daily: (date: string) => [...breakoutDataKeys.all, 'daily', date] as const,
 }
 
@@ -60,7 +62,10 @@ export function useDailyBreakoutSummary(date: string) {
 }
 
 // Auto-refreshing query for real-time data during analysis
-export function useBreakoutDataRealtime(filters: BreakoutDataFilter = {}, enabled = false) {
+export function useBreakoutDataRealtime(
+  filters: BreakoutDataFilter = {},
+  enabled = false
+) {
   return useQuery({
     queryKey: [...breakoutDataKeys.list(filters), 'realtime'],
     queryFn: () => apiClient.get<BreakoutDataList>('/breakout-data/', filters),
@@ -91,7 +96,9 @@ export function useUpdateBreakoutData() {
     mutationFn: ({ id, data }: { id: string; data: any }) =>
       apiClient.put<BreakoutDataResponse>(`/breakout-data/${id}`, data),
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: breakoutDataKeys.detail(variables.id) })
+      queryClient.invalidateQueries({
+        queryKey: breakoutDataKeys.detail(variables.id),
+      })
       queryClient.invalidateQueries({ queryKey: breakoutDataKeys.lists() })
       queryClient.invalidateQueries({ queryKey: breakoutDataKeys.summary() })
     },

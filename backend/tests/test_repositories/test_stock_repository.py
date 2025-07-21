@@ -133,7 +133,7 @@ class TestStockRepository:
         """Test getting all stocks"""
         # Create multiple stocks
         stocks_data = [
-            {**sample_stock_data, "symbol": f"TEST{i}", "isin": f"INE12345678{i}"}
+            {**sample_stock_data, "symbol": f"TEST{i}", "isin_code": f"INE12345678{i}"}
             for i in range(3)
         ]
         
@@ -143,7 +143,7 @@ class TestStockRepository:
         stocks = await stock_repository.get_all()
         
         assert len(stocks) == 3
-        assert all(isinstance(stock, Stock) for stock in stocks)
+        assert all(isin_codestance(stock, Stock) for stock in stocks)
 
     @pytest.mark.asyncio
     async def test_get_all_with_pagination(
@@ -155,7 +155,7 @@ class TestStockRepository:
             stock_data = {
                 **sample_stock_data,
                 "symbol": f"TEST{i}",
-                "isin": f"INE12345678{i}",
+                "isin_code": f"INE12345678{i}",
             }
             await stock_repository.create(stock_data)
         
@@ -187,7 +187,7 @@ class TestStockRepository:
             stock_data = {
                 **sample_stock_data,
                 "symbol": symbol,
-                "isin": f"INE{symbol}123",
+                "isin_code": f"INE{symbol}123",
             }
             await stock_repository.create(stock_data)
         
@@ -208,7 +208,7 @@ class TestStockRepository:
         inactive_stock_data = {
             **sample_stock_data,
             "symbol": "INACTIVE",
-            "isin": "INE987654321",
+            "isin_code": "INE987654321",
             "is_active": False,
         }
         
@@ -230,19 +230,19 @@ class TestStockRepository:
                 **sample_stock_data,
                 "symbol": "TECH1",
                 "company_name": "Technology Company One",
-                "isin": "INE123456781",
+                "isin_code": "INE123456781",
             },
             {
                 **sample_stock_data,
                 "symbol": "TECH2", 
                 "company_name": "Technology Company Two",
-                "isin": "INE123456782",
+                "isin_code": "INE123456782",
             },
             {
                 **sample_stock_data,
                 "symbol": "BANK1",
                 "company_name": "Banking Corporation",
-                "isin": "INE123456783",
+                "isin_code": "INE123456783",
             },
         ]
         
@@ -266,8 +266,8 @@ class TestStockRepository:
         # Create stocks with different market caps
         stocks_data = [
             {**sample_stock_data, "symbol": "SMALL", "market_cap": 1000000000},
-            {**sample_stock_data, "symbol": "MEDIUM", "market_cap": 5000000000, "isin": "INE123456782"},
-            {**sample_stock_data, "symbol": "LARGE", "market_cap": 10000000000, "isin": "INE123456783"},
+            {**sample_stock_data, "symbol": "MEDIUM", "market_cap": 5000000000, "isin_code": "INE123456782"},
+            {**sample_stock_data, "symbol": "LARGE", "market_cap": 10000000000, "isin_code": "INE123456783"},
         ]
         
         for stock_data in stocks_data:
@@ -287,8 +287,8 @@ class TestStockRepository:
         # Create stocks in different sectors
         stocks_data = [
             {**sample_stock_data, "symbol": "TECH1", "sector": "Technology"},
-            {**sample_stock_data, "symbol": "BANK1", "sector": "Banking", "isin": "INE123456782"},
-            {**sample_stock_data, "symbol": "TECH2", "sector": "Technology", "isin": "INE123456783"},
+            {**sample_stock_data, "symbol": "BANK1", "sector": "Banking", "isin_code": "INE123456782"},
+            {**sample_stock_data, "symbol": "TECH2", "sector": "Technology", "isin_code": "INE123456783"},
         ]
         
         for stock_data in stocks_data:
@@ -307,7 +307,7 @@ class TestStockRepository:
             stock_data = {
                 **sample_stock_data,
                 "symbol": f"TEST{i}",
-                "isin": f"INE12345678{i}",
+                "isin_code": f"INE12345678{i}",
             }
             await stock_repository.create(stock_data)
         
@@ -333,7 +333,7 @@ class TestStockRepository:
     async def test_bulk_create_stocks(self, stock_repository: StockRepository, sample_stock_data):
         """Test bulk creating stocks"""
         stocks_data = [
-            {**sample_stock_data, "symbol": f"BULK{i}", "isin": f"INE12345678{i}"}
+            {**sample_stock_data, "symbol": f"BULK{i}", "isin_code": f"INE12345678{i}"}
             for i in range(3)
         ]
         

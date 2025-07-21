@@ -141,3 +141,37 @@ class StockGroupEnum(str, enum.Enum):
     def nse_url_key(self) -> str:
         """Get corresponding NSE URL configuration key"""
         return f"NSE_URL_{self.value}"
+
+
+class BreakoutStatusEnum(str, enum.Enum):
+    """Breakout status enumeration"""
+    NO_BREAKOUT = "NO_BREAKOUT"
+    BULLISH_BREAKOUT = "BULLISH_BREAKOUT"
+    BEARISH_BREAKOUT = "BEARISH_BREAKOUT"
+    SIDEWAYS = "SIDEWAYS"
+
+
+class AnalysisStatusEnum(str, enum.Enum):
+    """Analysis status enumeration"""
+    PENDING = "PENDING"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
+class PivotTypeEnum(str, enum.Enum):
+    """Pivot calculation type enumeration"""
+    CLASSICAL = "CLASSICAL"
+    FIBONACCI = "FIBONACCI"
+    CAMARILLA = "CAMARILLA"
+    WOODIE = "WOODIE"
+
+
+class PerformanceMetricTypeEnum(str, enum.Enum):
+    """Performance metric type enumeration"""
+    ACCURACY = "ACCURACY"
+    PRECISION = "PRECISION"
+    RECALL = "RECALL"
+    F1_SCORE = "F1_SCORE"
+    SUCCESS_RATE = "SUCCESS_RATE"

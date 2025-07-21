@@ -8,7 +8,12 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Breakout Screener V2',
   description: 'Advanced breakout stock screener with real-time data analysis',
-  keywords: ['stock screener', 'breakout analysis', 'NSE data', 'financial analysis'],
+  keywords: [
+    'stock screener',
+    'breakout analysis',
+    'NSE data',
+    'financial analysis',
+  ],
   authors: [{ name: 'Breakout Screener Team' }],
   viewport: 'width=device-width, initial-scale=1',
 }

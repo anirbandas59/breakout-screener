@@ -86,6 +86,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    # Package managers and build tools
+    "pip>=23.0.0",
+    "uv>=0.1.0",
+    
     # Testing
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
@@ -94,6 +98,7 @@ dev = [
     "pytest-xdist>=3.3.0",
     "httpx>=0.25.0",  # For async test client
     "faker>=19.0.0",
+    "aiosqlite>=0.19.0",  # For test database
     
     # Code quality
     "ruff>=0.1.0",
