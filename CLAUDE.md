@@ -68,10 +68,10 @@ Settings management using Pydantic with support for:
 #### 4. Services (`app/services/`)
 Business logic modules:
 - `fetch_data.py` - Data fetching operations
-- `fetch_scripts.py` - Stock symbol retrieval
+- `fetch_scripts.py` - Stock symbol retrieval and historical data
 - `generate_bo_data.py` - Breakout analysis generation
-- `nse_data.py` - NSE data processing
 - `clear_chart.py` - Data cleanup operations
+- `clear_complete_data.py` - Archive and reset operations
 
 #### 5. Celery Tasks (`app/tasks/`)
 Asynchronous task processing:
@@ -115,7 +115,7 @@ uvicorn app.main:app --reload
 alembic upgrade head
 
 # Start Celery worker
-celery -A app.celery_app.celery worker --loglevel=info
+celery -A app.celery.celery_app worker --loglevel=info
 ```
 
 ### Frontend Commands
@@ -181,15 +181,15 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 - **Redis**: In-memory data store for Celery broker
 - **PostgreSQL**: Primary database
 - **Pandas**: Data manipulation and analysis
-- **Selenium**: Web scraping for NSE data
+- **Selenium**: Web scraping for NSE index constituents
+- **yfinance**: Historical price data fetching (planned replacement for Selenium)
 
 ### Frontend
 - **Next.js 15**: React framework with App Router
 - **React 19**: UI library
 - **TypeScript**: Static type checking
-- **Material-UI**: Component library
+- **Material-UI**: Component library (icons, dividers)
 - **Axios**: HTTP client
-- **Jotai**: State management
 - **Tailwind CSS**: Utility-first CSS framework
 
 ## Development Workflow
@@ -225,10 +225,13 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 
 ## Performance Considerations
 
-- Use Celery for CPU-intensive operations
-- Implement pagination for large datasets
-- Redis caching for frequently accessed data
-- Database indexing on commonly queried fields
+- Use Celery for long-running operations (data fetching, analysis)
+- Implement pagination for large datasets (400-500 scripts)
+- Database indexing on commonly queried fields (script_name, group_name, date)
+
+## Known Issues
+
+See `docs/project-analysis.md` for detailed analysis of current issues and implementation plan.
 
 ## Security Notes
 
