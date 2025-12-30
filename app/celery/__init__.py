@@ -20,6 +20,16 @@ def celery_init_app() -> Celery:
 
 celery_app = celery_init_app()
 
+celery_app.conf.update(
+    task_time_limit=3600,           # 1 hour hard limit
+    task_soft_time_limit=3300,      # 55 min soft limit
+    broker_transport_options={
+        'visibility_timeout': 3600   # 1 hour
+    },
+    task_acks_late=True,            # Ack after completion
+    task_reject_on_worker_lost=True # Requeue if worker dies
+)
+
 # import os
 # from celery import Celery, Task
 # from fastapi import FastAPI
