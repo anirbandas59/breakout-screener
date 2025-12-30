@@ -3,6 +3,7 @@ import os
 import logging
 import pandas as pd
 import yfinance as yf
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from selenium.webdriver.common.by import By
 from sqlalchemy.orm import Session
@@ -122,6 +123,14 @@ def fetch_script_symbols(db: Session):
         driver.quit()
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception_type(Exception),
+    before_sleep=lambda retry_state: logging.warning(
+        f"Retrying {retry_state.fn.__name__}, attempt {retry_state.attempt_number}"
+    )
+)
 def fetch_script_historical_data(script_name: str, period: str = "1mo") -> pd.DataFrame:
     """
     Fetch historical OHLCV data using yfinance.

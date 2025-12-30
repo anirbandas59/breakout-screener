@@ -109,6 +109,52 @@ Let me know when you're ready to begin.
 
 ---
 
+### [2025-12-30 18:25] [DEV] Completed Task 1.5
+
+**Task**: Add Retry Logic
+**Status**: Complete
+
+**Changes Made**:
+- `requirements.txt`: Added `tenacity` (line 16)
+- `app/services/fetch_scripts.py`:
+  - Added tenacity imports (line 6)
+  - Added @retry decorator to fetch_script_historical_data (lines 126-133)
+
+**Dependencies**:
+- Added: tenacity==9.1.2
+- Installation: `uv pip install tenacity`
+- Verification: `uv pip list | grep tenacity` ✓
+
+**Testing**:
+Commands run:
+```bash
+uv pip install tenacity
+uv run python -c "from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type; print('✓ tenacity imports successfully')"
+uv run python -c "from app.services.fetch_scripts import fetch_script_historical_data; df = fetch_script_historical_data('RELIANCE'); print(f'✓ Function with retry decorator works: {len(df)} rows')"
+```
+
+Results:
+- [x] tenacity installed: 9.1.2
+- [x] Imports work correctly
+- [x] Retry decorator added with:
+  * Max 3 attempts (stop_after_attempt(3))
+  * Exponential backoff (wait_exponential 2-10s)
+  * Retry on any exception
+  * Logging before retry attempts
+- [x] Function works: 21 rows for RELIANCE
+
+**Issues Encountered**:
+- None
+
+**Questions for PM**:
+- None
+
+**Next**: Phase 1 complete. Ready for PM review.
+
+**Blocking**: No
+
+---
+
 ### [2025-12-30 18:20] [DEV] Completed Task 1.4
 
 **Task**: Add Progress Tracking
