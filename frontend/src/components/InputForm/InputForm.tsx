@@ -38,7 +38,7 @@ const InputForm: React.FC<InputFormProps> = ({
     // Logic for starting analysis
 
     try {
-      const result = await generateBOData(date, pivotGap / 100);
+      const result = await generateBOData(date, pivotGap / 100, startFrom);
       onTaskIdChange(result.task_id);
     } catch (error) {
       console.error(error);

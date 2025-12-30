@@ -13,11 +13,12 @@ export const fetchScripts = async (): Promise<APIResponse> => {
   }
 };
 
-export const generateBOData = async (date: string, pivot_val: number): Promise<APIResponse> => {
+export const generateBOData = async (date: string, pivot_val: number, start_from: number = 1): Promise<APIResponse> => {
   try {
     const response = await axiosInstance.post('/generate_bodata', {
       date,
       pivot_val,
+      start_from,
     });
     console.log(response.data);
 
