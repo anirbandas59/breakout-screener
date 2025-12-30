@@ -48,7 +48,7 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float) -> dict:
         }
 
     logging.info("Starting analysis in generate_BOData")
-    for script in scripts[:5]:
+    for script in scripts:
         if SUSPEND_ANALYSIS.is_set():
             logging.warning(
                 "Analysis suspended. Halting analysis at script: %s", script.script_name)
