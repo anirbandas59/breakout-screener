@@ -2,6 +2,7 @@ import logging
 
 from datetime import datetime
 from sqlalchemy.orm import Session
+from celery import current_task
 
 from app.models.breakout_data import BreakoutData
 from app.services.fetch_scripts import fetch_script_historical_data
@@ -47,14 +48,26 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float) -> dict:
             "error": "No scripts available for analysis."
         }
 
+    total_scripts = len(scripts)
     logging.info("Starting analysis in generate_BOData")
-    for script in scripts:
+    for i, script in enumerate(scripts):
+        # Update progress
+        if current_task:
+            current_task.update_state(
+                state='PROGRESS',
+                meta={
+                    'current': i + 1,
+                    'total': total_scripts,
+                    'script': script.script_name
+                }
+            )
+        # Check suspension
         if SUSPEND_ANALYSIS.is_set():
             logging.warning(
                 "Analysis suspended. Halting analysis at script: %s", script.script_name)
             return {
-                "status": "FAIL",
-                "error": "Analysis suspended by user."
+                "status": "SUSPENDED",
+                "message": f"Suspended at script {i + 1} of {total_scripts}"
             }
 
         script_name: str = script.script_name
@@ -198,5 +211,5 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float) -> dict:
     logging.info("BO Analysis completed successfully")
     return {
         "status": "SUCCESS",
-        "message": "BO Analysis completed successfully"
+        "message": f"Completed {total_scripts} scripts"
     }
