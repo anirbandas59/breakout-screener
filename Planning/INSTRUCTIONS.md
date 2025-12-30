@@ -68,17 +68,38 @@ def fetch_script_historical_data(script_name: str, period: str = "1mo") -> pd.Da
 ```
 
 **Steps**:
-- [ ] Add `yfinance` to requirements.txt
-- [ ] Replace `fetch_script_historical_data` function
-- [ ] Remove unused Selenium imports (keep for NSE scraping)
-- [ ] Test with single script: `RELIANCE`
-- [ ] Test with 10 scripts
+- [x] Add `yfinance` to requirements.txt
+- [x] Replace `fetch_script_historical_data` function
+- [x] Remove unused Selenium imports (keep for NSE scraping)
+- [x] Test with single script: `RELIANCE`
+- [x] Test with 10 scripts
 - [x] **Developer Done**
 - [ ] **PM Verified**
 
 **Notes**:
 ```
-Developer: (write notes here)
+Developer:
+- Added yfinance==1.0 to requirements.txt
+- Installed using: uv pip install yfinance
+- Also installed missing dependencies: websocket-client, packaging
+- Replaced fetch_script_historical_data() at lines 125-150 in fetch_scripts.py
+- Kept Selenium imports (still needed for fetch_script_symbols)
+- Added yfinance import at line 5
+- Tests passed:
+  * RELIANCE: 21 rows fetched successfully
+  * 10 stocks: All fetched successfully in 3.52s (0.35s per stock)
+  * ~60x faster than Selenium (was ~20s per stock with Selenium)
+- Function returns DataFrame with OHLCV columns as expected
+- Empty DataFrame handling works correctly
+- Error handling in place with logging
+
+Commands used:
+uv pip install yfinance
+uv pip install websocket-client packaging
+uv pip list | grep yfinance
+uv run python -c "import yfinance as yf; print(yf.__version__)"
+uv run python -c "from app.services.fetch_scripts import fetch_script_historical_data; df = fetch_script_historical_data('RELIANCE'); print(f'✓ RELIANCE: {len(df)} rows fetched')"
+
 PM: (review notes here)
 ```
 

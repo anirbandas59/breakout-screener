@@ -2,6 +2,7 @@ import time
 import os
 import logging
 import pandas as pd
+import yfinance as yf
 
 from selenium.webdriver.common.by import By
 from sqlalchemy.orm import Session
@@ -121,67 +122,29 @@ def fetch_script_symbols(db: Session):
         driver.quit()
 
 
-def fetch_script_historical_data(script_name: str) -> pd.DataFrame:
+def fetch_script_historical_data(script_name: str, period: str = "1mo") -> pd.DataFrame:
     """
-    Fetches the historical data for a script from Yahoo Finance and returns it as a pandas DataFrame.
+    Fetch historical OHLCV data using yfinance.
 
     Args:
-        script_name (str): The script name to fetch data for.
+        script_name: NSE stock symbol (e.g., "RELIANCE")
+        period: Data period (default "1mo" for 1 month)
 
     Returns:
-        pd.DataFrame: A DataFrame containing the historical data for the script.
+        DataFrame with Date index and OHLCV columns
     """
-    # logging.basicConfig(level=logging.INFO)
-
-    # Replace the script name in the URL
-    yfin_hist_url = settings.yfin_hist_url.replace("SCRIPT", script_name)
-    logging.info("Fetching data from %s", yfin_hist_url)
-    print("Fetching data from %s", yfin_hist_url)
-
-    # Create a Chrome driver with an implicit wait of 10 seconds
-    driver = get_chrome_driver()
-    driver.implicitly_wait(10)
-
     try:
-        # Navigate to the Yahoo Finance page
-        driver.get(yfin_hist_url)
-        # Find the table element
-        table = driver.find_element(By.TAG_NAME, "table")
+        ticker = yf.Ticker(f"{script_name}.NS")
+        df = ticker.history(period=period)
 
-        # Extract the table headers
-        table_head = table.find_element(By.TAG_NAME, "thead")
-        headers = [th.text.strip()
-                   for th in table_head.find_elements(By.TAG_NAME, "th")]
-        # print(headers)
+        if df.empty:
+            logging.warning(f"No data returned for {script_name}")
+            return pd.DataFrame()
 
-        # Extract the table rows
-        table_body = table.find_element(By.TAG_NAME, "tbody")
-        rows = table_body.find_elements(By.TAG_NAME, "tr")
+        # Ensure column names match expected format
+        df.index = df.index.strftime('%Y-%m-%d')
+        return df
 
-        # Parse the table data
-        data = []
-        for row in rows:
-            cells = row.find_elements(By.TAG_NAME, "td")
-            if len(cells) == len(headers):  # Ensure the row has all columns
-                row_data = [cell.text.strip() for cell in cells]
-                data.append(row_data)
-
-        # Create a DataFrame from the parsed data
-        df = pd.DataFrame(data, columns=headers)
-        # print(df)
-
-        # Parse and set the Date column as index
-        df["Date"] = pd.to_datetime(
-            df["Date"], errors="coerce")  # Handle invalid dates
-        df = df.dropna(subset=["Date"]).set_index("Date")
-
-        # Convert numeric columns
-        for col in ["Open", "High", "Low", "Close", "Adj Close", "Volume"]:
-            df[col] = pd.to_numeric(
-                df[col].str.replace(",", ""), errors="coerce")
-
-    finally:
-        # Quit the driver
-        driver.quit()
-
-    return df
+    except Exception as e:
+        logging.error(f"Error fetching data for {script_name}: {e}")
+        return pd.DataFrame()

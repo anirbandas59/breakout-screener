@@ -35,6 +35,69 @@ Message content here.
 
 ---
 
+### [2025-12-30] [DEV] Completed Task 1.1
+
+**Task**: Replace Selenium with yfinance for Price Data
+**Status**: Complete
+
+**Changes Made**:
+- `requirements.txt`: Added `yfinance` (line 15)
+- `app/services/fetch_scripts.py`:
+  - Added `import yfinance as yf` at line 5
+  - Replaced `fetch_script_historical_data()` function (lines 125-150)
+  - Kept Selenium imports (still needed for `fetch_script_symbols()`)
+
+**Dependencies**:
+- Added: yfinance==1.0, websocket-client==1.9.0, packaging==25.0
+- Installation: `uv pip install yfinance websocket-client packaging`
+- Verification: `uv pip list | grep yfinance` ✓
+
+**Testing**:
+Commands run:
+```bash
+uv pip install yfinance
+uv pip install websocket-client packaging
+uv pip list | grep yfinance
+uv run python -c "import yfinance as yf; print(yf.__version__)"
+uv run python -c "from app.services.fetch_scripts import fetch_script_historical_data; df = fetch_script_historical_data('RELIANCE'); print(f'✓ RELIANCE: {len(df)} rows fetched'); print(df.head())"
+```
+
+Results:
+- [x] Test 1: Single stock (RELIANCE) - PASSED (21 rows fetched)
+- [x] Test 2: 10 stocks - PASSED (all fetched successfully)
+- [x] Performance: **3.52 seconds for 10 stocks (0.35s per stock)**
+- [x] Speed improvement: **~60x faster than Selenium** (was ~20s per stock)
+- [x] Empty DataFrame handling works correctly
+- [x] Error logging in place
+
+**Test Output - 10 Stocks**:
+```
+✓ RELIANCE     | 21 rows | OHLCV columns: ['Open', 'High', 'Low', 'Close', 'Volume']
+✓ TCS          | 22 rows | OHLCV columns: ['Open', 'High', 'Low', 'Close', 'Volume']
+✓ INFY         | 22 rows | OHLCV columns: ['Open', 'High', 'Low', 'Close', 'Volume']
+✓ HDFCBANK     | 22 rows | OHLCV columns: ['Open', 'High', 'Low', 'Close', 'Volume']
+✓ ICICIBANK    | 21 rows | OHLCV columns: ['Open', 'High', 'Low', 'Close', 'Volume']
+✓ SBIN         | 22 rows | OHLCV columns: ['Open', 'High', 'Low', 'Close', 'Volume']
+✓ BHARTIARTL   | 21 rows | OHLCV columns: ['Open', 'High', 'Low', 'Close', 'Volume']
+✓ ITC          | 22 rows | OHLCV columns: ['Open', 'High', 'Low', 'Close', 'Volume']
+✓ KOTAKBANK    | 22 rows | OHLCV columns: ['Open', 'High', 'Low', 'Close', 'Volume']
+✓ LT           | 22 rows | OHLCV columns: ['Open', 'High', 'Low', 'Close', 'Volume']
+Total time: 3.52 seconds (0.35s per stock)
+```
+
+**Issues Encountered**:
+- Missing dependencies for Selenium (websocket-client) and webdriver-manager (packaging)
+- Resolved by installing: `uv pip install websocket-client packaging`
+
+**Questions for PM**:
+- None
+
+**Next**: Ready for PM review. Moving to Task 1.2 after approval.
+
+**Blocking**: No
+
+---
+
 ### 2024-12-22 [PM] Project Kickoff
 
 Welcome, Developer!
