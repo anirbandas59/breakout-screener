@@ -11,7 +11,7 @@ from app.utils.suspension_flag import SUSPEND_ANALYSIS
 # logging.basicConfig(level=logging.INFO)
 
 
-def generate_BOData(db: Session, analysis_date: str, pivot_val: float) -> dict:
+def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_from: int = 1) -> dict:
     """
     Generate breakout data for all scripts in the breakout_data table.
 
@@ -19,6 +19,7 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float) -> dict:
         db (Session): SQLAlchemy session.
         analysis_date (str): Date for which the analysis needs to run (format: YYYY-MM-DD).
         pivot_val (float): Percentage of the gap to be considered narrow.
+        start_from (int): Index to start processing from (1-indexed). Default is 1.
 
     Returns:
         dict: Status of the analysis.
@@ -48,16 +49,20 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float) -> dict:
             "error": "No scripts available for analysis."
         }
 
-    total_scripts = len(scripts)
-    logging.info("Starting analysis in generate_BOData")
-    for i, script in enumerate(scripts):
-        # Update progress
+    # Apply start_from index (convert from 1-indexed to 0-indexed)
+    scripts_to_process = scripts[start_from - 1:]
+    total_scripts = len(scripts_to_process)
+
+    logging.info("Starting analysis from script %d (total: %d scripts)", start_from, total_scripts)
+    for i, script in enumerate(scripts_to_process):
+        # Update progress (show absolute position: start_from + current index)
+        current_position = start_from + i
         if current_task:
             current_task.update_state(
                 state='PROGRESS',
                 meta={
-                    'current': i + 1,
-                    'total': total_scripts,
+                    'current': current_position,
+                    'total': len(scripts),
                     'script': script.script_name
                 }
             )
@@ -67,7 +72,7 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float) -> dict:
                 "Analysis suspended. Halting analysis at script: %s", script.script_name)
             return {
                 "status": "SUSPENDED",
-                "message": f"Suspended at script {i + 1} of {total_scripts}"
+                "message": f"Suspended at script {current_position} of {len(scripts)}"
             }
 
         script_name: str = script.script_name

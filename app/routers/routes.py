@@ -98,6 +98,7 @@ def generate_bodata(request: GenerateBODataRequest):
     """
     # Fetch the pivot value from the request
     pivot_val = request.pivot_val
+    start_from = request.start_from
 
     # Validate the date format
     analysis_date_val = (
@@ -106,13 +107,14 @@ def generate_bodata(request: GenerateBODataRequest):
 
     try:
         logging.info(
-            "Starting BO Data generation for date: %s with pivot value: %s",
+            "Starting BO Data generation for date: %s with pivot value: %s, start_from: %s",
             analysis_date_val,
             pivot_val,
+            start_from,
         )
         # Call the function to generate the BO Data
         task = generate_bo_data_task.apply_async(
-            args=[analysis_date_val, pivot_val])
+            args=[analysis_date_val, pivot_val, start_from])
 
         return {
             "task_id": task.id,

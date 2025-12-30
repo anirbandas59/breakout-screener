@@ -50,14 +50,15 @@ def fetch_script_symbols_task():
 
 
 @celery_app.task
-def generate_bo_data_task(date, pivot):
+def generate_bo_data_task(date, pivot, start_from=1):
     """
     Celery task to generate BO data for all symbols.
 
     This task is used to generate BO data for all symbols in the database. The
-    task takes two parameters: date and pivot. The date parameter is the date
-    for which the BO data needs to be generated and the pivot parameter is the
-    percentage of the gap to be considered narrow.
+    task takes three parameters: date, pivot, and start_from. The date parameter
+    is the date for which the BO data needs to be generated, the pivot parameter
+    is the percentage of the gap to be considered narrow, and start_from is the
+    index to resume processing from (1-indexed).
 
     The task returns a string message indicating the status of the task.
     """
@@ -66,7 +67,7 @@ def generate_bo_data_task(date, pivot):
     try:
         logging.info(
             "Starting Celery task to generate BO data for all symbols ...")
-        result = generate_BOData(db, date, pivot)
+        result = generate_BOData(db, date, pivot, start_from)
 
         logging.info("Celery task completed: Generate BO Data task")
 
