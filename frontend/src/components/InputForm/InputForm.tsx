@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Divider } from '@mui/material';
+import toast from 'react-hot-toast';
 
 import DisplayFields from '@/components/DisplayFields/DisplayFields';
 import ButtonGroups from '@/components/ButtonGroups/ButtonGroups';
@@ -40,8 +41,10 @@ const InputForm: React.FC<InputFormProps> = ({
     try {
       const result = await generateBOData(date, pivotGap / 100, startFrom);
       onTaskIdChange(result.task_id);
+      toast.success('Analysis started!');
     } catch (error) {
       console.error(error);
+      toast.error('Failed to start analysis');
     }
   };
 
@@ -49,12 +52,11 @@ const InputForm: React.FC<InputFormProps> = ({
     // Logic for stopping analysis
     try {
       const result = await suspendAction();
-
-      // if (result.status !== 'SUCCESS') console.log(result.message);
-
       console.log(result.message);
+      toast.success('Analysis stopped');
     } catch (error) {
       console.error(error);
+      toast.error('Failed to stop analysis');
     }
   };
 
@@ -62,8 +64,10 @@ const InputForm: React.FC<InputFormProps> = ({
     try {
       const result = await clearChartData();
       onTaskIdChange(result.task_id);
+      toast.success('Clearing chart data...');
     } catch (error) {
       console.error(error);
+      toast.error('Failed to clear chart data');
     }
   };
 
@@ -71,8 +75,10 @@ const InputForm: React.FC<InputFormProps> = ({
     try {
       const result = await fetchScripts();
       onTaskIdChange(result.task_id);
+      toast.success('Fetching stock list...');
     } catch (error) {
       console.error(error);
+      toast.error('Failed to fetch stock list');
     }
   };
 
@@ -80,9 +86,10 @@ const InputForm: React.FC<InputFormProps> = ({
     try {
       const result = await clearCompleteData();
       onTaskIdChange(result.task_id);
-      console.log('List is cleared');
+      toast.success('Clearing complete data...');
     } catch (error) {
       console.error(error);
+      toast.error('Failed to clear complete data');
     }
   };
 
