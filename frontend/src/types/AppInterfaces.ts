@@ -55,6 +55,12 @@ export interface InputFormProps {
   onStartRefresh: (value: boolean) => void;
 }
 
+export interface TaskProgress {
+  current: number;
+  total: number;
+  script?: string;
+}
+
 export interface TaskResponse {
   task_id: string;
   status: string;
@@ -63,6 +69,9 @@ export interface TaskResponse {
     message: string | null;
     start_time: string | null;
     end_time: string | null;
+    current?: number;
+    total?: number;
+    script?: string;
   } | null;
   error: string | null;
 }

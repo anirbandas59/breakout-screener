@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import DataTable from '@/components/DataTable/DataTable';
 import InputForm from '@/components/InputForm/InputForm';
-import { DataResponse, DataRow, TaskResponse } from '@/types/AppInterfaces';
+import { DataResponse, DataRow, TaskResponse, TaskProgress } from '@/types/AppInterfaces';
 import { getTaskStatus } from '@/services/api';
 import { formatDateTime, formatDuration, getCurrentDate } from '@/utils/helperFn';
 
@@ -17,6 +18,7 @@ const HomePage: React.FC = () => {
   const [runningTime, setRunningTime] = useState<string>('');
   const [scriptFetchedOn, setScriptFetchedOn] = useState<string>('');
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  const [progress, setProgress] = useState<TaskProgress | null>(null);
 
   // Handlers for root data ==> date, start Refresh
   const handleDateChange = (value: string) => {
@@ -61,6 +63,17 @@ const HomePage: React.FC = () => {
 
         setStartRefresh(true);
 
+        // Handle PROGRESS status
+        if (status === 'PROGRESS' && result) {
+          if (result.current && result.total) {
+            setProgress({
+              current: result.current,
+              total: result.total,
+              script: result.script
+            });
+          }
+        }
+
         if (status === 'SUCCESS') {
           clearInterval(interval);
           clearInterval(timerInterval);
@@ -70,11 +83,15 @@ const HomePage: React.FC = () => {
             setScriptFetchedOn(result.end_time);
             setRunningTime(formatDuration(result.start_time, result.end_time));
           }
+          setProgress(null);
           setStartRefresh(false);
+          toast.success('Analysis complete!');
         } else if (status === 'FAILURE') {
           clearInterval(interval); // Stop the timer
           clearInterval(timerInterval); // Stop polling
+          setProgress(null);
           setStartRefresh(false);
+          toast.error('Analysis failed!');
         } else {
           console.log(result);
           if (result?.start_time) setStartTime(result.start_time);
@@ -85,9 +102,10 @@ const HomePage: React.FC = () => {
       } catch (error) {
         console.error('Error polling in Task', error);
         clearInterval(interval);
+        setProgress(null);
         setStartRefresh(false);
       }
-    }, 10000);
+    }, 2000);
   };
 
   /***
@@ -114,6 +132,22 @@ const HomePage: React.FC = () => {
           onDateChange={handleDateChange}
           onStartRefresh={handleStartRefresh}
         />
+
+        {/* Progress Bar */}
+        {progress && (
+          <div className="mx-6 mb-4">
+            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+              <div
+                className="bg-blue-600 h-3 transition-all duration-300 ease-in-out"
+                style={{ width: `${(progress.current / progress.total) * 100}%` }}
+              />
+            </div>
+            <p className="text-sm mt-2 text-gray-700">
+              Processing {progress.current} of {progress.total}
+              {progress.script && `: ${progress.script}`}
+            </p>
+          </div>
+        )}
       </div>
       <div className="flex-1 my-2">
         <DataTable
