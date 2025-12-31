@@ -485,11 +485,11 @@ Date: 2025-12-30
 
 - [x] All 5 tasks completed (1.1 - 1.5)
 - [x] Task 2.0: Database setup verified
-- [ ] Test 1: Process 50 scripts successfully
-- [ ] Test 2: Process 500 scripts successfully
-- [ ] Test 3: Progress tracking visible and accurate
-- [ ] Test 4: Task timeout configured and working
-- [ ] **Phase 1 Approved by PM**
+- [x] Test 1: Process 50 scripts successfully
+- [x] Test 2: Process 500 scripts successfully
+- [x] Test 3: Progress tracking visible and accurate
+- [x] Test 4: Task timeout configured and working
+- [✓] **Phase 1 Approved by PM** - 2025-12-31
 
 ---
 
@@ -977,15 +977,1063 @@ Date: 2025-12-30
 
 ---
 
-## Phase 3: Code Structure (Optional)
+## Phase 3: Code Structure Improvements (Optional)
 
-*To be detailed after Phase 1 & 2 completion*
+**Status**: Not Started (Awaiting Stakeholder Approval)
+**Priority**: MEDIUM
+**Goal**: Improve maintainability without over-engineering
+
+**Prerequisites**: Phase 1 & 2 must be complete and approved by PM
+
+---
+
+### Task 3.1: Add Enum Types for Indicators
+
+**Objective**: Replace magic strings with type-safe enums
+
+**Developer Checklist**:
+- [ ] Create `app/models/enums.py` with indicator enums
+- [ ] Define `BreakoutIndicator` enum (BUYING, SELLING, NEUTRAL)
+- [ ] Define `CandleIndicator` enum (BULLISH, BEARISH, NEUTRAL)
+- [ ] Define `VolumeIndicator` enum (HIGH, LOW, AVERAGE)
+- [ ] Update `app/services/generate_bo_data.py` to use enums
+- [ ] Replace all magic strings with enum values
+- [ ] Verify no hardcoded strings remain
+
+**Implementation Example**:
+```python
+# app/models/enums.py
+from enum import Enum
+
+class BreakoutIndicator(str, Enum):
+    BUYING = "BUYING"
+    SELLING = "SELLING"
+    NEUTRAL = "NEUTRAL"
+
+class CandleIndicator(str, Enum):
+    BULLISH = "BULLISH"
+    BEARISH = "BEARISH"
+    NEUTRAL = "NEUTRAL"
+
+class VolumeIndicator(str, Enum):
+    HIGH = "HIGH"
+    LOW = "LOW"
+    AVERAGE = "AVERAGE"
+
+# In generate_bo_data.py:
+from app.models.enums import BreakoutIndicator, CandleIndicator, VolumeIndicator
+
+# Replace:
+breakout_indicator = "BUYING"
+# With:
+breakout_indicator = BreakoutIndicator.BUYING
+```
+
+**Testing Steps**:
+1. Run backend server: `uvicorn app.main:app --reload`
+2. Test `/generate_bodata` endpoint with 5 scripts
+3. Verify data still stored correctly in database
+4. Check API responses return string values (FastAPI auto-converts)
+
+**PM Verification**:
+- [ ] Enums defined correctly in `app/models/enums.py`
+- [ ] All services updated to use enums
+- [ ] No magic strings in indicator assignments
+- [ ] Tests pass without errors
+- [ ] API responses unchanged (backward compatible)
+
+---
+
+### Task 3.2: Refactor CPR Calculation into Separate Module
+
+**Objective**: Extract CPR logic for better testability and reusability
+
+**Developer Checklist**:
+- [ ] Create `app/services/cpr_calculator.py`
+- [ ] Extract CPR calculation logic from `generate_bo_data.py`
+- [ ] Create `calculate_cpr()` function with clear inputs/outputs
+- [ ] Add docstrings explaining CPR formula
+- [ ] Update `generate_bo_data.py` to import and use new function
+- [ ] Verify CPR values match previous implementation
+- [ ] Add unit tests for CPR calculator (optional)
+
+**Implementation Example**:
+```python
+# app/services/cpr_calculator.py
+from typing import Tuple
+
+def calculate_cpr(high: float, low: float, close: float) -> Tuple[float, float, float, float, float]:
+    """
+    Calculate Central Pivot Range (CPR) levels.
+
+    Args:
+        high: Previous day's high price
+        low: Previous day's low price
+        close: Previous day's closing price
+
+    Returns:
+        Tuple of (cpr, res1, res2, supp1, supp2)
+    """
+    pivot = (high + low + close) / 3
+    bc = (high + low) / 2
+    tc = (pivot - bc) + pivot
+    cpr = tc
+
+    res1 = (2 * pivot) - low
+    res2 = pivot + (high - low)
+    supp1 = (2 * pivot) - high
+    supp2 = pivot - (high - low)
+
+    return cpr, res1, res2, supp1, supp2
+
+# In generate_bo_data.py:
+from app.services.cpr_calculator import calculate_cpr
+
+# Replace inline calculation with:
+cpr, res1, res2, supp1, supp2 = calculate_cpr(prev_high, prev_low, prev_close)
+```
+
+**Testing Steps**:
+1. Compare CPR values before/after refactoring for same stock data
+2. Test with edge cases (high = low, very small differences)
+3. Run full analysis on 10 scripts and verify results match
+
+**PM Verification**:
+- [ ] New file `app/services/cpr_calculator.py` created
+- [ ] Function has clear docstring with formula explanation
+- [ ] `generate_bo_data.py` uses new function
+- [ ] CPR values identical to previous implementation
+- [ ] Code is more readable and testable
+
+---
+
+### Task 3.3: Add Input Validation with Pydantic for All Models
+
+**Objective**: Catch errors early and enable auto-generated API docs
+
+**Developer Checklist**:
+- [ ] Create comprehensive Pydantic schemas in `app/models/schemas.py`
+- [ ] Add `GenerateBoDataRequest` schema with field validation
+- [ ] Add `FetchScriptsRequest` schema
+- [ ] Add `ClearChartRequest` schema
+- [ ] Update all API endpoints to use Pydantic models
+- [ ] Add validation constraints (min/max values, date formats)
+- [ ] Test with invalid inputs to verify validation works
+
+**Implementation Example**:
+```python
+# app/models/schemas.py
+from pydantic import BaseModel, Field, field_validator
+from datetime import date
+from typing import Optional
+
+class GenerateBoDataRequest(BaseModel):
+    group_name: str = Field(..., min_length=1, max_length=50, description="Stock group name (e.g., NIFTY_50)")
+    date_str: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}$', description="Date in YYYY-MM-DD format")
+    start_from: Optional[int] = Field(default=0, ge=0, description="Resume from index (0-based)")
+
+    @field_validator('date_str')
+    @classmethod
+    def validate_date_format(cls, v: str) -> str:
+        try:
+            date.fromisoformat(v)
+        except ValueError:
+            raise ValueError('Invalid date format, use YYYY-MM-DD')
+        return v
+
+# In routes.py:
+from app.models.schemas import GenerateBoDataRequest
+
+@router.post("/generate_bodata")
+async def generate_bodata(request: GenerateBoDataRequest):
+    # FastAPI auto-validates and returns 422 for invalid input
+    ...
+```
+
+**Testing Steps**:
+1. Test with valid input: `{"group_name": "NIFTY_50", "date_str": "2025-01-15", "start_from": 0}`
+2. Test with invalid date: `{"group_name": "NIFTY_50", "date_str": "invalid"}`
+3. Test with negative start_from: `{"group_name": "NIFTY_50", "date_str": "2025-01-15", "start_from": -1}`
+4. Verify 422 Validation Error responses include helpful messages
+5. Check `/docs` endpoint shows proper request schemas
+
+**PM Verification**:
+- [ ] All request models defined with Pydantic
+- [ ] Field validation includes constraints (min/max, patterns)
+- [ ] All endpoints updated to use schemas
+- [ ] Invalid inputs return 422 with clear error messages
+- [ ] API docs show request/response schemas
+
+---
+
+### Task 3.4: Add Comprehensive Error Handling
+
+**Objective**: Better debugging and user feedback
+
+**Developer Checklist**:
+- [ ] Create `app/utils/error_handlers.py` for centralized error handling
+- [ ] Define custom exception classes (DataFetchError, ValidationError, etc.)
+- [ ] Add try-except blocks in all service functions
+- [ ] Log errors with context (script name, date, operation)
+- [ ] Return structured error responses to frontend
+- [ ] Add error handling to Celery tasks
+- [ ] Test error scenarios (network failures, invalid data, timeouts)
+
+**Implementation Example**:
+```python
+# app/utils/error_handlers.py
+from fastapi import HTTPException, status
+from typing import Dict, Any
+import logging
+
+logger = logging.getLogger(__name__)
+
+class DataFetchError(Exception):
+    """Raised when data fetching fails"""
+    pass
+
+class CPRCalculationError(Exception):
+    """Raised when CPR calculation fails"""
+    pass
+
+def handle_service_error(error: Exception, context: Dict[str, Any]) -> HTTPException:
+    """
+    Convert service errors to HTTP exceptions with logging.
+
+    Args:
+        error: The caught exception
+        context: Dict with request details (script_name, date, etc.)
+
+    Returns:
+        HTTPException with appropriate status code and message
+    """
+    logger.error(f"Service error: {error}", extra=context)
+
+    if isinstance(error, DataFetchError):
+        return HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch data: {str(error)}"
+        )
+    elif isinstance(error, CPRCalculationError):
+        return HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Failed to calculate CPR: {str(error)}"
+        )
+    else:
+        return HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(error)}"
+        )
+
+# In services/generate_bo_data.py:
+from app.utils.error_handlers import DataFetchError, handle_service_error
+
+try:
+    price_data = yf.download(ticker, start=start_date, end=end_date, progress=False)
+    if price_data.empty:
+        raise DataFetchError(f"No data available for {ticker}")
+except Exception as e:
+    logger.error(f"Failed to fetch data for {script_name}: {e}")
+    raise DataFetchError(f"yfinance error for {script_name}: {str(e)}")
+```
+
+**Testing Steps**:
+1. Test with invalid ticker symbol (should raise DataFetchError)
+2. Test with future date (should handle gracefully)
+3. Test network timeout scenarios
+4. Verify errors logged with proper context
+5. Check frontend receives structured error messages
+
+**PM Verification**:
+- [ ] Custom exception classes defined
+- [ ] Error handlers centralized in `error_handlers.py`
+- [ ] All service functions have try-except blocks
+- [ ] Errors logged with context (script, date, operation)
+- [ ] Structured error responses returned to frontend
+- [ ] Error scenarios tested and handled gracefully
+
+---
+
+### Task 3.5: Add API Response Schemas
+
+**Objective**: Consistent responses and type safety
+
+**Developer Checklist**:
+- [ ] Define response models in `app/models/schemas.py`
+- [ ] Create `BreakoutDataResponse` schema
+- [ ] Create `TaskStatusResponse` schema
+- [ ] Create `ErrorResponse` schema
+- [ ] Update all endpoints to use `response_model` parameter
+- [ ] Ensure consistent structure across all responses
+- [ ] Test API responses match schemas
+
+**Implementation Example**:
+```python
+# app/models/schemas.py
+from pydantic import BaseModel
+from typing import List, Optional, Any
+from datetime import date
+
+class BreakoutData(BaseModel):
+    script_name: str
+    group_name: str
+    date: date
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: int
+    breakout_indicator: str
+    candle_indicator: str
+    volume_indicator: str
+    cpr: float
+    res1: float
+    res2: float
+    supp1: float
+    supp2: float
+    narrow_gap: bool
+    link: Optional[str] = None
+
+class BreakoutDataResponse(BaseModel):
+    success: bool
+    data: List[BreakoutData]
+    total: int
+    page: int
+    page_size: int
+
+class TaskStatusResponse(BaseModel):
+    task_id: str
+    status: str  # PENDING, PROGRESS, SUCCESS, FAILURE
+    meta: Optional[dict] = None
+    result: Optional[Any] = None
+
+class ErrorResponse(BaseModel):
+    success: bool = False
+    error: str
+    detail: Optional[str] = None
+
+# In routes.py:
+from app.models.schemas import BreakoutDataResponse, TaskStatusResponse
+
+@router.get("/get_data", response_model=BreakoutDataResponse)
+async def get_data(page: int = 1, page_size: int = 50):
+    # FastAPI auto-validates response matches schema
+    ...
+
+@router.get("/task_status/{task_id}", response_model=TaskStatusResponse)
+async def task_status(task_id: str):
+    ...
+```
+
+**Testing Steps**:
+1. Call `/get_data` and verify response structure
+2. Call `/task_status/{id}` and verify status response
+3. Trigger error and verify ErrorResponse structure
+4. Check `/docs` shows response schemas
+5. Test with Python client to verify type safety
+
+**PM Verification**:
+- [ ] All response models defined in schemas.py
+- [ ] All endpoints use `response_model` parameter
+- [ ] Responses have consistent structure (success, data, error)
+- [ ] API docs show response schemas
+- [ ] Responses match schemas (no extra/missing fields)
+
+---
+
+## Phase 3 Completion Checklist
+
+- [ ] Task 3.1: Enum types added for indicators
+- [ ] Task 3.2: CPR calculation refactored into separate module
+- [ ] Task 3.3: Input validation with Pydantic for all models
+- [ ] Task 3.4: Comprehensive error handling added
+- [ ] Task 3.5: API response schemas defined and used
+- [ ] All tests pass
+- [ ] Code review completed
+- [ ] Documentation updated
+- [ ] **Phase 3 Approved by PM**
 
 ---
 
 ## Phase 4: Frontend Enhancements (Optional)
 
-*To be detailed after Phase 3 completion*
+**Status**: Not Started (Awaiting Phase 3 Completion & Stakeholder Approval)
+**Priority**: LOW
+**Goal**: Improve user experience and data visualization
+
+**Prerequisites**: Phase 3 must be complete (or stakeholder approves proceeding without Phase 3)
+
+---
+
+### Task 4.1: Color-Code Breakout Indicators
+
+**Objective**: Visual clarity for quick pattern recognition
+
+**Developer Checklist**:
+- [ ] Create `frontend/src/styles/indicators.css` with color definitions
+- [ ] Define colors: GREEN (bullish), RED (bearish), YELLOW (neutral)
+- [ ] Update DataTable component to apply color classes
+- [ ] Add color-coding for breakout_indicator column
+- [ ] Add color-coding for candle_indicator column
+- [ ] Add color-coding for volume_indicator column
+- [ ] Test accessibility (color contrast ratios)
+
+**Implementation Example**:
+```css
+/* frontend/src/styles/indicators.css */
+.indicator-bullish {
+  color: #22c55e; /* green-500 */
+  font-weight: 600;
+}
+
+.indicator-bearish {
+  color: #ef4444; /* red-500 */
+  font-weight: 600;
+}
+
+.indicator-neutral {
+  color: #eab308; /* yellow-500 */
+  font-weight: 600;
+}
+
+.indicator-buying {
+  color: #22c55e;
+  background-color: #f0fdf4; /* green-50 */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.indicator-selling {
+  color: #ef4444;
+  background-color: #fef2f2; /* red-50 */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+```
+
+```typescript
+// frontend/src/components/DataTable/DataTable.tsx
+const getIndicatorClass = (indicator: string): string => {
+  const upperIndicator = indicator.toUpperCase();
+
+  if (upperIndicator.includes('BUYING') || upperIndicator.includes('BULLISH')) {
+    return 'indicator-bullish';
+  } else if (upperIndicator.includes('SELLING') || upperIndicator.includes('BEARISH')) {
+    return 'indicator-bearish';
+  } else {
+    return 'indicator-neutral';
+  }
+};
+
+// In table cell rendering:
+<td className={getIndicatorClass(row.breakout_indicator)}>
+  {row.breakout_indicator}
+</td>
+```
+
+**Testing Steps**:
+1. Load data table with various indicators
+2. Verify BUYING/BULLISH displays green
+3. Verify SELLING/BEARISH displays red
+4. Verify NEUTRAL displays yellow
+5. Test in dark mode (ensure readability)
+6. Check color contrast meets WCAG AA standards
+
+**PM Verification**:
+- [ ] Color styles defined in indicators.css
+- [ ] DataTable applies color classes correctly
+- [ ] All three indicator columns color-coded
+- [ ] Colors are visually distinct and accessible
+- [ ] Works in both light and dark modes
+
+---
+
+### Task 4.2: Add Button Loading States
+
+**Objective**: Better UX during async operations
+
+**Developer Checklist**:
+- [ ] Add loading state to "Fetch Scripts" button
+- [ ] Add loading state to "Generate BO Data" button
+- [ ] Add loading state to "Clear Chart" button
+- [ ] Show spinner icon during loading
+- [ ] Disable button during loading to prevent double-clicks
+- [ ] Update button text during loading (e.g., "Fetching...")
+- [ ] Test all button loading states
+
+**Implementation Example**:
+```typescript
+// frontend/src/components/InputForm/InputForm.tsx
+import CircularProgress from '@mui/material/CircularProgress';
+
+const [isFetching, setIsFetching] = useState(false);
+const [isGenerating, setIsGenerating] = useState(false);
+
+const handleFetchScripts = async () => {
+  setIsFetching(true);
+  try {
+    const result = await api.fetchScriptSymbols(groupName);
+    // Handle result...
+  } catch (error) {
+    toast.error('Failed to fetch scripts');
+  } finally {
+    setIsFetching(false);
+  }
+};
+
+return (
+  <button
+    onClick={handleFetchScripts}
+    disabled={isFetching || !groupName}
+    className="btn-primary"
+  >
+    {isFetching ? (
+      <>
+        <CircularProgress size={16} className="mr-2" />
+        Fetching Scripts...
+      </>
+    ) : (
+      'Fetch Scripts'
+    )}
+  </button>
+);
+```
+
+**Testing Steps**:
+1. Click "Fetch Scripts" - verify spinner shows, button disabled
+2. Click "Generate BO Data" - verify loading state
+3. Try clicking button multiple times rapidly - verify only one request
+4. Test with slow network (throttle to 3G)
+5. Verify loading state clears after completion/error
+
+**PM Verification**:
+- [ ] All async buttons have loading states
+- [ ] Spinner icon displays during loading
+- [ ] Button disabled during operation
+- [ ] Button text updates to show action in progress
+- [ ] Loading state clears properly on success/error
+
+---
+
+### Task 4.3: Add Table Filtering and Sorting
+
+**Objective**: Find stocks faster with search and sort capabilities
+
+**Developer Checklist**:
+- [ ] Install `@tanstack/react-table` package
+- [ ] Set up TanStack Table in DataTable component
+- [ ] Add column sorting (click header to sort)
+- [ ] Add search filter for script_name
+- [ ] Add dropdown filter for group_name
+- [ ] Add dropdown filter for breakout_indicator
+- [ ] Persist filter/sort state in URL query params
+- [ ] Test with large dataset (500+ rows)
+
+**Dependencies**:
+```bash
+npm install @tanstack/react-table
+```
+
+**Implementation Example**:
+```typescript
+// frontend/src/components/DataTable/DataTable.tsx
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+} from '@tanstack/react-table';
+
+const [sorting, setSorting] = useState([]);
+const [globalFilter, setGlobalFilter] = useState('');
+
+const table = useReactTable({
+  data: breakoutData,
+  columns,
+  state: {
+    sorting,
+    globalFilter,
+  },
+  onSortingChange: setSorting,
+  onGlobalFilterChange: setGlobalFilter,
+  getCoreRowModel: getCoreRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+});
+
+// Search input:
+<input
+  type="text"
+  placeholder="Search by script name..."
+  value={globalFilter}
+  onChange={(e) => setGlobalFilter(e.target.value)}
+  className="search-input"
+/>
+
+// Sortable column header:
+<th onClick={header.column.getToggleSortingHandler()}>
+  {flexRender(header.column.columnDef.header, header.getContext())}
+  {{ asc: ' ↑', desc: ' ↓' }[header.column.getIsSorted()] ?? null}
+</th>
+```
+
+**Testing Steps**:
+1. Click column headers - verify sorting works (asc/desc)
+2. Type in search box - verify table filters instantly
+3. Test with 500 rows - verify performance is acceptable
+4. Test filter + sort together
+5. Verify sort/filter state persists on page reload (if URL params implemented)
+
+**PM Verification**:
+- [ ] TanStack Table installed and configured
+- [ ] All columns sortable by clicking header
+- [ ] Search filter works for script names
+- [ ] Filter dropdowns work for categorical columns
+- [ ] Performance acceptable with 500+ rows
+- [ ] UI shows sort direction indicators (↑↓)
+
+---
+
+### Task 4.4: Add CSV Export
+
+**Objective**: Export data for Excel analysis
+
+**Developer Checklist**:
+- [ ] Install `papaparse` package
+- [ ] Create `frontend/src/utils/csvExport.ts` utility
+- [ ] Add "Export CSV" button to DataTable
+- [ ] Export visible/filtered data only
+- [ ] Include all columns in export
+- [ ] Format dates and numbers properly
+- [ ] Test with large dataset (500+ rows)
+
+**Dependencies**:
+```bash
+npm install papaparse
+npm install --save-dev @types/papaparse
+```
+
+**Implementation Example**:
+```typescript
+// frontend/src/utils/csvExport.ts
+import Papa from 'papaparse';
+
+export interface BreakoutData {
+  script_name: string;
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  breakout_indicator: string;
+  // ... other fields
+}
+
+export const exportToCSV = (data: BreakoutData[], filename: string = 'breakout_data.csv') => {
+  const csv = Papa.unparse(data, {
+    header: true,
+    columns: [
+      'script_name',
+      'group_name',
+      'date',
+      'open',
+      'high',
+      'low',
+      'close',
+      'volume',
+      'breakout_indicator',
+      'candle_indicator',
+      'volume_indicator',
+      'cpr',
+      'res1',
+      'res2',
+      'supp1',
+      'supp2',
+      'narrow_gap',
+    ],
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// In DataTable component:
+import { exportToCSV } from '@/utils/csvExport';
+
+<button onClick={() => exportToCSV(filteredData, `breakout_${date}.csv`)}>
+  Export CSV
+</button>
+```
+
+**Testing Steps**:
+1. Click "Export CSV" button
+2. Verify file downloads with correct filename
+3. Open CSV in Excel - verify all columns present
+4. Verify dates formatted correctly (YYYY-MM-DD)
+5. Test with filtered data - verify only visible rows exported
+6. Test with 500 rows - verify export completes quickly
+
+**PM Verification**:
+- [ ] papaparse installed
+- [ ] CSV export utility created
+- [ ] Export button added to UI
+- [ ] All columns included in export
+- [ ] Data formatted correctly in CSV
+- [ ] Export works with filtered/sorted data
+
+---
+
+### Task 4.5: Add Date Range Picker
+
+**Objective**: View historical analysis for specific date ranges
+
+**Developer Checklist**:
+- [ ] Install `react-datepicker` package
+- [ ] Create DateRangePicker component
+- [ ] Add start date and end date inputs
+- [ ] Update API call to fetch data for date range
+- [ ] Show loading state while fetching historical data
+- [ ] Add "Clear" button to reset to today's data
+- [ ] Test with various date ranges
+
+**Dependencies**:
+```bash
+npm install react-datepicker
+npm install --save-dev @types/react-datepicker
+```
+
+**Implementation Example**:
+```typescript
+// frontend/src/components/DateRangePicker/DateRangePicker.tsx
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+
+interface DateRangePickerProps {
+  startDate: Date | null;
+  endDate: Date | null;
+  onStartDateChange: (date: Date | null) => void;
+  onEndDateChange: (date: Date | null) => void;
+  onClear: () => void;
+}
+
+export const DateRangePicker: React.FC<DateRangePickerProps> = ({
+  startDate,
+  endDate,
+  onStartDateChange,
+  onEndDateChange,
+  onClear,
+}) => {
+  return (
+    <div className="date-range-picker">
+      <div>
+        <label>Start Date</label>
+        <DatePicker
+          selected={startDate}
+          onChange={onStartDateChange}
+          selectsStart
+          startDate={startDate}
+          endDate={endDate}
+          maxDate={new Date()}
+          dateFormat="yyyy-MM-dd"
+        />
+      </div>
+      <div>
+        <label>End Date</label>
+        <DatePicker
+          selected={endDate}
+          onChange={onEndDateChange}
+          selectsEnd
+          startDate={startDate}
+          endDate={endDate}
+          minDate={startDate}
+          maxDate={new Date()}
+          dateFormat="yyyy-MM-dd"
+        />
+      </div>
+      <button onClick={onClear}>Clear</button>
+    </div>
+  );
+};
+```
+
+**Testing Steps**:
+1. Select start date - verify date picker works
+2. Select end date - verify end >= start enforced
+3. Click "Fetch Data" - verify API called with date range
+4. Test with 7-day range, 30-day range
+5. Click "Clear" - verify resets to today
+6. Test date validation (no future dates)
+
+**PM Verification**:
+- [ ] react-datepicker installed
+- [ ] DateRangePicker component created
+- [ ] Start/end date selection works
+- [ ] Date validation enforced (end >= start, no future)
+- [ ] API updated to accept date range
+- [ ] Clear button resets to default
+
+---
+
+### Task 4.6: Add Column Visibility Toggle
+
+**Objective**: Customize table view by hiding/showing columns
+
+**Developer Checklist**:
+- [ ] Create ColumnToggle component
+- [ ] Add checkboxes for each column
+- [ ] Store column visibility state in localStorage
+- [ ] Update DataTable to hide/show columns based on state
+- [ ] Add "Reset" button to show all columns
+- [ ] Test persistence across page reloads
+
+**Implementation Example**:
+```typescript
+// frontend/src/components/DataTable/ColumnToggle.tsx
+import { useState, useEffect } from 'react';
+
+interface ColumnVisibility {
+  [key: string]: boolean;
+}
+
+export const ColumnToggle: React.FC<{
+  columns: string[];
+  visibility: ColumnVisibility;
+  onVisibilityChange: (visibility: ColumnVisibility) => void;
+}> = ({ columns, visibility, onVisibilityChange }) => {
+  const handleToggle = (column: string) => {
+    const newVisibility = { ...visibility, [column]: !visibility[column] };
+    onVisibilityChange(newVisibility);
+    localStorage.setItem('columnVisibility', JSON.stringify(newVisibility));
+  };
+
+  const handleReset = () => {
+    const allVisible = columns.reduce((acc, col) => ({ ...acc, [col]: true }), {});
+    onVisibilityChange(allVisible);
+    localStorage.removeItem('columnVisibility');
+  };
+
+  return (
+    <div className="column-toggle">
+      <h3>Show/Hide Columns</h3>
+      {columns.map((column) => (
+        <label key={column}>
+          <input
+            type="checkbox"
+            checked={visibility[column] ?? true}
+            onChange={() => handleToggle(column)}
+          />
+          {column}
+        </label>
+      ))}
+      <button onClick={handleReset}>Reset</button>
+    </div>
+  );
+};
+
+// In DataTable:
+const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>(() => {
+  const saved = localStorage.getItem('columnVisibility');
+  return saved ? JSON.parse(saved) : {};
+});
+
+// Only render column if visible:
+{columnVisibility['open'] !== false && <td>{row.open}</td>}
+```
+
+**Testing Steps**:
+1. Uncheck columns - verify they hide from table
+2. Reload page - verify column visibility persists
+3. Click "Reset" - verify all columns shown
+4. Test with different combinations of visible/hidden columns
+5. Verify horizontal scroll works with many visible columns
+
+**PM Verification**:
+- [ ] ColumnToggle component created
+- [ ] Checkboxes control column visibility
+- [ ] State persisted in localStorage
+- [ ] DataTable hides/shows columns correctly
+- [ ] Reset button restores all columns
+- [ ] Works across page reloads
+
+---
+
+### Task 4.7: Add Dark Mode Toggle
+
+**Objective**: User preference for dark/light theme
+
+**Developer Checklist**:
+- [ ] Add dark mode toggle button to Header
+- [ ] Use Tailwind's dark mode support
+- [ ] Store preference in localStorage
+- [ ] Apply dark mode styles to all components
+- [ ] Test all components in dark mode
+- [ ] Ensure indicator colors remain accessible in dark mode
+
+**Implementation Example**:
+```typescript
+// frontend/src/components/Header/Header.tsx
+import { useState, useEffect } from 'react';
+
+export const Header: React.FC = () => {
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('darkMode');
+      return saved === 'true';
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', String(isDarkMode));
+  }, [isDarkMode]);
+
+  return (
+    <header>
+      {/* ... */}
+      <button onClick={() => setIsDarkMode(!isDarkMode)}>
+        {isDarkMode ? '☀️ Light' : '🌙 Dark'}
+      </button>
+    </header>
+  );
+};
+```
+
+```css
+/* Update Tailwind config for dark mode */
+/* tailwind.config.ts already supports dark mode via class strategy */
+
+/* Update components with dark mode styles */
+.btn-primary {
+  @apply bg-blue-600 text-white dark:bg-blue-500;
+}
+
+.table-row {
+  @apply bg-white dark:bg-gray-800;
+}
+```
+
+**Testing Steps**:
+1. Click dark mode toggle - verify theme switches
+2. Reload page - verify preference persists
+3. Test all components in dark mode (table, forms, buttons)
+4. Verify indicator colors readable in dark mode
+5. Check color contrast meets accessibility standards
+
+**PM Verification**:
+- [ ] Dark mode toggle added to Header
+- [ ] Toggle switches theme correctly
+- [ ] Preference persisted in localStorage
+- [ ] All components styled for dark mode
+- [ ] Indicator colors accessible in dark mode
+- [ ] No visual glitches in either mode
+
+---
+
+### Task 4.8: Add Keyboard Shortcuts
+
+**Objective**: Power user efficiency with keyboard navigation
+
+**Developer Checklist**:
+- [ ] Create `useKeyboardShortcuts` hook
+- [ ] Implement shortcuts: F (Fetch Scripts), G (Generate BO Data), C (Clear Chart)
+- [ ] Add shortcut hints to button tooltips
+- [ ] Create KeyboardShortcuts help modal (? key to open)
+- [ ] Disable shortcuts when modal/input focused
+- [ ] Test all shortcuts
+
+**Implementation Example**:
+```typescript
+// frontend/src/hooks/useKeyboardShortcuts.ts
+import { useEffect } from 'react';
+
+interface ShortcutConfig {
+  [key: string]: () => void;
+}
+
+export const useKeyboardShortcuts = (shortcuts: ShortcutConfig) => {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Ignore if typing in input/textarea
+      if (event.target instanceof HTMLInputElement ||
+          event.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      if (shortcuts[key]) {
+        event.preventDefault();
+        shortcuts[key]();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [shortcuts]);
+};
+
+// In HomePage:
+useKeyboardShortcuts({
+  'f': handleFetchScripts,
+  'g': handleGenerateBoData,
+  'c': handleClearChart,
+  '?': () => setShowShortcutsHelp(true),
+});
+
+// KeyboardShortcuts modal:
+const shortcuts = [
+  { key: 'F', action: 'Fetch Scripts' },
+  { key: 'G', action: 'Generate BO Data' },
+  { key: 'C', action: 'Clear Chart' },
+  { key: '?', action: 'Show Shortcuts Help' },
+];
+```
+
+**Testing Steps**:
+1. Press 'F' - verify Fetch Scripts triggered
+2. Press 'G' - verify Generate BO Data triggered
+3. Press '?' - verify shortcuts help modal opens
+4. Focus input field, press 'F' - verify shortcut ignored
+5. Test in different browsers (Chrome, Firefox)
+
+**PM Verification**:
+- [ ] useKeyboardShortcuts hook created
+- [ ] All shortcuts working (F, G, C, ?)
+- [ ] Shortcuts disabled when typing in inputs
+- [ ] Help modal shows all available shortcuts
+- [ ] Button tooltips mention keyboard shortcuts
+
+---
+
+## Phase 4 Completion Checklist
+
+- [ ] Task 4.1: Breakout indicators color-coded
+- [ ] Task 4.2: Button loading states added
+- [ ] Task 4.3: Table filtering and sorting implemented
+- [ ] Task 4.4: CSV export functionality working
+- [ ] Task 4.5: Date range picker integrated
+- [ ] Task 4.6: Column visibility toggle functional
+- [ ] Task 4.7: Dark mode toggle working
+- [ ] Task 4.8: Keyboard shortcuts implemented
+- [ ] All dependencies installed correctly
+- [ ] All tests pass
+- [ ] Code review completed
+- [ ] Documentation updated
+- [ ] **Phase 4 Approved by PM**
 
 ---
 
