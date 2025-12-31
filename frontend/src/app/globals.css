@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../styles/indicators.css";
 
 @theme {
   --color-background: #ffffff;

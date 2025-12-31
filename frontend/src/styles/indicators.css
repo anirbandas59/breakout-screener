@@ -1,0 +1,157 @@
+/* Indicator Color Classes for Breakout Screener */
+/* Provides visual clarity for quick pattern recognition */
+
+/* ========================================
+   BREAKOUT INDICATORS
+   ======================================== */
+
+/* Breakout - Strong bullish signal */
+.indicator-breakout {
+  color: #16a34a; /* green-600 */
+  background-color: #f0fdf4; /* green-50 */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+}
+
+/* Red candle - Bearish signal (breakout indicator) */
+.indicator-red-candle-breakout {
+  color: #dc2626; /* red-600 */
+  background-color: #fef2f2; /* red-50 */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+}
+
+/* No breakout - Neutral */
+.indicator-no-breakout {
+  color: #64748b; /* slate-500 */
+  background-color: #f8fafc; /* slate-50 */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Big Sell Wick - Warning (profit booking) */
+.indicator-big-sell-wick {
+  color: #ea580c; /* orange-600 */
+  background-color: #fff7ed; /* orange-50 */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+}
+
+/* No Entry - Neutral/Caution */
+.indicator-no-entry {
+  color: #6b7280; /* gray-500 */
+  background-color: #f9fafb; /* gray-50 */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* ========================================
+   CANDLE INDICATORS
+   ======================================== */
+
+/* Green candle - Bullish */
+.indicator-green-candle {
+  color: #16a34a; /* green-600 */
+  background-color: #f0fdf4; /* green-50 */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+}
+
+/* Red candle - Bearish */
+.indicator-red-candle {
+  color: #dc2626; /* red-600 */
+  background-color: #fef2f2; /* red-50 */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+}
+
+/* Doji - Neutral/Indecision */
+.indicator-doji {
+  color: #ca8a04; /* yellow-600 */
+  background-color: #fefce8; /* yellow-50 */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* ========================================
+   VOLUME INDICATORS
+   ======================================== */
+
+/* Good volume - Strong participation */
+.indicator-good {
+  color: #16a34a; /* green-600 */
+  font-weight: 600;
+}
+
+/* Average volume */
+.indicator-average {
+  color: #ca8a04; /* yellow-600 */
+  font-weight: 600;
+}
+
+/* Low volume - Weak participation */
+.indicator-low {
+  color: #dc2626; /* red-600 */
+  font-weight: 600;
+}
+
+/* ========================================
+   DARK MODE SUPPORT
+   ======================================== */
+
+.dark .indicator-breakout {
+  color: #22c55e; /* green-500 */
+  background-color: #14532d; /* green-950 */
+}
+
+.dark .indicator-red-candle-breakout {
+  color: #f87171; /* red-400 */
+  background-color: #7f1d1d; /* red-900 */
+}
+
+.dark .indicator-no-breakout {
+  color: #94a3b8; /* slate-400 */
+  background-color: #1e293b; /* slate-800 */
+}
+
+.dark .indicator-big-sell-wick {
+  color: #fb923c; /* orange-400 */
+  background-color: #7c2d12; /* orange-900 */
+}
+
+.dark .indicator-no-entry {
+  color: #9ca3af; /* gray-400 */
+  background-color: #1f2937; /* gray-800 */
+}
+
+.dark .indicator-green-candle {
+  color: #22c55e; /* green-500 */
+  background-color: #14532d; /* green-950 */
+}
+
+.dark .indicator-red-candle {
+  color: #f87171; /* red-400 */
+  background-color: #7f1d1d; /* red-900 */
+}
+
+.dark .indicator-doji {
+  color: #fbbf24; /* yellow-400 */
+  background-color: #713f12; /* yellow-900 */
+}
+
+.dark .indicator-good {
+  color: #22c55e; /* green-500 */
+}
+
+.dark .indicator-average {
+  color: #fbbf24; /* yellow-400 */
+}
+
+.dark .indicator-low {
+  color: #f87171; /* red-400 */
+}
