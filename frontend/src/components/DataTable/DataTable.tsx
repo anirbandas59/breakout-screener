@@ -1,10 +1,20 @@
 'use client';
 
-import React, { useState, useEffect, JSX } from 'react';
+import React, { useEffect, JSX } from 'react';
+import { useAtom } from 'jotai';
 import Loader from '@/components/Loader/Loader';
 import Pagination from '@/components/Pagination/Pagination';
-import { DataRow, DataTableProps } from '@/types/AppInterfaces';
+import { DataRow } from '@/types/AppInterfaces';
 import { getData } from '@/services/api';
+import {
+  tablePageAtom,
+  tableLimitAtom,
+  totalRecordsAtom,
+  isLoadingAtom,
+  startRefreshAtom,
+  refreshTriggerAtom,
+  scriptsAnalyzedAtom,
+} from '@/store/atoms';
 
 // Helper function to generate header cells
 const generateHeaderRow = (columnName: string) => (
@@ -45,25 +55,27 @@ const generateDataCell = (value: string | number | JSX.Element, index: number, c
   </td>
 );
 
-const DataTable: React.FC<DataTableProps> = ({ date, startRefresh, refreshTrigger }) => {
-  const [data, setData] = useState<DataRow[]>([]);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(30);
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+const DataTable: React.FC = () => {
+  const [page, setPage] = useAtom(tablePageAtom);
+  const [limit, setLimit] = useAtom(tableLimitAtom);
+  const [totalRecords, setTotalRecords] = useAtom(totalRecordsAtom);
+  const [isLoading, setIsLoading] = useAtom(isLoadingAtom);
+  const [startRefresh] = useAtom(startRefreshAtom);
+  const [refreshTrigger] = useAtom(refreshTriggerAtom);
+  const [, setScriptsAnalyzed] = useAtom(scriptsAnalyzedAtom);
+
+  const [data, setData] = React.useState<DataRow[]>([]);
 
   const fetchData = async (page: number, limit: number) => {
     setIsLoading(true);
 
     try {
       const response = await getData(page, limit);
-
-      // console.log(response.data);
       const { total, data } = response;
 
       setData(data);
-      // total is the total number of records from the API
       setTotalRecords(total);
+      setScriptsAnalyzed(total);
     } catch (error) {
       console.error('Error fetching error', error);
     } finally {
@@ -118,7 +130,6 @@ const DataTable: React.FC<DataTableProps> = ({ date, startRefresh, refreshTrigge
   return (
     <>
       <Pagination
-        date={date}
         currentPage={page}
         totalPages={totalRecords}
         limit={limit}

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Divider } from '@mui/material';
-import toast from 'react-hot-toast';
+import { useAtom } from 'jotai';
+import { toast } from 'sonner';
+import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 import DisplayFields from '@/components/DisplayFields/DisplayFields';
 import ButtonGroups from '@/components/ButtonGroups/ButtonGroups';
@@ -11,23 +14,29 @@ import {
   clearCompleteData,
   suspendAction,
 } from '@/services/api';
-import { InputFormProps } from '@/types/AppInterfaces';
+import {
+  dateAtom,
+  taskIdAtom,
+  startTimeAtom,
+  runningTimeAtom,
+  scriptFetchedOnAtom,
+  scriptsAnalyzedAtom,
+} from '@/store/atoms';
 
-const InputForm: React.FC<InputFormProps> = ({
-  date,
-  startTime,
-  runningTime,
-  scriptFetchedOn,
-  scriptsAnalyzed,
-  onTaskIdChange,
-  onDateChange,
-}) => {
+const InputForm: React.FC = () => {
+  const [date, setDate] = useAtom(dateAtom);
+  const [, setTaskId] = useAtom(taskIdAtom);
+  const [startTime] = useAtom(startTimeAtom);
+  const [runningTime] = useAtom(runningTimeAtom);
+  const [scriptFetchedOn] = useAtom(scriptFetchedOnAtom);
+  const [scriptsAnalyzed] = useAtom(scriptsAnalyzedAtom);
+
   const [startFrom, setStartFrom] = useState(1);
   const [pivotGap, setPivotGap] = useState(0.5);
 
   // Handlers
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    onDateChange(e.target.value);
+    setDate(e.target.value);
   };
 
   const handleStartFromChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -35,11 +44,9 @@ const InputForm: React.FC<InputFormProps> = ({
   };
 
   const handleStart = async () => {
-    // Logic for starting analysis
-
     try {
       const result = await generateBOData(date, pivotGap / 100, startFrom);
-      onTaskIdChange(result.task_id);
+      setTaskId(result.task_id);
       toast.success('Analysis started!');
     } catch (error) {
       console.error(error);
@@ -62,7 +69,7 @@ const InputForm: React.FC<InputFormProps> = ({
   const handleClear = async () => {
     try {
       const result = await clearChartData();
-      onTaskIdChange(result.task_id);
+      setTaskId(result.task_id);
       toast.success('Clearing chart data...');
     } catch (error) {
       console.error(error);
@@ -73,7 +80,7 @@ const InputForm: React.FC<InputFormProps> = ({
   const handleFetchList = async () => {
     try {
       const result = await fetchScripts();
-      onTaskIdChange(result.task_id);
+      setTaskId(result.task_id);
       toast.success('Fetching stock list...');
     } catch (error) {
       console.error(error);
@@ -84,7 +91,7 @@ const InputForm: React.FC<InputFormProps> = ({
   const handleClearList = async () => {
     try {
       const result = await clearCompleteData();
-      onTaskIdChange(result.task_id);
+      setTaskId(result.task_id);
       toast.success('Clearing complete data...');
     } catch (error) {
       console.error(error);
@@ -97,31 +104,25 @@ const InputForm: React.FC<InputFormProps> = ({
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-400 p-6">
+    <div className="flex flex-col p-6">
       {/* Input Fields */}
-      <div className="flex gap-4 mb-6 min-w-60">
+      <div className="flex gap-4 mb-6">
         <div className="flex-1">
-          <label className="block font-medium sm:text-xs text-sm mb-2" htmlFor="date">
-            Run Date
-          </label>
-          <input
+          <Label htmlFor="date">Run Date</Label>
+          <Input
             type="date"
             id="date"
             value={date}
             onChange={handleDateChange}
-            className="w-full sm:p-2 p-3 border border-gray-300  rounded sm:text-xs text-sm dark:text-gray-500"
           />
         </div>
         <div className="flex-1">
-          <label className="block sm:text-xs text-sm font-medium mb-2" htmlFor="startFrom">
-            Start From
-          </label>
-          <input
+          <Label htmlFor="startFrom">Start From</Label>
+          <Input
             type="number"
             id="startFrom"
             value={startFrom}
             onChange={handleStartFromChange}
-            className="w-full sm:p-2 p-3 border border-gray-300 rounded sm:text-xs text-sm dark:text-gray-500"
           />
         </div>
       </div>
@@ -137,8 +138,8 @@ const InputForm: React.FC<InputFormProps> = ({
 
       {/* Text with Divider */}
       <div className="flex flex-col gap-2 mb-6">
-        <span className="text-xl">Stock Analysis</span>
-        <Divider />
+        <span className="text-xl font-semibold">Stock Analysis</span>
+        <Separator />
       </div>
 
       {/* Read-Only Fields */}

@@ -1,52 +1,51 @@
 import React, { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+import { useAtom } from 'jotai';
+import { toast } from 'sonner';
 import DataTable from '@/components/DataTable/DataTable';
 import InputForm from '@/components/InputForm/InputForm';
-import { TaskResponse, TaskProgress } from '@/types/AppInterfaces';
+import { TaskResponse } from '@/types/AppInterfaces';
 import { getTaskStatus } from '@/services/api';
-import { formatDateTime, formatDuration, getCurrentDate } from '@/utils/helperFn';
+import { formatDuration, getCurrentDate } from '@/utils/helperFn';
+import {
+  dateAtom,
+  taskIdAtom,
+  startRefreshAtom,
+  progressAtom,
+  startTimeAtom,
+  runningTimeAtom,
+  scriptFetchedOnAtom,
+  refreshTriggerAtom,
+} from '@/store/atoms';
 
 const HomePage: React.FC = () => {
-  const [date, setDate] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [taskId, setTaskId] = useState('');
-  const [scriptsAnalyzed, setScriptsAnalyzed] = useState(0);
-  const [startRefresh, setStartRefresh] = useState(false);
-  const [startTime, setStartTime] = useState<string>('');
-  const [runningTime, setRunningTime] = useState<string>('');
-  const [scriptFetchedOn, setScriptFetchedOn] = useState<string>('');
+  const [date, setDate] = useAtom(dateAtom);
+  const [taskId, setTaskId] = useAtom(taskIdAtom);
+  const [startRefresh, setStartRefresh] = useAtom(startRefreshAtom);
+  const [startTime, setStartTime] = useAtom(startTimeAtom);
+  const [runningTime, setRunningTime] = useAtom(runningTimeAtom);
+  const [scriptFetchedOn, setScriptFetchedOn] = useAtom(scriptFetchedOnAtom);
+  const [progress, setProgress] = useAtom(progressAtom);
+  const [refreshTrigger, setRefreshTrigger] = useAtom(refreshTriggerAtom);
+
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
-  const [progress, setProgress] = useState<TaskProgress | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
-  // Handlers for root data ==> date, start Refresh
-  const handleDateChange = (value: string) => {
-    setDate(value);
-  };
+  useEffect(() => {
+    if (taskId) {
+      const start_time = new Date().toISOString();
 
-  const handleScriptsAnalyzed = (value: number) => {
-    setScriptsAnalyzed(value);
-  };
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
 
-  const handleTaskIdChange = (value: string) => {
-    // console.log('Task ID::', value);
-    setTaskId(value);
-    const start_time = new Date().toISOString();
+      const interval = setInterval(() => {
+        const now = new Date().toISOString();
+        setRunningTime(formatDuration(start_time, now));
+      }, 1000);
 
-    if (timerInterval) {
-      clearInterval(timerInterval);
+      setTimerInterval(interval);
+      pollTaskStatus(taskId, interval);
     }
-
-    // Start the timer
-    const interval = setInterval(() => {
-      const now = new Date().toISOString();
-      setRunningTime(formatDuration(start_time, now));
-    }, 1000);
-
-    setTimerInterval(interval);
-
-    pollTaskStatus(value, interval);
-  };
+  }, [taskId]);
 
   const pollTaskStatus = async (id: string, timerInterval: NodeJS.Timeout) => {
     const interval = setInterval(async () => {
@@ -105,40 +104,26 @@ const HomePage: React.FC = () => {
     }, 2000);
   };
 
-  /***
-   * UseEffect functions
-   */
-  // Runs only in 1st instance
   useEffect(() => {
     const today: string = getCurrentDate();
-    // console.log(today);
-
     setDate(today);
-  }, []);
+  }, [setDate]);
 
   return (
     <>
-      <div className="">
-        <InputForm
-          date={date}
-          startTime={formatDateTime(startTime)}
-          runningTime={runningTime}
-          scriptFetchedOn={formatDateTime(scriptFetchedOn)}
-          scriptsAnalyzed={scriptsAnalyzed}
-          onTaskIdChange={handleTaskIdChange}
-          onDateChange={handleDateChange}
-        />
+      <div>
+        <InputForm />
 
         {/* Progress Bar */}
         {progress && (
           <div className="mx-6 mb-4">
-            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
               <div
-                className="bg-blue-600 h-3 transition-all duration-300 ease-in-out"
+                className="bg-primary h-3 transition-all duration-300 ease-in-out"
                 style={{ width: `${(progress.current / progress.total) * 100}%` }}
               />
             </div>
-            <p className="text-sm mt-2 text-gray-700">
+            <p className="text-sm mt-2 text-muted-foreground">
               Processing {progress.current} of {progress.total}
               {progress.script && `: ${progress.script}`}
             </p>
@@ -146,12 +131,7 @@ const HomePage: React.FC = () => {
         )}
       </div>
       <div className="flex-1 my-2">
-        <DataTable
-          date={date}
-          startRefresh={startRefresh}
-          refreshTrigger={refreshTrigger}
-          onScriptsAnalyzed={handleScriptsAnalyzed}
-        />
+        <DataTable />
       </div>
     </>
   );
