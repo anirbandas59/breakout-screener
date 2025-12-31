@@ -21,7 +21,6 @@ const InputForm: React.FC<InputFormProps> = ({
   scriptsAnalyzed,
   onTaskIdChange,
   onDateChange,
-  onStartRefresh,
 }) => {
   const [startFrom, setStartFrom] = useState(1);
   const [pivotGap, setPivotGap] = useState(0.5);

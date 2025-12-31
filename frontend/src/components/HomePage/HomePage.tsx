@@ -2,15 +2,13 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import DataTable from '@/components/DataTable/DataTable';
 import InputForm from '@/components/InputForm/InputForm';
-import { DataResponse, DataRow, TaskResponse, TaskProgress } from '@/types/AppInterfaces';
+import { TaskResponse, TaskProgress } from '@/types/AppInterfaces';
 import { getTaskStatus } from '@/services/api';
 import { formatDateTime, formatDuration, getCurrentDate } from '@/utils/helperFn';
 
 const HomePage: React.FC = () => {
-  // const [data, setData] = useState<DataRow[]>([]);
-  // const [totalPages, setTotalPages] = useState(0);
-  // const [isLoading, setIsLoading] = useState(false);
   const [date, setDate] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [taskId, setTaskId] = useState('');
   const [scriptsAnalyzed, setScriptsAnalyzed] = useState(0);
   const [startRefresh, setStartRefresh] = useState(false);
@@ -19,6 +17,7 @@ const HomePage: React.FC = () => {
   const [scriptFetchedOn, setScriptFetchedOn] = useState<string>('');
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
   const [progress, setProgress] = useState<TaskProgress | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   // Handlers for root data ==> date, start Refresh
   const handleDateChange = (value: string) => {
@@ -27,10 +26,6 @@ const HomePage: React.FC = () => {
 
   const handleScriptsAnalyzed = (value: number) => {
     setScriptsAnalyzed(value);
-  };
-
-  const handleStartRefresh = (value: boolean) => {
-    setStartRefresh(value);
   };
 
   const handleTaskIdChange = (value: string) => {
@@ -85,12 +80,14 @@ const HomePage: React.FC = () => {
           }
           setProgress(null);
           setStartRefresh(false);
+          setRefreshTrigger(prev => prev + 1); // Force data table refresh
           toast.success('Analysis complete!');
         } else if (status === 'FAILURE') {
           clearInterval(interval); // Stop the timer
           clearInterval(timerInterval); // Stop polling
           setProgress(null);
           setStartRefresh(false);
+          setRefreshTrigger(prev => prev + 1); // Force data table refresh
           toast.error('Analysis failed!');
         } else {
           console.log(result);
@@ -130,7 +127,6 @@ const HomePage: React.FC = () => {
           scriptsAnalyzed={scriptsAnalyzed}
           onTaskIdChange={handleTaskIdChange}
           onDateChange={handleDateChange}
-          onStartRefresh={handleStartRefresh}
         />
 
         {/* Progress Bar */}
@@ -153,6 +149,7 @@ const HomePage: React.FC = () => {
         <DataTable
           date={date}
           startRefresh={startRefresh}
+          refreshTrigger={refreshTrigger}
           onScriptsAnalyzed={handleScriptsAnalyzed}
         />
       </div>

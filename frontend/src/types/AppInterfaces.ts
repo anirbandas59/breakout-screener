@@ -39,6 +39,7 @@ export interface ButtonGroupsProps {
 export interface DataTableProps {
   startRefresh: boolean;
   date: string;
+  refreshTrigger: number;
   onScriptsAnalyzed: (value: number) => void;
   // data: DataRow[];
   // onDataChange: (data: DataRow) => void;
@@ -52,7 +53,6 @@ export interface InputFormProps {
   scriptsAnalyzed: number;
   onTaskIdChange: (value: string) => void;
   onDateChange: (value: string) => void;
-  onStartRefresh: (value: boolean) => void;
 }
 
 export interface TaskProgress {

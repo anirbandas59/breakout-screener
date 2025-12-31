@@ -89,12 +89,12 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
         logging.info("Data fetched for script %s ==> %d rows",
                      script_name, df.size)
 
-        if str(analysis_date_val) not in df.index:
+        if analysis_date not in df.index:
             logging.warning(
-                "No data available for %s on %s. Skipping...", script_name, analysis_date_val)
+                "No data available for %s on %s. Skipping...", script_name, analysis_date)
             continue
 
-        today_data = df.loc[str(analysis_date_val)]
+        today_data = df.loc[analysis_date]
         today_open, today_high, today_low, today_close, today_volume = today_data[
             "Open"], today_data["High"], today_data["Low"], today_data["Close"], today_data["Volume"]
         logging.info("Open: %.2f", today_open)
@@ -104,10 +104,10 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
         logging.info("Volume: %.2f", today_volume)
 
         # Calculate Previous Highs and Average Volume
-        prev_highs = df[df.index < analysis_date_val]["High"].iloc[:10]
+        prev_highs = df[df.index < analysis_date]["High"].iloc[:10]
         prev_high = prev_highs.max() if not prev_highs.empty else 0
         avg_volume = df[df.index <
-                        analysis_date_val]["Volume"].iloc[:10].mean()
+                        analysis_date]["Volume"].iloc[:10].mean()
 
         logging.info("Previous High: %.2f", prev_high)
         logging.info("Avg Volume: %d", avg_volume)
@@ -203,7 +203,7 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
                 db_record.candle_indicator = candle_indicator
                 db_record.breakout_indicator = breakout_indicator
                 db_record.volume_indicator = volume_indicator
-                db_record.date = analysis_date_val
+                db_record.date = analysis_date_val.date()
 
                 db.commit()
                 logging.info("Data updated for script %s", script_name)

@@ -20,7 +20,7 @@ const generateDataCell = (value: string | number | JSX.Element, index: number) =
   </td>
 );
 
-const DataTable: React.FC<DataTableProps> = ({ date, startRefresh }) => {
+const DataTable: React.FC<DataTableProps> = ({ date, startRefresh, refreshTrigger }) => {
   const [data, setData] = useState<DataRow[]>([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(30);
@@ -52,11 +52,11 @@ const DataTable: React.FC<DataTableProps> = ({ date, startRefresh }) => {
     if (startRefresh) {
       const interval = setInterval(() => {
         fetchData(page, limit);
-      }, 30000);
+      }, 10000); // Reduced from 30s to 10s for better sync with progress
 
       return () => clearInterval(interval);
     }
-  }, [page, limit, startRefresh]);
+  }, [page, limit, startRefresh, refreshTrigger]); // Add refreshTrigger to trigger immediate refresh on task completion
 
   const columnHeaders = [
     'Group',
