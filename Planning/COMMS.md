@@ -3187,3 +3187,87 @@ Created `docs/nse-scraping-fix.md` with:
 
 ---
 
+
+---
+
+### [2025-12-31] [DEV] Phase 5.1 Complete: Foundation & Infrastructure
+
+**Task**: Phase 5.1 - Set up shadcn/ui, establish design system, create multi-page routing
+
+**Status**: Complete ✓
+
+**Changes Made**:
+
+1. **shadcn/ui Setup**:
+   - Installed core dependencies: clsx, tailwind-merge, class-variance-authority, lucide-react, next-themes
+   - Created components.json configuration
+   - Added CSS variables to globals.css for light/dark themes
+   - Created cn() utility helper function in src/lib/utils.ts
+
+2. **Multi-Page Routing**:
+   - Created (dashboard) route group structure
+   - Added pages: Scanner (/), Reports (/reports), Settings (/settings), About (/about)
+   - Created dashboard layout with sidebar and header
+
+3. **Theme Support**:
+   - Created ThemeProvider component using next-themes
+   - Updated root layout with ThemeProvider
+   - Configured class-based dark mode support
+
+4. **shadcn/ui Components**:
+   - Button (with variants: default, destructive, outline, secondary, ghost, link)
+   - Card (with CardHeader, CardTitle, CardDescription, CardContent, CardFooter)
+   - Input
+   - Label
+   - Separator
+   - Skeleton
+   - Sonner (toast notifications - replaces react-hot-toast)
+
+5. **Layout Components**:
+   - Sidebar with navigation (Scanner, Reports, Settings, About)
+   - Dashboard layout (flex layout with sidebar + header + main content)
+
+**Files Created (16)**:
+- components.json
+- src/lib/utils.ts
+- src/components/theme-provider.tsx
+- src/components/layouts/Sidebar.tsx
+- src/app/(dashboard)/layout.tsx
+- src/app/(dashboard)/page.tsx
+- src/app/(dashboard)/reports/page.tsx
+- src/app/(dashboard)/settings/page.tsx
+- src/app/(dashboard)/about/page.tsx
+- src/components/ui/button.tsx
+- src/components/ui/card.tsx
+- src/components/ui/input.tsx
+- src/components/ui/label.tsx
+- src/components/ui/separator.tsx
+- src/components/ui/skeleton.tsx
+- src/components/ui/sonner.tsx
+
+**Files Modified (3)**:
+- src/app/globals.css (added shadcn CSS variables, removed tw-animate-css import)
+- src/app/layout.tsx (added ThemeProvider and Sonner toaster)
+- package.json (added 5 dependencies)
+
+**Files Deleted (1)**:
+- src/app/page.tsx (moved to (dashboard)/page.tsx)
+
+**Testing**:
+- npm run build: ✓ Successful compilation
+- Routes created: ✓ /, /reports, /settings, /about
+- TypeScript compilation: ✓ No errors
+- All pages render with placeholder content
+
+**Known Issues**:
+- None
+
+**Next Steps**:
+- Phase 5.2: Create Jotai store for state management
+- Phase 5.2: Update Header with theme toggle
+- Phase 5.2: Migrate existing components to use Jotai atoms
+
+**Blocking**: No
+
+Git commit: 4331a94
+
