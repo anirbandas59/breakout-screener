@@ -4,6 +4,7 @@ import logging
 import pandas as pd
 import yfinance as yf
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from app.utils.error_handlers import log_error_with_context, DataFetchError
 
 from selenium.webdriver.common.by import By
 from sqlalchemy.orm import Session
@@ -155,5 +156,10 @@ def fetch_script_historical_data(script_name: str, period: str = "1mo") -> pd.Da
         return df
 
     except Exception as e:
-        logging.error(f"Error fetching data for {script_name}: {e}")
+        log_error_with_context(
+            error=e,
+            script_name=script_name,
+            operation="fetch_historical_data",
+            period=period
+        )
         return pd.DataFrame()

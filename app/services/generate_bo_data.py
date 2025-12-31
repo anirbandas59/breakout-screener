@@ -9,6 +9,7 @@ from app.models.enums import BreakoutIndicator, CandleIndicator, VolumeIndicator
 from app.services.cpr_calculator import calculate_cpr
 from app.services.fetch_scripts import fetch_script_historical_data
 from app.utils.suspension_flag import SUSPEND_ANALYSIS
+from app.utils.error_handlers import log_error_with_context, DatabaseError, CPRCalculationError
 
 # logging.basicConfig(level=logging.INFO)
 
@@ -115,7 +116,19 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
         logging.info("Avg Volume: %d", avg_volume)
 
         # Calculate CPR levels using dedicated calculator
-        pivot, res1, res2, sup1, sup2, gap = calculate_cpr(today_high, today_low, today_close)
+        try:
+            pivot, res1, res2, sup1, sup2, gap = calculate_cpr(today_high, today_low, today_close)
+        except Exception as e:
+            log_error_with_context(
+                error=e,
+                script_name=script_name,
+                date=analysis_date,
+                operation="calculate_cpr",
+                high=today_high,
+                low=today_low,
+                close=today_close
+            )
+            raise CPRCalculationError(f"CPR calculation failed for {script_name}: {e}") from e
 
         logging.info("Pivot: %.2f", pivot)
         logging.info("Resistance Level 1: %.2f", res1)
@@ -205,8 +218,14 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
             else:
                 logging.info("Update skipped for script %s", script_name)
         except Exception as e:
-            logging.error("Error updating database for %s: %s",
-                          script_name, e)
+            log_error_with_context(
+                error=e,
+                script_name=script_name,
+                date=analysis_date,
+                operation="database_update"
+            )
+            db.rollback()
+            # Continue processing other scripts instead of failing entirely
 
     logging.info("BO Analysis completed successfully")
     return {
