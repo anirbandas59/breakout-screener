@@ -1,9 +1,14 @@
 import React from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Loader: React.FC = () => {
   return (
-    <div className="flex justify-center items-center h-16">
-      <div className="loader border-t-4 border-blue-500 rounded-full w-8 h-8 animate-spin"></div>
+    <div className="space-y-2 p-4">
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-12 w-full" />
     </div>
   );
 };

@@ -1,6 +1,8 @@
 'use client';
 
 import * as React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 interface ReadOnlyFieldsProps {
   scriptsAnalyzed: number;
@@ -21,46 +23,45 @@ const DisplayFields: React.FC<ReadOnlyFieldsProps> = ({
 }) => {
   const handlePivotChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const newValue = parseFloat(e.target.value);
-    console.log('Newvalue: ', newValue);
     if (!Number.isNaN(newValue)) {
       onPivotChange(newValue);
     }
   };
 
   return (
-    <div className="bg-yellow-100 dark:bg-slate-500 rounded p-4 shadow-md w-full">
-      <div className="mb-2 flex justify-between">
-        <span className="text-sm sm:text-xs font-medium">Scripts Analyzed:</span>
-        <span className="text-sm sm:text-xs text-blue-500 dark:text-white">{scriptsAnalyzed}</span>
-      </div>
-      <div className="mb-2 flex justify-between">
-        <span className="text-sm sm:text-xs font-medium">Start Time:</span>
-        <span className="text-sm sm:text-xs text-blue-500 dark:text-white">
-          {startTime || '--'}
-        </span>
-      </div>
-      <div className="mb-2 flex justify-between">
-        <span className="font-medium text-sm sm:text-xs">Running Time:</span>
-        <span className="text-blue- dark:text-white text-sm sm:text-xs">{runningTime || '--'}</span>
-      </div>
-      <div className="mb-2 flex justify-between">
-        <span className="font-medium text-sm sm:text-xs">Script Fetched On:</span>
-        <span className="text-blue-500 text-sm sm:text-xs dark:text-white">
-          {fetchingTime || '--'}
-        </span>
-      </div>
-      <div className="mb-2 flex justify-between">
-        <span className="font-medium text-sm sm:text-xs">Pivot %:</span>
-        {/* <span className="text-blue-500 text-sm sm:text-xs dark:text-white">{pivotGap}</span> */}
-        <input
-          type="number"
-          id="startFrom"
-          value={pivotGap}
-          onChange={handlePivotChange}
-          className="w-16 sm:p-2 p-3 border border-gray-300 rounded sm:text-xs text-sm dark:text-gray-500"
-        />
-      </div>
-    </div>
+    <Card>
+      <CardContent className="pt-6 space-y-3">
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium">Scripts Analyzed:</span>
+          <span className="text-sm text-primary">{scriptsAnalyzed}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium">Start Time:</span>
+          <span className="text-sm text-muted-foreground">
+            {startTime || '--'}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium">Running Time:</span>
+          <span className="text-sm text-muted-foreground">{runningTime || '--'}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium">Script Fetched On:</span>
+          <span className="text-sm text-muted-foreground">
+            {fetchingTime || '--'}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium">Pivot %:</span>
+          <Input
+            type="number"
+            value={pivotGap}
+            onChange={handlePivotChange}
+            className="w-20 h-8"
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
