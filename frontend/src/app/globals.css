@@ -1,6 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-background: #ffffff;
+  --color-foreground: #171717;
+
+  --font-family-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-family-serif: var(--font-playfair-display), ui-serif, Georgia, serif;
+}
 
 :root {
   --background: #ffffff;
@@ -8,6 +14,11 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  @theme {
+    --color-background: #0a0a0a;
+    --color-foreground: #ededed;
+  }
+
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
