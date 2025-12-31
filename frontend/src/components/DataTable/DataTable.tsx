@@ -11,19 +11,18 @@ import {
   ColumnDef,
   ColumnFiltersState,
 } from '@tanstack/react-table';
-import { Download, Search } from 'lucide-react';
+import { Download, Search, Filter } from 'lucide-react';
 import Loader from '@/components/Loader/Loader';
 import Pagination from '@/components/Pagination/Pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import {
   Table,
   TableBody,
@@ -36,6 +35,7 @@ import { DataRow } from '@/types/AppInterfaces';
 import { getData } from '@/services/api';
 import { exportToCSV } from '@/utils/csvExport';
 import {
+  dateAtom,
   tablePageAtom,
   tableLimitAtom,
   totalRecordsAtom,
@@ -74,6 +74,7 @@ const getIndicatorVariant = (
 };
 
 const DataTable: React.FC = () => {
+  const [date] = useAtom(dateAtom);
   const [page, setPage] = useAtom(tablePageAtom);
   const [limit, setLimit] = useAtom(tableLimitAtom);
   const [totalRecords, setTotalRecords] = useAtom(totalRecordsAtom);
@@ -85,7 +86,7 @@ const DataTable: React.FC = () => {
   const [data, setData] = React.useState<DataRow[]>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [searchValue, setSearchValue] = useState('');
-  const [breakoutFilter, setBreakoutFilter] = useState<string>('all');
+  const [selectedBreakouts, setSelectedBreakouts] = useState<string[]>([]);
 
   const fetchData = async (page: number, limit: number) => {
     setIsLoading(true);
@@ -127,44 +128,87 @@ const DataTable: React.FC = () => {
       });
     }
 
-    if (breakoutFilter && breakoutFilter !== 'all') {
+    if (selectedBreakouts.length > 0) {
       filters.push({
         id: 'breakout_indicator',
-        value: breakoutFilter,
+        value: selectedBreakouts,
       });
     }
 
     setColumnFilters(filters);
-  }, [searchValue, breakoutFilter]);
+  }, [searchValue, selectedBreakouts]);
 
   const columnHelper = createColumnHelper<DataRow>();
 
+  // Get unique breakout indicator values for filter
+  const breakoutValues = React.useMemo(() => {
+    const unique = new Set(data.map((row) => row.breakout_indicator).filter(Boolean));
+    return Array.from(unique).sort();
+  }, [data]);
+
+  const handleBreakoutToggle = (value: string) => {
+    setSelectedBreakouts((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    );
+  };
+
   const columns: ColumnDef<DataRow, any>[] = [
-    columnHelper.accessor('group_name', {
-      header: 'Group',
-      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
-    }),
-    columnHelper.display({
-      id: 'sl_no',
-      header: 'Sl. No',
-      cell: ({ row }) => (
-        <span className="text-xs">{row.index + 1 + (page - 1) * limit}</span>
-      ),
-    }),
     columnHelper.accessor('script_name', {
       header: 'Scripts',
       cell: (info) => <span className="text-xs font-medium">{info.getValue()}</span>,
       filterFn: 'includesString',
     }),
     columnHelper.accessor('breakout_indicator', {
-      header: 'Breakout',
+      header: () => (
+        <div className="flex items-center gap-2">
+          <span>Breakout</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                <Filter className="h-3 w-3" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56" align="start">
+              <div className="space-y-2">
+                <div className="font-semibold text-sm">Filter by Breakout</div>
+                {breakoutValues.map((value) => (
+                  <div key={value} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`breakout-${value}`}
+                      checked={selectedBreakouts.includes(value)}
+                      onCheckedChange={() => handleBreakoutToggle(value)}
+                    />
+                    <label
+                      htmlFor={`breakout-${value}`}
+                      className="text-sm cursor-pointer flex-1"
+                    >
+                      {value}
+                    </label>
+                  </div>
+                ))}
+                {selectedBreakouts.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={() => setSelectedBreakouts([])}
+                  >
+                    Clear Filter
+                  </Button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      ),
       cell: (info) => (
         <Badge variant={getIndicatorVariant(info.getValue(), 'breakout')} className="text-xs">
           {info.getValue()}
         </Badge>
       ),
-      filterFn: (row, id, value) => {
-        return row.getValue(id) === value;
+      filterFn: (row, id, value: string[]) => {
+        if (!value || value.length === 0) return true;
+        return value.includes(row.getValue(id));
       },
     }),
     columnHelper.accessor('candle_indicator', {
@@ -267,66 +311,52 @@ const DataTable: React.FC = () => {
   };
 
   const handleExport = () => {
-    const date = new Date().toISOString().split('T')[0];
-    exportToCSV(data, `breakout_data_${date}.csv`);
+    const exportDate = date || new Date().toISOString().split('T')[0];
+    exportToCSV(data, `breakout_data_${exportDate}.csv`);
   };
-
-  // Get unique breakout indicator values for filter dropdown
-  const breakoutValues = React.useMemo(() => {
-    const unique = new Set(data.map((row) => row.breakout_indicator).filter(Boolean));
-    return Array.from(unique).sort();
-  }, [data]);
 
   return (
     <>
-      <div className="flex justify-between items-center mb-4">
-        <Pagination
-          currentPage={page}
-          totalPages={totalRecords}
-          limit={limit}
-          onPageChange={handlePageChange}
-          onLimitChange={handleLimitChange}
-        />
+      <div className="space-y-4 mb-4">
+        {/* Line 1: Date and Pagination */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="text-sm font-medium">
+            Date: <span className="text-muted-foreground">{date || 'Not set'}</span>
+          </div>
+          <Pagination
+            currentPage={page}
+            totalPages={totalRecords}
+            limit={limit}
+            onPageChange={handlePageChange}
+            onLimitChange={handleLimitChange}
+          />
+        </div>
+
+        {/* Line 2: Search and Export */}
         {data.length > 0 && (
-          <Button
-            onClick={handleExport}
-            variant="outline"
-            size="sm"
-            className="gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
+          <div className="flex items-center justify-between gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by symbol..."
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="pl-8"
+                size={undefined}
+              />
+            </div>
+            <Button
+              onClick={handleExport}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
         )}
       </div>
-
-      {/* Filters Section */}
-      {data.length > 0 && (
-        <div className="flex gap-4 mb-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by symbol name..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-          <Select value={breakoutFilter} onValueChange={setBreakoutFilter}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filter by Breakout" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Breakouts</SelectItem>
-              {breakoutValues.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
 
       <div className="rounded-lg border shadow-md">
         {isLoading ? (

@@ -3646,3 +3646,72 @@ Git commit: a2ed964
 **Blocking**: No
 
 Git commit: Pending
+
+---
+
+### [2025-12-31] [DEV] Table UI/UX Enhancements Complete
+
+**Tasks**: Column optimization, two-line layout, checkbox filters
+
+**Status**: Complete
+
+**Changes Made**:
+
+1. **Table Column Optimization**:
+   - Removed Group Name column (redundant)
+   - Removed Sl. No column (unnecessary)
+   - Streamlined to 17 essential data columns
+   - More screen space for critical data
+
+2. **Two-Line Control Layout**:
+   - **Line 1**: Date and Pagination (equally spaced with justify-between)
+   - **Line 2**: Search field (left) and Export CSV button (right)
+   - Clean, organized interface
+   - Responsive spacing
+
+3. **Checkbox Filter in Breakout Column Header**:
+   - Filter icon button in Breakout column header
+   - Click opens Popover with checkboxes
+   - Multi-select: choose 1+ options to filter
+   - "Clear Filter" button when selections active
+   - Default: no selections = all records shown
+   - Exact match filtering on selected values
+
+4. **Pagination Component Cleanup**:
+   - Removed duplicate Date display from Pagination
+   - Date now only shown in DataTable's first line
+   - Simplified Pagination to page controls + rows per page selector
+   - Cleaner component separation
+
+**Files Modified**:
+- frontend/src/components/DataTable/DataTable.tsx
+- frontend/src/components/Pagination/Pagination.tsx
+- frontend/src/components/HomePage/HomePage.tsx
+
+**Files Created**:
+- frontend/src/components/ui/checkbox.tsx
+- frontend/src/components/ui/popover.tsx
+
+**Dependencies**:
+- @radix-ui/react-checkbox
+- @radix-ui/react-popover
+
+**Features Delivered**:
+- ✅ Removed 2 unnecessary columns (Group, Sl. No)
+- ✅ Two-line layout: Date/Pagination, Search/Export
+- ✅ Checkbox filter dropdown in Breakout header
+- ✅ Multi-select filter with clear button
+- ✅ Symbol search filter (partial match)
+- ✅ Combined filters work together
+- ✅ Removed duplicate Date field from Pagination
+- ✅ Clean, professional UI
+
+**Testing**:
+- Build: ✓ Successful (2.7s compilation)
+- TypeScript: ✓ No errors
+- All routes: ✓ Generated successfully
+- UI layout: ✓ Two lines, properly spaced
+
+**Blocking**: No
+
+Git commit: Pending
