@@ -1,4 +1,4 @@
-# Communication Log
+# Communication Log Template
 
 **Purpose**: Two-way communication between Project Manager (PM) and Developer
 **Format**: Append new entries at the end (oldest first, newest at bottom)
@@ -7,19 +7,22 @@
 
 ## How to Use
 
-### For Developer:
+### For Developer
+
 - Write status updates after completing tasks
 - Ask questions when blocked
 - Report issues or concerns
 - Tag entries with `[DEV]`
 
-### For PM:
+### For PM
+
 - Provide feedback on completed work
 - Answer developer questions
 - Give additional guidance
 - Tag entries with `[PM]`
 
-### Entry Format:
+### Entry Format
+
 ```
 ### [DATE] [ROLE] Subject
 
@@ -28,6 +31,7 @@ Message content here.
 **Status**: (if applicable)
 **Blocking**: Yes/No
 ```
+
 ---
 
 ### 2024-12-22 [PM] Project Kickoff
@@ -43,6 +47,7 @@ I've created the implementation plan for merging V1 and V2 codebases. Please rev
 **Priority**: Start with Phase 1 (Critical Backend Fixes)
 
 **Key Points**:
+
 - Task 1.1 (yfinance) is the most important - it enables everything else
 - Test after each task before moving on
 - Update checkboxes as you complete tasks
@@ -108,6 +113,7 @@ Let me know when you're ready to begin.
 ## Communication Log
 
 ---
+
 ### [2025-12-30] [PM] Review of Task 1.1 - APPROVED ✅
 
 **Task**: Replace Selenium with yfinance for Price Data
@@ -117,6 +123,7 @@ Let me know when you're ready to begin.
 ---
 
 #### Summary
+
 Excellent implementation! The developer has successfully replaced Selenium-based price data fetching with yfinance, achieving a **60x performance improvement** (0.20s vs 20s per stock). All task requirements met with exemplary code quality, testing, and documentation.
 
 ---
@@ -124,22 +131,26 @@ Excellent implementation! The developer has successfully replaced Selenium-based
 #### Detailed Scoring
 
 **A. CORRECTNESS (15/15)** ✅
+
 - ✓ Code implements exactly what was specified in INSTRUCTIONS.md
 - ✓ Logic is sound: proper use of `yf.Ticker(f"{script_name}.NS")` for NSE stocks
 - ✓ Edge cases handled: empty data check, error handling, logging
 
 **B. CODE QUALITY (15/15)** ✅
+
 - ✓ Follows existing code patterns and logging approach
 - ✓ Highly readable: reduced complexity from 67 to 18 lines
 - ✓ No duplication, simple and maintainable
 
 **C. DEPENDENCY MANAGEMENT (10/10)** ✅
+
 - ✓ `yfinance` properly added to requirements.txt (line 15)
 - ✓ All dependencies install without errors via `uv pip install`
 - ✓ No conflicts detected (`uv pip check` passed)
 - ✓ Imports work correctly, verified with `uv run python`
 
 **D. TESTING (15/15)** ✅
+
 - ✓ All checklist tests completed and documented
 - ✓ Single stock test: PASSED (RELIANCE: 21 rows in 0.90s)
 - ✓ 10 stocks test: PASSED (2.00s total, 0.20s per stock)
@@ -148,17 +159,20 @@ Excellent implementation! The developer has successfully replaced Selenium-based
 - ✓ Module imports: PASSED
 
 **E. CHECKLIST COMPLETION (10/10)** ✅
+
 - ✓ All 6 step checkboxes marked [x]
 - ✓ Comprehensive developer notes with specific details
 - ✓ Test results documented with exact numbers
 - ✓ Commands documented for reproducibility
 
 **F. COMMUNICATION (5/5)** ✅
+
 - ✓ Excellent status update in COMMS.md
 - ✓ All `uv` commands properly documented
 - ✓ Issues encountered and resolved clearly explained
 
 **G. INTEGRATION (5/5)** ✅
+
 - ✓ No breaking changes to existing functionality
 - ✓ Selenium imports correctly retained for `fetch_script_symbols()`
 - ✓ Return type matches original (pandas DataFrame)
@@ -169,6 +183,7 @@ Excellent implementation! The developer has successfully replaced Selenium-based
 #### Verification Results
 
 **Dependencies:**
+
 ```bash
 ✓ uv pip install -r requirements.txt - SUCCESS
 ✓ uv pip check - All packages compatible
@@ -178,6 +193,7 @@ Excellent implementation! The developer has successfully replaced Selenium-based
 ```
 
 **Functional Tests:**
+
 ```bash
 ✓ Single stock (RELIANCE): 21 rows in 0.90s
 ✓ 10 stocks: All passed in 2.00s (0.20s avg per stock)
@@ -187,6 +203,7 @@ Excellent implementation! The developer has successfully replaced Selenium-based
 ```
 
 **Code Quality:**
+
 - Function at [app/services/fetch_scripts.py:125-150](app/services/fetch_scripts.py#L125-L150)
 - Clean implementation: 18 lines vs original 67 lines
 - Proper error handling with try/except
@@ -208,6 +225,7 @@ Excellent implementation! The developer has successfully replaced Selenium-based
 #### Action Items
 
 **For Developer:**
+
 - ✅ Task 1.1 COMPLETE - No changes required
 - ⏭️ Ready to proceed to **Task 1.2: Remove 5-Script Limit**
 - 💡 Suggestion: Continue this excellent standard of documentation!
@@ -226,14 +244,15 @@ Developer may proceed to Task 1.2 when ready.
 
 ---
 
-
 ---
+
 ### [2025-12-30] [DEV] Completed Task 1.1
 
 **Task**: Replace Selenium with yfinance for Price Data
 **Status**: Complete
 
 **Changes Made**:
+
 - `requirements.txt`: Added `yfinance` (line 15)
 - `app/services/fetch_scripts.py`:
   - Added `import yfinance as yf` at line 5
@@ -241,12 +260,14 @@ Developer may proceed to Task 1.2 when ready.
   - Kept Selenium imports (still needed for `fetch_script_symbols()`)
 
 **Dependencies**:
+
 - Added: yfinance==1.0, websocket-client==1.9.0, packaging==25.0
 - Installation: `uv pip install yfinance websocket-client packaging`
 - Verification: `uv pip list | grep yfinance` ✓
 
 **Testing**:
 Commands run:
+
 ```bash
 uv pip install yfinance
 uv pip install websocket-client packaging
@@ -256,6 +277,7 @@ uv run python -c "from app.services.fetch_scripts import fetch_script_historical
 ```
 
 Results:
+
 - [x] Test 1: Single stock (RELIANCE) - PASSED (21 rows fetched)
 - [x] Test 2: 10 stocks - PASSED (all fetched successfully)
 - [x] Performance: **3.52 seconds for 10 stocks (0.35s per stock)**
@@ -264,6 +286,7 @@ Results:
 - [x] Error logging in place
 
 **Test Output - 10 Stocks**:
+
 ```
 ✓ RELIANCE     | 21 rows | OHLCV columns: ['Open', 'High', 'Low', 'Close', 'Volume']
 ✓ TCS          | 22 rows | OHLCV columns: ['Open', 'High', 'Low', 'Close', 'Volume']
@@ -279,10 +302,12 @@ Total time: 3.52 seconds (0.35s per stock)
 ```
 
 **Issues Encountered**:
+
 - Missing dependencies for Selenium (websocket-client) and webdriver-manager (packaging)
 - Resolved by installing: `uv pip install websocket-client packaging`
 
 **Questions for PM**:
+
 - None
 
 **Next**: Ready for PM review. Moving to Task 1.2 after approval.
@@ -293,34 +318,40 @@ Total time: 3.52 seconds (0.35s per stock)
 
 *Add new entries above this line*
 
-
 ---
+
 ### [2025-12-30 18:05] [DEV] Completed Task 1.2
 
 **Task**: Remove 5-Script Limit
 **Status**: Complete
 
 **Changes Made**:
+
 - `app/services/generate_bo_data.py`: Removed `[:5]` slice from line 51
 
 **Dependencies**:
+
 - None
 
 **Testing**:
 Commands run:
+
 ```bash
 uv run python -c "from app.services.generate_bo_data import generate_BOData; print('✓ Module imports successfully')"
 ```
 
 Results:
+
 - [x] Module imports: PASSED
 - [x] Code change verified at line 51
 - [x] Changed: `for script in scripts[:5]` → `for script in scripts`
 
 **Issues Encountered**:
+
 - None
 
 **Questions for PM**:
+
 - None
 
 **Next**: Ready for PM review. Moving to Task 1.3 after approval.
@@ -329,26 +360,30 @@ Results:
 
 ---
 
-
 ---
+
 ### [2025-12-30 18:07] [DEV] Completed Task 1.3
 
 **Task**: Add Celery Task Timeout
 **Status**: Complete
 
 **Changes Made**:
+
 - `app/celery/__init__.py`: Added timeout configuration (lines 23-31)
 
 **Dependencies**:
+
 - None
 
 **Testing**:
 Commands run:
+
 ```bash
 uv run python -c "from app.celery import celery_app; print('✓ Celery app imports successfully'); print(f'✓ task_time_limit: {celery_app.conf.task_time_limit}'); print(f'✓ task_soft_time_limit: {celery_app.conf.task_soft_time_limit}'); print(f'✓ task_acks_late: {celery_app.conf.task_acks_late}')"
 ```
 
 Results:
+
 - [x] Celery app imports: PASSED
 - [x] task_time_limit configured: 3600s (1 hour)
 - [x] task_soft_time_limit configured: 3300s (55 min)
@@ -356,9 +391,11 @@ Results:
 - [x] All timeout settings verified
 
 **Issues Encountered**:
+
 - None
 
 **Questions for PM**:
+
 - None
 
 **Next**: Ready for PM review. Moving to Task 1.4 after approval.
@@ -367,8 +404,8 @@ Results:
 
 ---
 
-
 ---
+
 ### [2025-12-30 18:12] [PM] Review of Task 1.2
 
 **Task**: Remove 5-Script Limit
@@ -376,6 +413,7 @@ Results:
 **Score**: 75/75
 
 **Feedback**:
+
 - ✅ Exact change as specified: removed [:5] slice at line 51
 - ✅ Changed: `for script in scripts[:5]` → `for script in scripts`
 - ✅ Module imports successfully verified
@@ -387,6 +425,7 @@ Results:
 - ✅ No dependencies added (code change only)
 
 **Verification Results**:
+
 ```bash
 ✓ Module imports: from app.services.generate_bo_data import generate_BOData
 ✓ Git diff confirms single-line change at line 51
@@ -398,8 +437,8 @@ Results:
 
 ---
 
-
 ---
+
 ### [2025-12-30 18:15] [PM] Review of Task 1.3
 
 **Task**: Add Celery Task Timeout
@@ -407,13 +446,14 @@ Results:
 **Score**: 75/75
 
 **Feedback**:
-- ✅ Configuration matches specification exactly (lines 23-31 in app/celery/__init__.py)
+
+- ✅ Configuration matches specification exactly (lines 23-31 in `app/celery/__init__.py`)
 - ✅ All 5 timeout settings properly configured:
-  * task_time_limit: 3600s ✓
-  * task_soft_time_limit: 3300s ✓
-  * broker_transport_options.visibility_timeout: 3600s ✓
-  * task_acks_late: True ✓
-  * task_reject_on_worker_lost: True ✓
+  - task_time_limit: 3600s ✓
+  - task_soft_time_limit: 3300s ✓
+  - broker_transport_options.visibility_timeout: 3600s ✓
+  - task_acks_late: True ✓
+  - task_reject_on_worker_lost: True ✓
 - ✅ Celery app imports without errors
 - ✅ Proper placement after celery_app initialization
 - ✅ Clean code with inline comments explaining each setting
@@ -421,6 +461,7 @@ Results:
 - ✅ No dependencies added (configuration only)
 
 **Verification Results**:
+
 ```bash
 ✓ Celery app imports successfully
 ✓ All configuration values verified via celery_app.conf
@@ -433,14 +474,15 @@ Results:
 
 ---
 
-
 ---
+
 ### [2025-12-30 18:20] [DEV] Completed Task 1.4
 
 **Task**: Add Progress Tracking
 **Status**: Complete
 
 **Changes Made**:
+
 - `app/services/generate_bo_data.py`:
   - Added import: `from celery import current_task` (line 5)
   - Added `total_scripts = len(scripts)` (line 51)
@@ -450,15 +492,18 @@ Results:
   - Updated success message with total count (line 214)
 
 **Dependencies**:
+
 - None (celery already installed)
 
 **Testing**:
 Commands run:
+
 ```bash
 uv run python -c "from app.services.generate_bo_data import generate_BOData; print('✓ Module imports successfully with progress tracking')"
 ```
 
 Results:
+
 - [x] Module imports: PASSED
 - [x] current_task import added
 - [x] Progress tracking code added in loop
@@ -466,9 +511,11 @@ Results:
 - [x] enumerate() used for index tracking
 
 **Issues Encountered**:
+
 - None
 
 **Questions for PM**:
+
 - None
 
 **Next**: Ready for PM review. Moving to Task 1.5 after approval.
@@ -477,26 +524,29 @@ Results:
 
 ---
 
-
 ---
+
 ### [2025-12-30 18:25] [DEV] Completed Task 1.5
 
 **Task**: Add Retry Logic
 **Status**: Complete
 
 **Changes Made**:
+
 - `requirements.txt`: Added `tenacity` (line 16)
 - `app/services/fetch_scripts.py`:
   - Added tenacity imports (line 6)
   - Added @retry decorator to fetch_script_historical_data (lines 126-133)
 
 **Dependencies**:
+
 - Added: tenacity==9.1.2
 - Installation: `uv pip install tenacity`
 - Verification: `uv pip list | grep tenacity` ✓
 
 **Testing**:
 Commands run:
+
 ```bash
 uv pip install tenacity
 uv run python -c "from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type; print('✓ tenacity imports successfully')"
@@ -504,19 +554,22 @@ uv run python -c "from app.services.fetch_scripts import fetch_script_historical
 ```
 
 Results:
+
 - [x] tenacity installed: 9.1.2
 - [x] Imports work correctly
 - [x] Retry decorator added with:
-  * Max 3 attempts (stop_after_attempt(3))
-  * Exponential backoff (wait_exponential 2-10s)
-  * Retry on any exception
-  * Logging before retry attempts
+  - Max 3 attempts (stop_after_attempt(3))
+  - Exponential backoff (wait_exponential 2-10s)
+  - Retry on any exception
+  - Logging before retry attempts
 - [x] Function works: 21 rows for RELIANCE
 
 **Issues Encountered**:
+
 - None
 
 **Questions for PM**:
+
 - None
 
 **Next**: Phase 1 complete. Ready for PM review.
@@ -525,8 +578,8 @@ Results:
 
 ---
 
-
 ---
+
 ### [2025-12-30 18:28] [PM] Review of Task 1.4
 
 **Task**: Add Progress Tracking
@@ -534,14 +587,15 @@ Results:
 **Score**: 75/75
 
 **Feedback**:
+
 - ✅ Implementation matches specification exactly
 - ✅ current_task import added correctly (line 5)
 - ✅ total_scripts variable added (line 51)
 - ✅ enumerate() correctly used for index tracking (line 53)
 - ✅ Progress tracking block properly implemented (lines 54-63):
-  * Updates current_task.update_state with PROGRESS state ✓
-  * Meta includes current, total, and script name ✓
-  * Safe check: if current_task prevents errors ✓
+  - Updates current_task.update_state with PROGRESS state ✓
+  - Meta includes current, total, and script name ✓
+  - Safe check: if current_task prevents errors ✓
 - ✅ Suspension message improved with progress count (line 70)
 - ✅ Success message includes total count (line 214)
 - ✅ Status changed from "FAIL" to "SUSPENDED" (better semantics)
@@ -550,6 +604,7 @@ Results:
 - ✅ No dependencies added (celery already installed)
 
 **Verification Results**:
+
 ```bash
 ✓ Module imports successfully with progress tracking
 ✓ All code changes verified at correct line numbers
@@ -562,8 +617,8 @@ Results:
 
 ---
 
-
 ---
+
 ### [2025-12-30 18:30] [PM] Review of Task 1.5
 
 **Task**: Add Retry Logic
@@ -571,13 +626,14 @@ Results:
 **Score**: 75/75
 
 **Feedback**:
+
 - ✅ tenacity properly added to requirements.txt (line 16)
 - ✅ Retry decorator matches specification exactly (lines 126-133)
 - ✅ All 4 parameters correctly configured:
-  * stop_after_attempt(3): Max 3 attempts ✓
-  * wait_exponential(multiplier=1, min=2, max=10): 2-10s backoff ✓
-  * retry_if_exception_type(Exception): Retry on any exception ✓
-  * before_sleep: Logs retry attempts with warning ✓
+  - stop_after_attempt(3): Max 3 attempts ✓
+  - wait_exponential(multiplier=1, min=2, max=10): 2-10s backoff ✓
+  - retry_if_exception_type(Exception): Retry on any exception ✓
+  - before_sleep: Logs retry attempts with warning ✓
 - ✅ Function works with decorator: 21 rows for RELIANCE
 - ✅ No dependency conflicts (uv pip check: 92 packages compatible)
 - ✅ Developer used uv commands throughout
@@ -585,6 +641,7 @@ Results:
 - ✅ Improves resilience for network failures
 
 **Verification Results**:
+
 ```bash
 ✓ tenacity 9.1.2 installed
 ✓ tenacity imports successfully
@@ -598,19 +655,21 @@ Results:
 
 ---
 
-
 ---
+
 ### [2025-12-30 18:45] [PM] CRITICAL: Database Setup Task Added to Phase 2
 
 **Action Taken**: Created Task 2.0 - Database Setup and Verification
 
 **Rationale**:
 During Phase 1 review, discovered that database connection was never verified. This is a **CRITICAL BLOCKER** for:
+
 - Phase 1 completion testing (50/500 script processing)
 - All Phase 2 features (require data persistence)
 - Production readiness
 
 **Current Issue**:
+
 - PostgreSQL authentication fails: "password authentication failed for user 'trading_user'"
 - Database 'trading_db' may not exist
 - Tables 'breakout_data' and 'master_breakout_data' not verified
@@ -619,6 +678,7 @@ During Phase 1 review, discovered that database connection was never verified. T
 **Task 2.0 Specifications**:
 
 **Files to Create**:
+
 1. `app/db/init_db.py` - Database initialization script
    - Test connection
    - Create all tables using Base.metadata.create_all()
@@ -630,6 +690,7 @@ During Phase 1 review, discovered that database connection was never verified. T
    - Verify CRUD operations work
 
 **Steps Required**:
+
 1. Verify PostgreSQL service running
 2. Create database 'trading_db' (if not exists)
 3. Create user 'trading_user' with password 'tpassword'
@@ -638,11 +699,13 @@ During Phase 1 review, discovered that database connection was never verified. T
 6. Run verify_db.py to confirm setup
 
 **Expected Schema**:
+
 - `breakout_data`: 18 columns (id, script_name, group_name, date, OHLCV, CPR levels, indicators)
 - `master_breakout_data`: Same 18 columns
 - Indexes on: id (PK), script_name, group_name, date
 
 **Testing Checklist** (9 items):
+
 - [ ] PostgreSQL service running
 - [ ] Database exists
 - [ ] User can connect
@@ -654,6 +717,7 @@ During Phase 1 review, discovered that database connection was never verified. T
 **Priority**: **HIGHEST** - Must be completed before Task 2.1
 
 **Best Practices Applied**:
+
 - Least-privilege database user
 - Indexed columns for query performance
 - Connection verification before table creation
@@ -661,6 +725,7 @@ During Phase 1 review, discovered that database connection was never verified. T
 - Schema documentation in task
 
 **Next Steps for Developer**:
+
 1. Review Task 2.0 in INSTRUCTIONS.md (lines 364-543)
 2. Set up PostgreSQL database and user
 3. Create init_db.py and verify_db.py scripts
@@ -674,14 +739,15 @@ During Phase 1 review, discovered that database connection was never verified. T
 
 ---
 
-
 ---
+
 ### [2025-12-30 18:58] [PM] Task 2.0 Database Setup - Initial Investigation
 
 **Task**: Database Setup and Verification
 **Status**: ⚠️ Investigating (Permission Issue Found)
 
 **What I Did**:
+
 1. ✅ Verified database connection works (test_connection.py successful)
 2. ✅ Created `app/db/init_db.py` - table initialization script
 3. ✅ Created `app/db/verify_db.py` - database verification script
@@ -689,6 +755,7 @@ During Phase 1 review, discovered that database connection was never verified. T
 5. ✅ Created `app/db/setup_db.sh` - automated setup script
 
 **Current Status**:
+
 - ✅ Database 'trading_db' exists
 - ✅ User 'trading_user' exists and can connect
 - ✅ Password authentication works
@@ -699,6 +766,7 @@ During Phase 1 review, discovered that database connection was never verified. T
 The trading_user has USAGE permission on public schema but not CREATE permission. This prevents table creation.
 
 **Current Permissions**:
+
 ```
 Schema: public
 Owner: pg_database_owner
@@ -706,11 +774,13 @@ Access: trading_user=U/pg_database_owner (only USAGE, needs CREATE)
 ```
 
 **Error When Creating Tables**:
+
 ```
 psycopg2.errors.InsufficientPrivilege: permission denied for schema public
 ```
 
 **Files Created**:
+
 1. [app/db/init_db.py](app/db/init_db.py) - Creates tables using SQLAlchemy Base.metadata.create_all()
 2. [app/db/verify_db.py](app/db/verify_db.py) - Verifies tables are queryable
 3. [app/db/fix_permissions.sql](app/db/fix_permissions.sql) - SQL script to fix permissions
@@ -719,16 +789,20 @@ psycopg2.errors.InsufficientPrivilege: permission denied for schema public
 **Next Steps for User**:
 
 **Option 1: Run Automated Setup Script** (Recommended):
+
 ```bash
 ./app/db/setup_db.sh
 ```
+
 This will:
+
 - Grant CREATE permission to trading_user
 - Run init_db.py to create tables
 - Run verify_db.py to confirm setup
 - Display full status report
 
 **Option 2: Manual Setup**:
+
 ```bash
 # 1. Fix permissions
 sudo -u postgres psql -d trading_db -f app/db/fix_permissions.sql
@@ -741,6 +815,7 @@ PYTHONPATH=/home/anirban/workspace/projects/breakout_screener_v2 uv run python a
 ```
 
 **Expected Result After Fix**:
+
 ```
 ✓ Database connection successful
 ✓ All tables created/verified
@@ -753,6 +828,7 @@ PYTHONPATH=/home/anirban/workspace/projects/breakout_screener_v2 uv run python a
 ```
 
 **Once Fixed, I Can**:
+
 - Complete Task 2.0 checklist
 - Test Phase 1 completion (50/500 script processing)
 - Review Task 2.1 implementation
@@ -764,8 +840,8 @@ PYTHONPATH=/home/anirban/workspace/projects/breakout_screener_v2 uv run python a
 
 ---
 
-
 ---
+
 ### [2025-12-30 19:00] [DEV] Completed Task 2.1
 
 **Task**: Connect "Start From" Field
@@ -773,6 +849,7 @@ PYTHONPATH=/home/anirban/workspace/projects/breakout_screener_v2 uv run python a
 
 **Changes Made**:
 Backend:
+
 - `app/models/generate_bo_request.py`: Added start_from field with Field(default=1, ge=1) validation
 - `app/routers/routes.py`: Updated generate_bodata route to extract and pass start_from (lines 101, 113, 117)
 - `app/tasks/__init__.py`: Modified generate_bo_data_task signature to accept start_from=1 parameter (line 53)
@@ -783,14 +860,17 @@ Backend:
   - Updated logging to show start_from index (line 56)
 
 Frontend:
+
 - `frontend/src/services/api.ts`: Added start_from parameter to generateBOData API call (line 16)
 - `frontend/src/components/InputForm/InputForm.tsx`: Updated handleStart to pass startFrom to API (line 41)
 
 **Dependencies**:
+
 - None (existing dependencies only)
 
 **Testing**:
 Commands run:
+
 ```bash
 uv run python -c "from app.models.generate_bo_request import GenerateBODataRequest; req = GenerateBODataRequest(date='2025-01-01', pivot_val=0.5, start_from=10); print(f'✓ Model works: date={req.date}, pivot_val={req.pivot_val}, start_from={req.start_from}')"
 uv run python -c "from app.services.generate_bo_data import generate_BOData; print('✓ Module imports successfully with start_from parameter')"
@@ -798,6 +878,7 @@ uv run python -c "from app.tasks import generate_bo_data_task; print('✓ Celery
 ```
 
 Results:
+
 - [x] Pydantic model validation works: start_from=10 accepted, Field validation (ge=1) in place
 - [x] Service module imports successfully
 - [x] Celery task imports successfully
@@ -806,15 +887,18 @@ Results:
 - [x] Progress tracking shows absolute position (current_position = start_from + i)
 
 **Git Commits**:
+
 ```
 e40dbcf Task 2.1: Connect Start From field - Backend
 2867801 Task 2.1: Connect Start From field - Frontend
 ```
 
 **Issues Encountered**:
+
 - None
 
 **Questions for PM**:
+
 - None
 
 **Next**: Ready for PM review. Will move to Phase 1 completion testing or Phase 2 next tasks after approval.
@@ -823,8 +907,8 @@ e40dbcf Task 2.1: Connect Start From field - Backend
 
 ---
 
-
 ---
+
 ### [2025-12-30 19:05] [PM] Review of Task 2.0 - APPROVED ✅
 
 **Task**: Database Setup and Verification
@@ -837,30 +921,36 @@ Database setup is COMPLETE! All tables exist with correct schema, permissions ar
 **Verification Results**:
 
 **A. Database Connection (15/15)** ✅
+
 - ✓ PostgreSQL service running on localhost:5432
 - ✓ Database 'trading_db' exists
 - ✓ User 'trading_user' authenticates successfully
 - ✓ Connection test passes
 
 **B. Permissions (15/15)** ✅
+
 - ✓ Schema permissions: trading_user=UC (USAGE + CREATE)
 - ✓ No permission errors
 - ✓ Default privileges set
 
 **C. Tables Created (20/20)** ✅
+
 - ✓ breakout_data: 20 columns with indexes
 - ✓ master_breakout_data: 20 columns with indexes
 - ✓ Schema matches models exactly
 
 **D. CRUD Operations (15/15)** ✅
+
 - ✓ INSERT, SELECT, DELETE all work
 - ✓ No errors during operations
 
 **E. Scripts Created (10/10)** ✅
+
 - ✓ init_db.py, verify_db.py created
 - ✓ fix_permissions.sql, setup_db.sh created
 
 **Test Results**:
+
 ```
 ✓ Database connection successful
 ✓ Table "breakout_data" exists with 20 columns
@@ -878,8 +968,8 @@ Database setup is COMPLETE! All tables exist with correct schema, permissions ar
 
 ---
 
-
 ---
+
 ### [2025-12-30 19:10] [PM] Review of Task 2.1 - APPROVED ✅
 
 **Task**: Connect "Start From" Field
@@ -890,6 +980,7 @@ Database setup is COMPLETE! All tables exist with correct schema, permissions ar
 "Start From" field implementation is COMPLETE! Backend and frontend fully integrated, allowing users to resume breakout analysis from any script index. All 6 files properly modified with backward compatibility maintained.
 
 **A. Backend Model (15/15)** ✅
+
 - ✓ [app/models/generate_bo_request.py:7](app/models/generate_bo_request.py#L7)
   - Added: `start_from: int = Field(default=1, ge=1)`
   - Validation: ge=1 ensures positive integers only
@@ -897,6 +988,7 @@ Database setup is COMPLETE! All tables exist with correct schema, permissions ar
 - ✓ Model validation tested: start_from=10 works correctly
 
 **B. Backend Route (15/15)** ✅
+
 - ✓ [app/routers/routes.py:101,117](app/routers/routes.py#L101-L117)
   - Line 101: `start_from = request.start_from`
   - Line 110-113: Logging includes start_from value
@@ -904,35 +996,39 @@ Database setup is COMPLETE! All tables exist with correct schema, permissions ar
 - ✓ Route correctly extracts and passes parameter
 
 **C. Backend Service (20/20)** ✅
+
 - ✓ [app/services/generate_bo_data.py](app/services/generate_bo_data.py)
   - Line 14: Function signature includes `start_from: int = 1`
   - Line 22: Docstring documents parameter
   - Line 53: **Critical**: `scripts_to_process = scripts[start_from - 1:]`
-    * Correctly converts 1-indexed to 0-indexed
-    * Slices array from start position
+    - Correctly converts 1-indexed to 0-indexed
+    - Slices array from start position
   - Line 54: `total_scripts = len(scripts_to_process)`
   - Line 56: Logs starting position
   - Line 59: **Fixed progress tracking**: `current_position = start_from + i`
-    * Shows absolute position (e.g., "Processing 51 of 500")
-    * Not relative position within slice
+    - Shows absolute position (e.g., "Processing 51 of 500")
+    - Not relative position within slice
   - Lines 64-66: Progress meta shows correct current/total
   - Line 75: Suspension message includes absolute position
 - ✓ Service properly implements resume logic
 
 **D. Celery Task (10/10)** ✅
-- ✓ [app/tasks/__init__.py:53,70](app/tasks/__init__.py#L53-L70)
+
+- ✓ [`app/tasks/__init__.py`:53,70](app/tasks/__init__.py#L53-L70)
   - Line 53: `def generate_bo_data_task(date, pivot, start_from=1):`
   - Lines 57-61: Docstring updated to document parameter
   - Line 70: Passes to service: `result = generate_BOData(db, date, pivot, start_from)`
 - ✓ Task signature updated with default parameter
 
 **E. Frontend API (10/10)** ✅
+
 - ✓ [frontend/src/services/api.ts:16-21](frontend/src/services/api.ts#L16-L21)
   - Line 16: Function signature includes `start_from: number = 1`
   - Line 21: POST body includes `start_from` field
 - ✓ API call properly sends parameter to backend
 
 **F. Frontend Component (5/5)** ✅
+
 - ✓ [frontend/src/components/InputForm/InputForm.tsx:41](frontend/src/components/InputForm/InputForm.tsx#L41)
   - Line 41: `await generateBOData(date, pivotGap / 100, startFrom)`
   - Uses existing `startFrom` state variable
@@ -940,6 +1036,7 @@ Database setup is COMPLETE! All tables exist with correct schema, permissions ar
 - ✓ Component passes value to API
 
 **Test Results**:
+
 ```bash
 # Model validation
 ✓ Model validation works: date=2025-01-01, pivot_val=0.5, start_from=10
@@ -954,6 +1051,7 @@ Database setup is COMPLETE! All tables exist with correct schema, permissions ar
 ```
 
 **Git Commits Verified**:
+
 ```
 e40dbcf Task 2.1: Connect Start From field - Backend
   - 4 files changed, 26 insertions(+), 17 deletions(-)
@@ -963,6 +1061,7 @@ e40dbcf Task 2.1: Connect Start From field - Backend
 ```
 
 **Key Implementation Details**:
+
 1. **1-indexed to 0-indexed conversion**: `scripts[start_from - 1:]`
    - User enters: start_from=50
    - Array slices from: scripts[49:]
@@ -979,6 +1078,7 @@ e40dbcf Task 2.1: Connect Start From field - Backend
    - No breaking changes
 
 **What This Enables**:
+
 - ✅ Resume analysis after failures (e.g., network issues)
 - ✅ Test specific script ranges (e.g., scripts 100-200)
 - ✅ Skip already-processed scripts
@@ -990,14 +1090,15 @@ e40dbcf Task 2.1: Connect Start From field - Backend
 
 ---
 
-
 ---
+
 ### [2025-12-30 19:30] [DEV] Completed Task 2.2
 
 **Task**: Add Toast Notifications
 **Status**: Complete
 
 **Changes Made**:
+
 - `frontend/package.json`: Added react-hot-toast@2.6.0 dependency
 - `frontend/package-lock.json`: Updated with react-hot-toast dependencies
 - `frontend/src/app/layout.tsx`:
@@ -1012,10 +1113,12 @@ e40dbcf Task 2.1: Connect Start From field - Backend
   - Updated handleClearList: Added success/error toasts (lines 89, 92)
 
 **Dependencies**:
+
 - Added: react-hot-toast@2.6.0
 
 **Testing**:
 Commands run:
+
 ```bash
 npm install react-hot-toast
 grep "react-hot-toast" package.json
@@ -1023,26 +1126,30 @@ npm run build
 ```
 
 Results:
+
 - [x] react-hot-toast@2.6.0 installed successfully
 - [x] Toaster component added to layout at top-right position
 - [x] Toast import added to InputForm
 - [x] All 5 handlers updated with success/error toasts:
-  * handleStart: "Analysis started!" / "Failed to start analysis"
-  * handleStop: "Analysis stopped" / "Failed to stop analysis"
-  * handleClear: "Clearing chart data..." / "Failed to clear chart data"
-  * handleFetchList: "Fetching stock list..." / "Failed to fetch stock list"
-  * handleClearList: "Clearing complete data..." / "Failed to clear complete data"
+  - handleStart: "Analysis started!" / "Failed to start analysis"
+  - handleStop: "Analysis stopped" / "Failed to stop analysis"
+  - handleClear: "Clearing chart data..." / "Failed to clear chart data"
+  - handleFetchList: "Fetching stock list..." / "Failed to fetch stock list"
+  - handleClearList: "Clearing complete data..." / "Failed to clear complete data"
 - [x] Build runs (has pre-existing ESLint warnings in other files, not related to this task)
 
 **Git Commit**:
+
 ```
 616aa6f Task 2.2: Add toast notifications
 ```
 
 **Issues Encountered**:
+
 - None (build has pre-existing ESLint warnings in HomePage.tsx and InputForm.tsx about unused variables, but these are not related to the toast notification feature)
 
 **Questions for PM**:
+
 - None
 
 **Next**: Ready for PM review. Will move to Task 2.3 (Update Frontend Progress Display) after approval.
@@ -1051,8 +1158,8 @@ Results:
 
 ---
 
-
 ---
+
 ### [2025-12-30 19:34] [PM] Plan vs Implementation - Documentation Update
 
 **Action**: Updated INSTRUCTIONS.md to clarify deviations from original PLAN.md
@@ -1061,12 +1168,14 @@ Results:
 User asked to verify if instructions are in sync with PLAN.md. Found discrepancy in Phase 2 task numbering.
 
 **Original PLAN.md - Phase 2 Tasks**:
+
 - Task 2.1: Connect "Start From" field to backend
 - Task 2.2: Add Pydantic schemas for request validation
 - Task 2.3: Update frontend to show progress
 - Task 2.4: Add toast notifications
 
 **Actual INSTRUCTIONS.md - Phase 2 Tasks**:
+
 - Task 2.0: Database Setup and Verification (ADDED BY PM) ✅
 - Task 2.1: Connect "Start From" Field (includes Pydantic validation) ✅
 - Task 2.2: Add Toast Notifications (pending)
@@ -1091,12 +1200,14 @@ User asked to verify if instructions are in sync with PLAN.md. Found discrepancy
    - Original 2.4 (Add toast notifications) → Task 2.2
 
 **Rationale for Not Updating PLAN.md**:
+
 - PLAN.md serves as original strategy document
 - INSTRUCTIONS.md is living implementation guide
 - Added clear notes in INSTRUCTIONS.md Phase 2 header
 - Updated Phase 1 Completion Checklist to include Task 2.0
 
 **Changes Made to INSTRUCTIONS.md**:
+
 1. Added note at Phase 2 header explaining Task 2.0 addition
 2. Marked Task 2.0 with "(ADDED BY PM)" label
 3. Added prerequisite note to Phase 1 Completion Checklist
@@ -1116,12 +1227,14 @@ User asked to verify if instructions are in sync with PLAN.md. Found discrepancy
 Toast notification implementation is COMPLETE! All 5 async handlers properly integrated with react-hot-toast, providing excellent user feedback for all operations. Clean implementation with proper positioning and messaging.
 
 **A. Dependencies (10/10)** ✅
+
 - ✓ [frontend/package.json](frontend/package.json)
   - Added: react-hot-toast@2.6.0
   - Properly version-pinned
   - No conflicts with existing dependencies
 
 **B. Toaster Setup (15/15)** ✅
+
 - ✓ [frontend/src/app/layout.tsx:4,53](frontend/src/app/layout.tsx#L4-L53)
   - Line 4: `import { Toaster } from 'react-hot-toast';`
   - Line 53: `<Toaster position="top-right" />`
@@ -1129,6 +1242,7 @@ Toast notification implementation is COMPLETE! All 5 async handlers properly int
   - "top-right" position ensures visibility
 
 **C. Component Integration (35/35)** ✅
+
 - ✓ [frontend/src/components/InputForm/InputForm.tsx:3](frontend/src/components/InputForm/InputForm.tsx#L3)
   - Line 3: `import toast from 'react-hot-toast';`
   - Added to all 5 handlers:
@@ -1154,12 +1268,14 @@ Toast notification implementation is COMPLETE! All 5 async handlers properly int
   - Error: `toast.error('Failed to clear complete data')`
 
 **D. Testing (10/10)** ✅
+
 - ✓ npm install completed successfully
 - ✓ Build succeeds: `npm run build`
 - ✓ Pre-existing ESLint warnings noted and unrelated
 - ✓ All toast calls integrated correctly
 
 **E. Git Commit (5/5)** ✅
+
 - ✓ Commit 616aa6f properly labeled
 - ✓ All 4 files included in commit:
   - frontend/package.json
@@ -1168,6 +1284,7 @@ Toast notification implementation is COMPLETE! All 5 async handlers properly int
   - frontend/src/components/InputForm/InputForm.tsx
 
 **Test Results**:
+
 ```bash
 ✓ react-hot-toast@2.6.0 installed
 ✓ Toaster component at top-right position
@@ -1176,6 +1293,7 @@ Toast notification implementation is COMPLETE! All 5 async handlers properly int
 ```
 
 **What This Enables**:
+
 - ✅ Visual feedback for all async operations
 - ✅ Success notifications when tasks complete
 - ✅ Error notifications when API calls fail
@@ -1201,6 +1319,7 @@ Task 2.2 (Toast Notifications) is now complete. The backend already has progress
 **Required Implementation**:
 
 **A. Progress Component** (Create new file):
+
 - Location: `frontend/src/components/ProgressBar/ProgressBar.tsx`
 - Display: Progress bar showing current/total scripts
 - Format: "Processing 45 of 500 - RELIANCE"
@@ -1208,6 +1327,7 @@ Task 2.2 (Toast Notifications) is now complete. The backend already has progress
 - Hide when progress = 0 (analysis not running)
 
 **B. Frontend Polling Mechanism**:
+
 - Location: `frontend/src/components/InputForm/InputForm.tsx`
 - Implement: useEffect hook to poll task status
 - Interval: Check every 1-2 seconds
@@ -1215,11 +1335,13 @@ Task 2.2 (Toast Notifications) is now complete. The backend already has progress
 - Parse meta: `{ current: 45, total: 500, script: 'RELIANCE' }`
 
 **C. Integration Points**:
+
 - Hook into existing `handleStart` - start polling
 - Hook into existing `handleStop` - stop polling
 - Hook into existing task completion - hide progress bar
 
 **D. Data Flow**:
+
 1. User clicks "Start Analysis" → calls `handleStart`
 2. Backend starts Celery task → returns task_id
 3. Frontend polls task status every 1-2 seconds
@@ -1228,17 +1350,20 @@ Task 2.2 (Toast Notifications) is now complete. The backend already has progress
 6. When task completes → hide progress bar, show toast (from Task 2.2)
 
 **E. Backend Already Ready**:
+
 - ✅ [app/services/generate_bo_data.py:54-63] - Progress tracking implemented
 - ✅ Meta format: `{ 'current': 45, 'total': 500, 'script': 'RELIANCE' }`
 - ✅ Available via Celery task state polling
 
 **Expected Behavior**:
+
 - During analysis: Show "Processing 45 of 500 - RELIANCE" with progress bar
 - After analysis completes: Hide progress bar, show success toast
 - If user stops analysis: Progress bar stops updating, show stop toast
 - If error occurs: Progress bar hides, show error toast (Task 2.2)
 
 **Testing Checklist**:
+
 - [ ] ProgressBar component renders correctly
 - [ ] Progress updates in real-time during 50-script test
 - [ ] Progress updates in real-time during 500-script test
@@ -1248,6 +1373,7 @@ Task 2.2 (Toast Notifications) is now complete. The backend already has progress
 - [ ] All existing functionality still works
 
 **Reference Files**:
+
 - Backend progress: [app/services/generate_bo_data.py](app/services/generate_bo_data.py)
 - Frontend API: [frontend/src/services/api.ts](frontend/src/services/api.ts)
 - InputForm: [frontend/src/components/InputForm/InputForm.tsx](frontend/src/components/InputForm/InputForm.tsx)
@@ -1257,6 +1383,7 @@ Task 2.2 (Toast Notifications) is now complete. The backend already has progress
 **Timeline Notes**: Can be completed in 1-2 commits (component + integration)
 
 **Questions for Developer**:
+
 1. Any blockers or clarifications needed?
 2. Ready to implement?
 
@@ -1271,6 +1398,7 @@ Task 2.2 (Toast Notifications) is now complete. The backend already has progress
 **Status**: Complete
 
 **Changes Made**:
+
 - `frontend/src/types/AppInterfaces.ts`:
   - Added TaskProgress interface with current, total, script fields
   - Updated TaskResponse result to include current, total, script optional fields
@@ -1279,27 +1407,30 @@ Task 2.2 (Toast Notifications) is now complete. The backend already has progress
   - Added TaskProgress to imports (line 5)
   - Added progress state: useState<TaskProgress | null>(null) (line 21)
   - Updated pollTaskStatus function:
-    * Added PROGRESS status handling (lines 67-75)
-    * Extract current, total, script from result and update progress state
-    * Clear progress on SUCCESS/FAILURE (lines 86, 92)
-    * Added toast notifications for SUCCESS and FAILURE (lines 88, 94)
-    * Reduced polling interval from 10s to 2s for real-time updates (line 108)
+    - Added PROGRESS status handling (lines 67-75)
+    - Extract current, total, script from result and update progress state
+    - Clear progress on SUCCESS/FAILURE (lines 86, 92)
+    - Added toast notifications for SUCCESS and FAILURE (lines 88, 94)
+    - Reduced polling interval from 10s to 2s for real-time updates (line 108)
   - Added progress bar UI component (lines 137-150):
-    * Blue gradient progress bar with smooth transitions
-    * Shows percentage completion visually
-    * Displays text: "Processing X of Y: SCRIPT_NAME"
-    * Conditionally rendered when progress exists
+    - Blue gradient progress bar with smooth transitions
+    - Shows percentage completion visually
+    - Displays text: "Processing X of Y: SCRIPT_NAME"
+    - Conditionally rendered when progress exists
 
 **Dependencies**:
+
 - None (uses existing react-hot-toast from Task 2.2)
 
 **Testing**:
 Commands run:
+
 ```bash
 cd frontend && npm run build
 ```
 
 Results:
+
 - [x] TaskProgress interface defined with current, total, script
 - [x] TaskResponse updated with progress metadata fields
 - [x] Progress state added to HomePage component
@@ -1311,11 +1442,13 @@ Results:
 - [x] Build succeeds (pre-existing ESLint warnings unrelated to changes)
 
 **Git Commit**:
+
 ```
 b2cb867 Task 2.3: Update Frontend Progress Display
 ```
 
 **How It Works**:
+
 1. User clicks "Start Analysis" → handleStart triggers, receives task_id
 2. pollTaskStatus starts polling every 2 seconds
 3. Backend sends PROGRESS status with meta: { current: 45, total: 500, script: 'RELIANCE' }
@@ -1324,6 +1457,7 @@ b2cb867 Task 2.3: Update Frontend Progress Display
 6. On FAILURE: Progress bar hides, shows "Analysis failed!" toast
 
 **Visual Design**:
+
 - Progress bar: Blue (#3B82F6) on light gray background
 - Height: 12px (h-3), rounded corners
 - Smooth width transition (transition-all duration-300)
@@ -1331,9 +1465,11 @@ b2cb867 Task 2.3: Update Frontend Progress Display
 - Positioned below InputForm, above DataTable
 
 **Issues Encountered**:
+
 - None
 
 **Questions for PM**:
+
 - None
 
 **Next**: Ready for PM review. Phase 2 tasks (2.1, 2.2, 2.3) complete and awaiting verification.
@@ -1352,6 +1488,7 @@ b2cb867 Task 2.3: Update Frontend Progress Display
 Progress display implementation is COMPLETE! Real-time progress bar with polling mechanism properly integrated, backend data correctly extracted and displayed, and UI/UX polished. This completes Phase 2 and all core features are now operational.
 
 **A. Type Definitions (15/15)** ✅
+
 - ✓ [frontend/src/types/AppInterfaces.ts:58-62](frontend/src/types/AppInterfaces.ts#L58-L62)
   - Added: `TaskProgress` interface with current, total, script fields
   - Optional script field correctly typed
@@ -1363,12 +1500,14 @@ Progress display implementation is COMPLETE! Real-time progress bar with polling
   - Backward compatible (all new fields are optional)
 
 **B. State Management (15/15)** ✅
+
 - ✓ [frontend/src/components/HomePage/HomePage.tsx:21](frontend/src/components/HomePage/HomePage.tsx#L21)
   - Added: `const [progress, setProgress] = useState<TaskProgress | null>(null)`
   - Proper initialization with null (not running state)
   - Type-safe with TaskProgress interface
 
 **C. Progress Polling (20/20)** ✅
+
 - ✓ [frontend/src/components/HomePage/HomePage.tsx:56-109](frontend/src/components/HomePage/HomePage.tsx#L56-L109)
   - **PROGRESS status handling** (lines 67-75):
     - Correctly checks `status === 'PROGRESS'` and `result` exists
@@ -1392,6 +1531,7 @@ Progress display implementation is COMPLETE! Real-time progress bar with polling
     - Good balance between responsiveness and network load
 
 **D. Progress Bar UI (15/15)** ✅
+
 - ✓ [frontend/src/components/HomePage/HomePage.tsx:136-150](frontend/src/components/HomePage/HomePage.tsx#L136-L150)
   - **Conditional rendering**: `{progress && (...)}`
     - Only shows when progress state exists
@@ -1410,11 +1550,12 @@ Progress display implementation is COMPLETE! Real-time progress bar with polling
 
   - **Text display**:
     - Format: "Processing X of Y" (readable)
-    - Conditional script name: `{progress.script && `: ${progress.script}`}`
+    - Conditional script name: `{progress.script &&`: ${progress.script}`}`
     - Example: "Processing 45 of 500: RELIANCE"
     - Proper spacing and typography (text-sm, text-gray-700)
 
 **E. Integration Points (10/10)** ✅
+
 - ✓ Toast import added (line 2): `import toast from 'react-hot-toast'`
 - ✓ TaskProgress import added (line 5): from AppInterfaces
 - ✓ Progress bar positioned correctly: below InputForm, above DataTable
@@ -1422,6 +1563,7 @@ Progress display implementation is COMPLETE! Real-time progress bar with polling
 - ✓ Works with existing handleTaskIdChange and pollTaskStatus flow
 
 **Test Results**:
+
 ```bash
 ✓ TaskProgress interface defined correctly
 ✓ TaskResponse updated with progress metadata
@@ -1436,12 +1578,14 @@ Progress display implementation is COMPLETE! Real-time progress bar with polling
 ```
 
 **Git Commit Verified**:
+
 ```
 b2cb867 Task 2.3: Update Frontend Progress Display
   - 2 files changed, 27 insertions(+), 2 deletions(-)
 ```
 
 **What This Enables**:
+
 - ✅ Real-time progress visibility during analysis
 - ✅ User knows current progress (50 of 500 scripts)
 - ✅ Current script name displayed
@@ -1451,6 +1595,7 @@ b2cb867 Task 2.3: Update Frontend Progress Display
 - ✅ Professional, polished user experience
 
 **Data Flow Verified**:
+
 1. ✅ User clicks "Start Analysis" → handleTaskIdChange called
 2. ✅ Backend returns task_id → stored in state
 3. ✅ pollTaskStatus polls every 2 seconds
@@ -1481,6 +1626,7 @@ b2cb867 Task 2.3: Update Frontend Progress Display
 **Total Phase 2 Score**: 300/300 (100%)
 
 **What Phase 2 Delivers**:
+
 - ✅ Database ready for production use
 - ✅ Resume analysis from any script position
 - ✅ User feedback through toast notifications
@@ -1489,11 +1635,11 @@ b2cb867 Task 2.3: Update Frontend Progress Display
 - ✅ Ready for Phase 1 completion testing
 
 **Next Steps**:
+
 1. Run Phase 1 completion test: Process 50 scripts (verify progress tracking)
 2. Run Phase 1 completion test: Process 500 scripts (verify timeout, progress)
 3. Final verification and approval
 4. Prepare for production deployment
-
 
 ---
 
@@ -1505,11 +1651,13 @@ b2cb867 Task 2.3: Update Frontend Progress Display
 All Phase 2 tasks (2.0, 2.1, 2.2, 2.3) have been completed, reviewed by PM, and approved with perfect scores (75/75 each). Total Phase 2 score: 300/300 (100%).
 
 **INSTRUCTIONS.md Updated**:
+
 - Marked Task 2.2 as [✓] PM Verified with notes
 - Marked Task 2.3 as [✓] PM Verified with notes
 - Updated Phase 2 Completion Checklist - all items checked ✓
 
 **Phase 2 Deliverables**:
+
 1. ✅ Database Setup (Task 2.0) - Tables created, permissions verified
 2. ✅ Start From Field (Task 2.1) - Resume functionality integrated end-to-end
 3. ✅ Toast Notifications (Task 2.2) - User feedback on all async operations
@@ -1520,22 +1668,27 @@ All Phase 2 tasks (2.0, 2.1, 2.2, 2.3) have been completed, reviewed by PM, and 
 According to INSTRUCTIONS.md (lines 351-492), the next step is to run Phase 1 Completion Tests:
 
 **Test 1: Process 50 Scripts**
+
 - Verify 50-script processing with progress tracking visible
 - Expected: Progress updates every 2 seconds, toast on completion
 
 **Test 2: Process 500 Scripts**
+
 - Verify 500-script processing completes within timeout (~10-15 min)
 - Expected: Progress continues throughout, no timeout errors
 
 **Test 3: Progress Tracking Verification**
+
 - Confirm progress meta correctly sent from backend to frontend
 - Check DevTools Network tab for progress data
 
 **Test 4: Task Timeout Behavior**
+
 - Verify timeout configuration (1 hour hard limit, 55 min soft limit)
 - Ensure no zombie tasks
 
 **Prerequisites**: ✅ All Met
+
 - All Tasks 1.1-1.5 complete and PM verified
 - Task 2.0 (Database) complete
 - Tasks 2.1-2.3 (Phase 2) complete
@@ -1552,6 +1705,7 @@ According to INSTRUCTIONS.md (lines 351-492), the next step is to run Phase 1 Co
 **Current Status**: All implementation tasks complete, awaiting integration testing
 
 **Completed Work**:
+
 - ✅ Phase 1: All tasks (1.1-1.5) complete and PM-verified
 - ✅ Phase 2: All tasks (2.0-2.3) complete and PM-verified
 - ✅ Git commits: All changes committed to bo_fix_v2 branch
@@ -1560,6 +1714,7 @@ According to INSTRUCTIONS.md (lines 351-492), the next step is to run Phase 1 Co
 **Implementation Summary**:
 
 **Backend Improvements**:
+
 1. yfinance integration (60x faster than Selenium)
 2. Retry logic with exponential backoff
 3. Celery task timeout configuration (1 hour limit)
@@ -1568,6 +1723,7 @@ According to INSTRUCTIONS.md (lines 351-492), the next step is to run Phase 1 Co
 6. Database setup and verification complete
 
 **Frontend Improvements**:
+
 1. Toast notifications for all async operations
 2. Real-time progress bar (2-second polling)
 3. Start From input field connected to backend
@@ -1583,6 +1739,7 @@ According to INSTRUCTIONS.md (lines 351-492), the next step is to run Phase 1 Co
 4. **Test 4**: Verify task timeout behavior
 
 **Required Services**:
+
 ```bash
 # Terminal 1: FastAPI Backend
 cd /home/anirban/workspace/projects/breakout_screener_v2
@@ -1598,7 +1755,8 @@ npm run dev
 ```
 
 **Testing Instructions**:
-1. Access frontend at http://localhost:3000
+
+1. Access frontend at <http://localhost:3000>
 2. Click "Fetch Stock List" to populate database
 3. Set "Start From" to 1
 4. Click "Start Analysis"
@@ -1607,12 +1765,14 @@ npm run dev
 7. Check browser DevTools Network tab for progress data
 
 **Expected Results**:
+
 - Progress bar shows "Processing X of Y: SCRIPT_NAME"
 - Toast notification "Analysis complete!" on success
 - No timeout errors (should complete in ~10-15 min for 500 scripts)
 - Database populated with breakout data
 
 **Questions for PM/User**:
+
 1. Should I proceed with automated testing (if possible), or is manual testing preferred?
 2. Are there specific edge cases to test during Phase 1 completion testing?
 3. Should I document test results in INSTRUCTIONS.md after completion?
@@ -1775,12 +1935,14 @@ According to INSTRUCTIONS.md, Phase 1 completion requires:
 **API Endpoints Tested** (from chat history):
 
 Previously tested APIs:
+
 - ✅ `/api/fetch_script_symbols` - Fetches stock symbols from NSE
 - ✅ `/api/generate_bodata` - Generates breakout analysis data
 - ✅ `/api/clear_chart` - Clears chart data for specific date
 - ✅ `/api/clear_complete_data` - Clears all data and archives to master table
 
 Current session:
+
 - ✅ `/api/get_data` - Returns paginated breakout data
 
 **Test 3: Verify Progress Data Flow**
@@ -1788,6 +1950,7 @@ Current session:
 Can be tested by:
 
 1. **Backend approach** - Check Celery task state API:
+
    ```bash
    # Start a task and capture task_id
    task_id="<captured_from_frontend>"
@@ -1807,6 +1970,7 @@ Can be tested by:
 Can be tested by:
 
 1. **Configuration verification**:
+
    ```bash
    # Check timeout settings are applied
    uv run python -c "from app.celery import celery_app; print(f'Hard limit: {celery_app.conf.task_time_limit}s'); print(f'Soft limit: {celery_app.conf.task_soft_time_limit}s')"
@@ -1818,7 +1982,7 @@ Can be tested by:
    - Check Celery logs for timeout exception
 
 3. **Production verification**:
-   - Task timeout configuration exists: [app/celery/__init__.py:23-31](app/celery/__init__.py#L23-L31)
+   - Task timeout configuration exists: [app/celery/**init**.py:23-31](app/celery/__init__.py#L23-L31)
    - Settings: 3600s hard limit, 3300s soft limit
    - Should prevent zombie tasks
 
@@ -1897,7 +2061,7 @@ Verification:
 - ✅ Soft time limit: 3300s (55 min) configured
 - ✅ Task acknowledgment: Late acknowledgment enabled (prevents data loss)
 - ✅ Worker recovery: Reject on worker lost enabled (requeues tasks)
-- ✅ Timeout configuration verified at [app/celery/__init__.py:23-31](app/celery/__init__.py#L23-L31)
+- ✅ Timeout configuration verified at [app/celery/**init**.py:23-31](app/celery/__init__.py#L23-L31)
 
 **Phase 1 Completion Summary**:
 
@@ -1919,6 +2083,7 @@ Verification:
 ### [2025-12-31] [PM] Review of Phase 1 Completion Testing & Tailwind v4 Migration - APPROVED ✅
 
 **Tasks Reviewed**:
+
 1. Tailwind v4 Migration (Frontend Package Updates)
 2. Phase 1 Completion Testing (Tests 3 & 4)
 
@@ -1930,6 +2095,7 @@ Verification:
 ### [2025-12-31] [PM] Review of Phase 3: Code Structure Improvements - APPROVED ✅
 
 **Tasks Reviewed**:
+
 1. Task 3.1: Add Enum Types for Indicators
 2. Task 3.2: Refactor CPR Calculation into Separate Module
 3. Task 3.3: Add Input Validation with Pydantic for All Models
@@ -1946,6 +2112,7 @@ Verification:
 PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 
 **What Was Completed**:
+
 1. ✅ Enum types replace magic strings (3 enums: BreakoutIndicator, CandleIndicator, VolumeIndicator)
 2. ✅ CPR calculation extracted to separate module with comprehensive docstrings
 3. ✅ Pydantic schemas for all request/response models with field validation
@@ -1953,6 +2120,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 5. ✅ All API endpoints use response_model for type safety
 
 **Git Commits**:
+
 - 67fb86a: Task 3.1 - Add enum types for indicators
 - 9162e6e: Task 3.2 - Refactor CPR calculation into separate module
 - b962cff: Task 3.3 - Add comprehensive Pydantic schemas for API validation
@@ -1966,6 +2134,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 **A. TASK 3.1: ENUM TYPES FOR INDICATORS (25/25)** ✅
 
 **Implementation (15/15)**:
+
 - ✓ [app/models/enums.py](app/models/enums.py) created (54 lines)
 - ✓ BreakoutIndicator enum: RED_CANDLE, NO_BREAKOUT, BREAKOUT, BIG_SELL_WICK, NO_ENTRY
 - ✓ CandleIndicator enum: RED_CANDLE, GREEN_CANDLE, DOJI
@@ -1975,12 +2144,14 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 - ✓ Updated [app/services/generate_bo_data.py](app/services/generate_bo_data.py) to use enums
 
 **Testing (5/5)**:
+
 - ✓ All enums import successfully
 - ✓ Service modules import with enums
 - ✓ Celery tasks import with enums
 - ✓ Backward compatible: .value returns original string values
 
 **Code Quality (5/5)**:
+
 - ✓ No magic strings remain in indicator assignments
 - ✓ Type-safe enum values used throughout
 - ✓ Clear documentation for each enum value
@@ -1990,6 +2161,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 **B. TASK 3.2: CPR CALCULATOR MODULE (25/25)** ✅
 
 **Implementation (15/15)**:
+
 - ✓ [app/services/cpr_calculator.py](app/services/cpr_calculator.py) created (81 lines)
 - ✓ `calculate_cpr()` function with clear signature: (high, low, close) -> (cpr, res1, res2, supp1, supp2, gap)
 - ✓ Comprehensive docstring with formula explanation
@@ -1998,6 +2170,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 - ✓ Updated [app/services/generate_bo_data.py](app/services/generate_bo_data.py) to use extracted function
 
 **Code Quality (10/10)**:
+
 - ✓ Clear variable names (pivot, bcp, tcp, res1, res2, supp1, supp2, gap)
 - ✓ Step-by-step calculation comments
 - ✓ Returns 6 values including gap for narrow_gap calculation
@@ -2009,6 +2182,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 **C. TASK 3.3: PYDANTIC SCHEMAS (25/25)** ✅
 
 **Request Schemas (10/10)**:
+
 - ✓ [app/models/schemas.py](app/models/schemas.py) created (116 lines)
 - ✓ FetchScriptSymbolsRequest: group_name validation (min_length=1, max_length=100)
 - ✓ GenerateBODataRequest: date pattern validation, pivot_val (0-10), start_from (>=1)
@@ -2016,6 +2190,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 - ✓ @field_validator('date') for date format validation (YYYY-MM-DD)
 
 **Response Schemas (10/10)**:
+
 - ✓ TaskStatusResponse: task_id + message
 - ✓ TaskResultResponse: status + optional result (for polling)
 - ✓ BreakoutDataItem: Complete model with 20 fields, from_attributes=True
@@ -2023,19 +2198,21 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 - ✓ SuccessResponse, ErrorResponse: Generic responses
 
 **Routes Integration (5/5)**:
+
 - ✓ All 6 endpoints use response_model:
-  * /get_data: GetDataResponse
-  * /fetch_script_symbols: TaskStatusResponse
-  * /generate_bodata: TaskStatusResponse
-  * /clear_chart: TaskStatusResponse
-  * /clear_complete_data: TaskStatusResponse
-  * /task_status/{task_id}: TaskResultResponse
+  - /get_data: GetDataResponse
+  - /fetch_script_symbols: TaskStatusResponse
+  - /generate_bodata: TaskStatusResponse
+  - /clear_chart: TaskStatusResponse
+  - /clear_complete_data: TaskStatusResponse
+  - /task_status/{task_id}: TaskResultResponse
 
 ---
 
 **D. TASK 3.4: ERROR HANDLING (25/25)** ✅
 
 **Custom Exceptions (10/10)**:
+
 - ✓ [app/utils/error_handlers.py](app/utils/error_handlers.py) created (139 lines)
 - ✓ DataFetchError: with script_name, source attributes
 - ✓ CPRCalculationError: with script_name, values attributes
@@ -2043,11 +2220,13 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 - ✓ TaskExecutionError: with task_id, task_name attributes
 
 **Error Handling Functions (10/10)**:
+
 - ✓ handle_service_error(): Converts exceptions to HTTPException
 - ✓ log_error_with_context(): Logs errors with contextual fields
 - ✓ Appropriate HTTP status codes (503 for DataFetchError, 422 for validation, 500 for internal)
 
 **Integration (5/5)**:
+
 - ✓ Updated [app/services/generate_bo_data.py](app/services/generate_bo_data.py): CPR calculation wrapped in try-except
 - ✓ Updated [app/services/fetch_scripts.py](app/services/fetch_scripts.py): Historical data fetch errors logged
 - ✓ Database operations with rollback on error
@@ -2059,12 +2238,14 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 **Note**: This task was completed as part of Task 3.3. The schemas.py file contains all response models.
 
 **Response Models (15/15)**:
+
 - ✓ All response models defined in schemas.py
 - ✓ Consistent structure across all responses
 - ✓ Type safety with Pydantic validation
 - ✓ Auto-generated API documentation
 
 **Endpoint Integration (10/10)**:
+
 - ✓ All endpoints use response_model parameter
 - ✓ FastAPI auto-validates responses match schemas
 - ✓ /docs endpoint shows complete request/response schemas
@@ -2089,6 +2270,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 #### Code Quality Assessment
 
 **Strengths**:
+
 1. **Type Safety**: Enums eliminate magic strings, Pydantic provides runtime validation
 2. **Maintainability**: CPR logic extracted to reusable module with excellent documentation
 3. **Error Handling**: Comprehensive custom exceptions with contextual logging
@@ -2096,6 +2278,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 5. **Backward Compatibility**: All changes preserve existing API contracts
 
 **Best Practices Followed**:
+
 - ✓ Single Responsibility Principle (CPR calculator as separate module)
 - ✓ DRY Principle (reusable error handlers, schemas)
 - ✓ Explicit over Implicit (enums instead of magic strings)
@@ -2103,6 +2286,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 - ✓ Defensive programming (error handling, validation)
 
 **No Over-Engineering**:
+
 - ✓ Simple, focused implementations
 - ✓ No unnecessary abstraction layers
 - ✓ No complex design patterns
@@ -2113,6 +2297,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 #### Verification Results
 
 **Import Tests**:
+
 ```bash
 ✅ All Phase 3 modules import successfully
 ✅ Enums: BreakoutIndicator, CandleIndicator, VolumeIndicator
@@ -2123,6 +2308,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 ```
 
 **Files Verified**:
+
 - [app/models/enums.py](app/models/enums.py) - 54 lines
 - [app/services/cpr_calculator.py](app/services/cpr_calculator.py) - 81 lines
 - [app/models/schemas.py](app/models/schemas.py) - 116 lines
@@ -2130,6 +2316,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 - [app/routers/routes.py](app/routers/routes.py) - Updated with response_model on all 6 endpoints
 
 **Git History**:
+
 - All commits follow conventional commit format
 - Clear commit messages describing each task
 - No breaking changes
@@ -2142,6 +2329,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 **Phase 3 Status**: ✅ PRODUCTION READY
 
 **What This Means**:
+
 - ✅ Code quality improved significantly
 - ✅ Type safety enhanced with enums and schemas
 - ✅ Better error messages for debugging
@@ -2160,6 +2348,7 @@ PHASE 3 COMPLETE! ✅ All 5 tasks implemented and verified successfully.
 PHASE 1 COMPLETE! ✅ All implementation tasks and completion tests verified successfully.
 
 **What Was Completed**:
+
 1. ✅ Tailwind CSS migrated from v3 to v4.1.18 with zero UI breakage
 2. ✅ Test 3 (Progress Data Flow) verified via API polling
 3. ✅ Test 4 (Timeout Configuration) verified via CLI
@@ -2174,12 +2363,14 @@ PHASE 1 COMPLETE! ✅ All implementation tasks and completion tests verified suc
 **A. TAILWIND V4 MIGRATION (25/25)** ✅
 
 **Dependencies (10/10)**:
+
 - ✓ @tailwindcss/postcss@4.1.18 installed correctly
 - ✓ tailwindcss@4.1.18 verified in package.json
 - ✓ No dependency conflicts
 - ✓ npm install succeeded
 
 **Configuration (10/10)**:
+
 - ✓ [frontend/postcss.config.mjs](frontend/postcss.config.mjs#L4): Plugin changed to '@tailwindcss/postcss'
 - ✓ [frontend/src/app/globals.css](frontend/src/app/globals.css#L1): Migrated to `@import "tailwindcss"`
 - ✓ [frontend/src/app/globals.css](frontend/src/app/globals.css#L3-L9): Added `@theme` blocks for custom colors/fonts
@@ -2187,6 +2378,7 @@ PHASE 1 COMPLETE! ✅ All implementation tasks and completion tests verified suc
 - ✓ Dark mode preserved with `@media (prefers-color-scheme: dark)`
 
 **Testing (5/5)**:
+
 - ✓ Build succeeds: `npm run build` (2.7s compilation)
 - ✓ No UI breakage reported
 - ✓ All Tailwind utility classes functional
@@ -2199,6 +2391,7 @@ PHASE 1 COMPLETE! ✅ All implementation tasks and completion tests verified suc
 **Test 3: Progress Data Flow (20/20)**:
 
 Commands executed:
+
 ```bash
 # Started task and polled status 10 times over 20 seconds
 curl -X POST 'http://localhost:8000/api/generate_bodata' \
@@ -2207,6 +2400,7 @@ curl -X POST 'http://localhost:8000/api/generate_bodata' \
 ```
 
 Results:
+
 - ✓ PROGRESS status returned during execution
 - ✓ Meta contains all 3 fields: current, total, script
 - ✓ Progress updates in real-time (83→96→111→125→138→151→165→178→191→204)
@@ -2218,20 +2412,23 @@ Results:
 **Test 4: Timeout Configuration (15/15)**:
 
 Configuration verified:
+
 ```bash
 uv run python -c "from app.celery import celery_app; ..."
 ```
 
 Results:
+
 - ✓ Hard limit: 3600s (1 hour)
 - ✓ Soft limit: 3300s (55 min)
 - ✓ task_acks_late: True (prevents data loss)
 - ✓ task_reject_on_worker_lost: True (requeues tasks)
-- ✓ Configuration at [app/celery/__init__.py:23-31](app/celery/__init__.py#L23-L31)
+- ✓ Configuration at [app/celery/**init**.py:23-31](app/celery/__init__.py#L23-L31)
 
 ---
 
 **C. CODE QUALITY (5/5)** ✅
+
 - ✓ Migration follows Tailwind v4 best practices
 - ✓ CSS-first configuration approach
 - ✓ Backward compatibility maintained
@@ -2239,6 +2436,7 @@ Results:
 - ✓ Comprehensive testing documented
 
 **D. TESTING (5/5)** ✅
+
 - ✓ Frontend build verified
 - ✓ Backend API tested
 - ✓ Progress flow confirmed via curl
@@ -2246,6 +2444,7 @@ Results:
 - ✓ All 4 Phase 1 completion tests passed
 
 **E. COMMUNICATION (5/5)** ✅
+
 - ✓ Excellent documentation in COMMS.md (lines 1626-1917)
 - ✓ Test results with exact commands and output
 - ✓ Context explained (npm update triggered migration)
@@ -2257,6 +2456,7 @@ Results:
 #### Verification Results
 
 **Tailwind v4 Migration**:
+
 ```bash
 ✓ @tailwindcss/postcss@4.1.18 installed
 ✓ tailwindcss@4.1.18 installed
@@ -2269,6 +2469,7 @@ Results:
 ```
 
 **Phase 1 Completion Tests**:
+
 ```bash
 ✓ Test 1: 50 scripts - PASSED (user confirmed)
 ✓ Test 2: 500 scripts - PASSED (user confirmed)
@@ -2277,6 +2478,7 @@ Results:
 ```
 
 **API Endpoints Tested**:
+
 ```bash
 ✓ GET /api/get_data - Returns {"total":0,"data":[],"page":1,"limit":5}
 ✓ POST /api/generate_bodata - Returns task_id
@@ -2304,6 +2506,7 @@ Results:
 **Total Phase 1 Score**: 375/375 (100%)
 
 **What Phase 1 Delivers**:
+
 - ✅ 60x performance improvement (yfinance vs Selenium)
 - ✅ Processing 500 scripts in ~10-15 minutes (was hours)
 - ✅ Retry logic with exponential backoff (network resilience)
@@ -2318,6 +2521,7 @@ Results:
 **Context**: User ran `npm update` which upgraded Tailwind CSS from v3 to v4.1.18, requiring migration.
 
 **What Was Done**:
+
 1. Installed @tailwindcss/postcss (required dependency)
 2. Updated PostCSS config to use new plugin
 3. Migrated globals.css from `@tailwind` directives to `@import "tailwindcss"`
@@ -2327,6 +2531,7 @@ Results:
 7. Verified build succeeds with no UI breakage
 
 **Impact**:
+
 - ✅ Modern Tailwind v4 CSS-first approach
 - ✅ Zero UI breakage
 - ✅ All features continue to work
@@ -2338,12 +2543,14 @@ Results:
 #### Action Items
 
 **For Developer:**
+
 - ✅ Phase 1 COMPLETE - No further action required
 - ✅ Tailwind v4 Migration COMPLETE - No further action required
 - ✅ All tests passed
 - ⏭️ **READY FOR PRODUCTION** - All critical backend fixes and Phase 2 features operational
 
 **PM Checklist Updated:** YES
+
 - INSTRUCTIONS.md: Phase 1 Completion Checklist all items marked [x]
 - INSTRUCTIONS.md: Phase 1 marked [✓] PM Verified with date
 
@@ -2352,12 +2559,14 @@ Results:
 #### Known Non-Blocking Issues
 
 **1. Multiple Lockfiles Warning**:
+
 - Issue: Warning about pnpm-lock.yaml in root and frontend directories
 - Impact: Non-blocking, build succeeds
 - Solution: Configure `turbopack.root` in next.config.js or remove unused lockfile
 - Priority: LOW (cosmetic warning only)
 
 **2. Pre-existing ESLint Warnings**:
+
 - Issue: Unused variables in HomePage.tsx and InputForm.tsx
 - Impact: Non-blocking, unrelated to current work
 - Solution: Clean up in future refactoring phase
@@ -2372,6 +2581,7 @@ Results:
 **Production Readiness**: ✅ READY
 
 **All Critical Features Operational**:
+
 - ✅ yfinance integration (60x faster)
 - ✅ Database setup and verification
 - ✅ Progress tracking (backend + frontend)
@@ -2396,6 +2606,7 @@ Results:
 **Status**: Complete
 
 **Changes Made**:
+
 - `app/models/enums.py`: Created new file with three enum classes
   - BreakoutIndicator: RED_CANDLE, NO_BREAKOUT, BREAKOUT, BIG_SELL_WICK, NO_ENTRY
   - CandleIndicator: RED_CANDLE, GREEN_CANDLE, DOJI
@@ -2409,6 +2620,7 @@ Results:
   - Updated database assignments to use .value (lines 204-206)
 
 **Implementation Details**:
+
 - Enums inherit from `(str, Enum)` for FastAPI auto-serialization
 - Enum values match original magic strings exactly for backward compatibility
 - Database stores string values via `.value` property
@@ -2416,10 +2628,12 @@ Results:
 - No changes to API responses or database schema
 
 **Dependencies**:
+
 - None (uses Python standard library enum)
 
 **Testing**:
 Commands run:
+
 ```bash
 uv run python -c "from app.models.enums import BreakoutIndicator, CandleIndicator, VolumeIndicator; print('✓ Enums import successfully')"
 uv run python -c "from app.services.generate_bo_data import generate_BOData; print('✓ Module imports with enums')"
@@ -2427,6 +2641,7 @@ uv run python -c "from app.tasks import generate_bo_data_task; print('✓ Task i
 ```
 
 Results:
+
 - [x] Enum module imports successfully
 - [x] All three enums defined with correct values
 - [x] generate_BOData service imports successfully
@@ -2436,11 +2651,13 @@ Results:
 - [x] No hardcoded magic strings remain in generate_bo_data.py
 
 **Git Commit**:
+
 ```
 67fb86a Task 3.1: Add enum types for indicators
 ```
 
 **Benefits**:
+
 - Type safety: IDE autocomplete and type checking for indicators
 - No magic strings: Eliminates typos like "Breakout" vs "breakout"
 - Self-documenting: Enum names explain meaning (e.g., BIG_SELL_WICK)
@@ -2448,9 +2665,11 @@ Results:
 - Maintainable: Easy to add new indicators or update values
 
 **Issues Encountered**:
+
 - None
 
 **Questions for PM**:
+
 - None
 
 **Next**: Ready for PM review. Will move to Task 3.2 (Refactor CPR Calculation) after approval.
@@ -2465,6 +2684,7 @@ Results:
 **Status**: Complete
 
 **Changes Made**:
+
 - `app/services/cpr_calculator.py`: Created new module with calculate_cpr() function (85 lines)
   - Function signature: `calculate_cpr(high: float, low: float, close: float) -> Tuple[float, float, float, float, float, float]`
   - Returns: cpr, res1, res2, supp1, supp2, gap
@@ -2477,24 +2697,27 @@ Results:
   - Reduced code complexity in generate_BOData function
 
 **Implementation Details**:
+
 - CPR (Central Pivot Range) calculation extracted from inline code
 - Formula documented:
-  * Pivot = (High + Low + Close) / 3
-  * BC (Bottom Central) = (High + Low) / 2
-  * TC (Top Central) = (Pivot - BC) + Pivot
-  * R1 = (2 * Pivot) - Low
-  * S1 = (2 * Pivot) - High
-  * R2 = Pivot + (R1 - S1)
-  * S2 = Pivot - (R1 - S1)
-  * Gap = |TC - BC|
+  - Pivot = (High + Low + Close) / 3
+  - BC (Bottom Central) = (High + Low) / 2
+  - TC (Top Central) = (Pivot - BC) + Pivot
+  - R1 = (2 * Pivot) - Low
+  - S1 = (2 * Pivot) - High
+  - R2 = Pivot + (R1 - S1)
+  - S2 = Pivot - (R1 - S1)
+  - Gap = |TC - BC|
 - Trading significance documented in docstring
 - Better code organization: CPR logic isolated and reusable
 
 **Dependencies**:
+
 - None (uses Python standard library typing module)
 
 **Testing**:
 Commands run:
+
 ```bash
 uv run python -c "from app.services.cpr_calculator import calculate_cpr; print('✓ CPR calculator imports')"
 # Manual calculation test
@@ -2504,6 +2727,7 @@ uv run python -c "from app.tasks import generate_bo_data_task; print('✓ Task i
 ```
 
 Results:
+
 - [x] CPR calculator module imports successfully
 - [x] Function returns correct 6-tuple (cpr, res1, res2, supp1, supp2, gap)
 - [x] Manual calculation verified: High=150, Low=145, Close=148 → CPR=147.83, R1=150.33, R2=152.67, S1=145.33, S2=142.67, Gap=0.33
@@ -2513,11 +2737,13 @@ Results:
 - [x] No breaking changes to existing functionality
 
 **Git Commit**:
+
 ```
 9162e6e Task 3.2: Refactor CPR calculation into separate module
 ```
 
 **Benefits**:
+
 - Better code organization: CPR logic isolated in dedicated module
 - Improved testability: CPR calculation can be tested independently
 - Reusability: Function can be used by other services if needed
@@ -2526,9 +2752,11 @@ Results:
 - Type safety: Type hints for all inputs and outputs
 
 **Issues Encountered**:
+
 - None
 
 **Questions for PM**:
+
 - None
 
 **Next**: Ready for PM review. Tasks 3.1 and 3.2 complete. Will move to Task 3.3 (Input Validation with Pydantic) or await further instructions.
@@ -2543,10 +2771,12 @@ Results:
 **Status**: Complete
 
 **Changes Made**:
+
 - `app/models/schemas.py`: Created comprehensive schemas (113 lines)
 - `app/routers/routes.py`: Added response_model to 6 endpoints
 
 **Testing**:
+
 - [x] All schemas import successfully
 - [x] Valid requests accepted
 - [x] Invalid inputs rejected with ValidationError
@@ -2558,7 +2788,6 @@ Results:
 **Blocking**: No
 
 ---
-
 
 ---
 
@@ -2575,6 +2804,7 @@ Excellent work, Developer! All three core phases are now complete with perfect s
 #### What We've Accomplished
 
 **Phase 1: Critical Backend Fixes** ✅ (375/375 points)
+
 - yfinance integration: 60x performance improvement
 - 5-script limit removed
 - Celery task timeout configuration
@@ -2583,6 +2813,7 @@ Excellent work, Developer! All three core phases are now complete with perfect s
 - All 4 completion tests passed
 
 **Phase 2: Connect Missing Features** ✅ (300/300 points)
+
 - Database setup and verification
 - Start From field (resume capability)
 - Toast notifications
@@ -2590,6 +2821,7 @@ Excellent work, Developer! All three core phases are now complete with perfect s
 - Tailwind CSS v4 migration
 
 **Phase 3: Code Structure Improvements** ✅ (125/125 points)
+
 - Enum types for indicators (type safety)
 - CPR calculation refactored into separate module
 - Comprehensive Pydantic schemas with validation
@@ -2616,12 +2848,14 @@ Excellent work, Developer! All three core phases are now complete with perfect s
 The application is currently **production-ready**, but we have an opportunity to transform the user experience with a comprehensive UI redesign.
 
 **Phase 5 Overview**:
+
 - **Goal**: Transform single-page app into modern multi-page dashboard
 - **Duration**: 20 days (3-4 weeks)
 - **Approach**: Incremental migration with rollback points
 - **Priority**: HIGH (but optional - depends on stakeholder decision)
 
 **Key Improvements**:
+
 1. **Design System**: shadcn/ui components (replace MUI, save 380KB bundle size)
 2. **State Management**: Jotai (eliminate props drilling)
 3. **Advanced Table**: TanStack Table with sort/filter/search
@@ -2630,6 +2864,7 @@ The application is currently **production-ready**, but we have an opportunity to
 6. **Accessibility**: WCAG 2.1 AA compliance
 
 **Why Phase 5?**
+
 - Current UI is functional but basic
 - Single-page layout limits scalability
 - No advanced table features (sort/filter/search)
@@ -2638,6 +2873,7 @@ The application is currently **production-ready**, but we have an opportunity to
 - Props drilling makes state management complex
 
 **Why NOT Phase 5 (yet)?**
+
 - Application already meets all functional requirements
 - Current UI works well for core use cases
 - Significant development time investment
@@ -2648,18 +2884,21 @@ The application is currently **production-ready**, but we have an opportunity to
 #### Decision Point
 
 **Option 1: Deploy Current Version (Recommended if time-sensitive)**
+
 - Application is fully functional and production-ready
 - All critical features implemented
 - Good performance and reliability
 - Can always do UI redesign later
 
 **Option 2: Proceed with Phase 5 (Recommended for best UX)**
+
 - Transform into world-class financial dashboard
 - Professional design system
 - Advanced features (sort, filter, export, dark mode)
 - Better maintainability for future development
 
 **Option 3: Selective Features from Phase 5**
+
 - Pick specific features (e.g., just dark mode + table sorting)
 - Faster implementation than full redesign
 - Incremental improvements
@@ -2680,6 +2919,7 @@ Please decide which path to take:
 #### Technical Debt Status
 
 **Minimal Technical Debt**:
+
 - ✅ All magic strings replaced with enums
 - ✅ All APIs have Pydantic validation
 - ✅ Error handling comprehensive
@@ -2688,6 +2928,7 @@ Please decide which path to take:
 - ✅ No known bugs or performance issues
 
 **Future Enhancements** (if desired):
+
 - WebSocket for real-time updates (currently uses polling)
 - User authentication and multi-user support
 - Charting library integration
@@ -2701,12 +2942,14 @@ Please decide which path to take:
 #### Files Updated
 
 **PLAN.md**:
+
 - Updated Phase 3 status: COMPLETE ✅
 - Updated Phase 4 note: Deferred (merged into Phase 5)
 - Updated Phase 5 status: READY FOR IMPLEMENTATION
 - Updated Approval section with Phase 3 approval
 
 **INSTRUCTIONS.md**:
+
 - All Phase 3 tasks marked [✓] PM Verified
 - Phase 3 Completion Checklist: 100% complete
 
@@ -2729,4 +2972,218 @@ The codebase is clean, well-documented, and ready for whatever comes next.
 ---
 
 *Note: All planning documents (PLAN.md, INSTRUCTIONS.md, COMMS.md) have been updated to reflect Phase 3 completion.*
+
+### [2025-12-31] [DEV] Phase 4 Partial Completion
+
+**Task**: Phase 4 Frontend Enhancements (Tasks 4.1, 4.2, 4.7 completed)
+
+**Status**: Partial Complete (3 of 8 tasks)
+
+**Completed Tasks**:
+
+1. **Task 4.1: Color-Code Breakout Indicators** ✓
+   - Created `indicators.css` with comprehensive color definitions
+   - Green (bullish), Red (bearish), Yellow (neutral)
+   - Applied to breakout_indicator, candle_indicator, volume_indicator columns
+   - Full dark mode support included
+
+2. **Task 4.2: Button Loading States** ✓
+   - Added loading spinners to all async buttons
+   - Buttons disabled during operations (prevents double-clicks)
+   - Dynamic text updates ("Generating...", "Fetching...", etc.)
+   - Dark mode styles included
+
+3. **Task 4.7: Dark Mode Toggle** ✓
+   - Toggle button added to Header
+   - localStorage persistence implemented
+   - All components styled for dark mode
+   - Smooth theme transitions
+
+**Bug Fixes**:
+
+- Fixed pagination: Next button now properly disabled at last page
+- Fixed null/undefined indicator values causing runtime errors
+- Renamed `totalPages` to `totalRecords` for code clarity
+
+**Files Modified**:
+
+- `frontend/src/styles/indicators.css` (new - 200 lines)
+- `frontend/src/components/DataTable/DataTable.tsx`
+- `frontend/src/components/Header/Header.tsx`
+- `frontend/src/components/ButtonGroups/ButtonGroups.tsx`
+- `frontend/src/components/Pagination/Pagination.tsx`
+- `frontend/src/app/globals.css`
+
+**Testing**:
+
+- ✓ Frontend build successful
+- ✓ TypeScript compilation passed
+- ✓ Color-coding working for all indicator types
+- ✓ Dark mode toggle persists across reloads
+- ✓ Loading states prevent double-clicks
+
+**Remaining Phase 4 Tasks** (Optional - Not Implemented):
+
+- Task 4.3: Table Filtering/Sorting (TanStack Table)
+- Task 4.4: CSV Export
+- Task 4.5: Date Range Picker
+- Task 4.6: Column Visibility Toggle
+- Task 4.8: Keyboard Shortcuts
+
+**Rationale for Partial Completion**:
+Per PLAN.md, Phase 4 is marked as "MEDIUM - Part of Complete Redesign" and "Part of Phase 5 comprehensive redesign". Tasks 4.3-4.6 and 4.8 involve significant architectural changes (TanStack Table, new components) that are better suited for Phase 5's comprehensive UI overhaul.
+
+The three completed tasks (4.1, 4.2, 4.7) provide immediate UX improvements without major refactoring:
+
+- Visual clarity (color-coding)
+- User feedback (loading states)
+- Theme preference (dark mode)
+
+**Production Readiness**: ✓ Application is fully functional and production-ready with current improvements.
+
+**Next Steps**: Awaiting stakeholder decision on Phase 5 (Complete UI Redesign) vs deploying current version.
+
+**Blocking**: No
+
+---
+
+
+### [2025-12-31] [DEV] NSE Table Scraping Fix
+
+**Task**: Fix fetch_script_symbols capturing only 12 stocks instead of full count
+
+**Status**: Complete ✓
+
+**Problem**:
+- `fetch_script_symbols()` was only capturing 12 stocks from NSE indices
+- Expected: 50 stocks for NIFTY 50, 200 for NIFTY 200, etc.
+- Actual: Only 12 stocks regardless of index
+
+**Root Causes Identified**:
+
+1. **Dynamic Table Loading**
+   - NSE website loads table content asynchronously via JavaScript
+   - Initial page load showed only 2 rows (header + index name)
+   - Full table populated after ~5 seconds
+   - Old code didn't wait for complete table load
+
+2. **Incorrect Table Structure Assumption**
+   - Old code assumed 4 rows per stock (hardcoded)
+   - Actual structure: 1 header row + 1 index name row + 1 row per stock
+   - Calculation error: `(52 // 4) + 4 = 17`, `range(5, 17)` = only 12 iterations
+
+3. **Wrong Row Indexing**
+   - Row 0: Header row (15 `<th>` elements)
+   - Row 1: Index name (e.g., "NIFTY 50") - was incorrectly included in stock extraction
+   - Rows 2+: Actual stock data (15 `<td>` elements each)
+
+**Solution Implemented**:
+
+**File**: `app/services/fetch_scripts.py`
+
+1. **Added Wait Logic** (lines 42-62):
+   ```python
+   # Wait 5 seconds for initial page load
+   time.sleep(5)
+
+   # Poll table every second for up to 15 seconds until >10 rows loaded
+   for attempt in range(15):
+       rows = table.find_elements(By.TAG_NAME, "tr")
+       if len(rows) > 10:
+           break
+       time.sleep(1)
+   ```
+
+2. **Fixed Extraction Logic** (lines 67-93):
+   ```python
+   # Skip row 0 (header) and row 1 (index name)
+   # Extract from rows 2+ (actual stock data)
+   for row_index in range(2, len(rows)):
+       cells = rows[row_index].find_elements(By.TAG_NAME, "td")
+       if len(cells) >= 15:
+           script_name = cells[0].text.strip()
+           if script_name:
+               data.append({"group_name": group_name, "script_name": script_name})
+   ```
+
+3. **Enhanced Logging**:
+   - Logs wait attempts and row counts
+   - Logs group name identification
+   - Debug logs for each stock added
+
+**Diagnostic Tool Created**:
+
+**File**: `app/utils/diagnose_nse_table.py` (NEW)
+
+- Analyzes NSE table structure in detail
+- Shows row-by-row breakdown with cell counts
+- Saves screenshot for manual verification
+- Reports total stocks found
+- Useful for debugging future scraping issues
+
+**Files Modified**:
+
+- `app/services/fetch_scripts.py` - Main fix with wait logic and corrected iteration
+- `app/utils/diagnose_nse_table.py` - New diagnostic tool for table analysis
+- `docs/nse-scraping-fix.md` - Comprehensive documentation of issue and solution
+- `app/utils/selenium_driver.py` - Re-enabled headless mode (`--headless=new`)
+
+**Testing**:
+
+**Diagnostic Results**:
+```
+Total rows found: 52 (1 header + 1 index + 50 stocks)
+Stock rows identified: 50 (rows 2-51)
+All stocks extracted with 15 cells each
+```
+
+**Database Verification**:
+```bash
+Total unique scripts: 499 ✓
+NIFTY 50: 50 scripts ✓
+NIFTY 200: 150 scripts (overlap with NIFTY 50 expected)
+NIFTY MIDCAP 150: 50 scripts (overlap expected)
+NIFTY MIDSMALLCAP 400: 249 scripts (overlap expected)
+No duplicate symbols: ✓
+```
+
+**Sample NIFTY 50 stocks verified**:
+- ADANIENT, ADANIPORTS, APOLLOHOSP, ASIANPAINT, AXISBANK
+- BAJAJ-AUTO, BAJAJFINSV, BAJFINANCE, BEL, BHARTIARTL
+- [... all 50 stocks present]
+
+**Expected Behavior**:
+
+For NIFTY 50 URL, Celery logs now show:
+```
+INFO: Fetching data from URL: https://www.nseindia.com/market-data/live-equity-market?symbol=NIFTY%2050
+INFO: Table found
+INFO: Waiting for table data to load...
+INFO: Wait attempt 1: 52 rows
+INFO: Total rows found: 52
+INFO: Group name: NIFTY 50
+INFO: Data captured from URL: [Count: 50] => [...]
+```
+
+**Index Overlap Note**:
+- Stocks can appear in multiple NSE indices (e.g., NIFTY 50 stocks are also in NIFTY 200)
+- Database stores each script once with one group_name (first occurrence)
+- Total of 499 unique scripts across all indices is expected and correct
+
+**Documentation**:
+
+Created `docs/nse-scraping-fix.md` with:
+- Detailed root cause analysis
+- Investigation methodology using diagnostic script
+- Before/after code comparison
+- Testing procedures
+- Future improvement suggestions
+
+**Production Readiness**: ✓ Fix is tested and working correctly. When Celery worker restarts with new code, all NSE indices will be scraped with complete stock counts.
+
+**Next Steps**: Fix is complete and committed. No further action needed.
+
+**Blocking**: No
+
+---
 
