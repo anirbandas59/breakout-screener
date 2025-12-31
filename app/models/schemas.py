@@ -71,24 +71,24 @@ class BreakoutDataItem(BaseModel):
     """Schema for individual breakout data record."""
     id: int
     script_name: str
-    group_name: Optional[str] = None
-    date: Optional[date] = None
-    open: Optional[float] = None
-    high: Optional[float] = None
-    low: Optional[float] = None
-    close: Optional[float] = None
-    previous_high: Optional[float] = None
-    volume: Optional[float] = None
-    cpr: Optional[float] = None
-    res1: Optional[float] = None
-    res2: Optional[float] = None
-    supp1: Optional[float] = None
-    supp2: Optional[float] = None
-    narrow_gap: Optional[str] = None
-    breakout_indicator: Optional[str] = None
-    candle_indicator: Optional[str] = None
-    volume_indicator: Optional[str] = None
-    link: Optional[str] = None
+    group_name: Optional[str]
+    date: Optional[date]
+    open: Optional[float]
+    high: Optional[float]
+    low: Optional[float]
+    close: Optional[float]
+    previous_high: Optional[float]
+    volume: Optional[float]
+    cpr: Optional[float]
+    res1: Optional[float]
+    res2: Optional[float]
+    supp1: Optional[float]
+    supp2: Optional[float]
+    narrow_gap: Optional[str]
+    breakout_indicator: Optional[str]
+    candle_indicator: Optional[str]
+    volume_indicator: Optional[str]
+    link: Optional[str]
 
     class Config:
         from_attributes = True
