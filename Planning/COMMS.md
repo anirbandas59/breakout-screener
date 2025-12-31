@@ -3583,4 +3583,66 @@ Git commit: d660ca1
 
 **Blocking**: No
 
+Git commit: a2ed964
+
+---
+
+### [2025-12-31] [DEV] Table Filtering Implementation Complete
+
+**Task**: Replace sorting with intelligent filtering
+
+**Status**: Complete
+
+**Changes Made**:
+
+1. **Removed Sorting Functionality**:
+   - Removed all sort icons and handlers from column headers
+   - Removed getSortedRowModel from TanStack Table
+   - Simplified column definitions (no sort buttons)
+   - Cleaner table headers with plain text
+
+2. **Added Symbol Search Filter**:
+   - Search input with magnifying glass icon
+   - Real-time filtering as user types
+   - Case-insensitive includesString filter
+   - Positioned above table with max-width constraint
+
+3. **Added Breakout Indicator Dropdown Filter**:
+   - Select dropdown with all unique breakout values
+   - Exact match filtering (not search-based)
+   - "All Breakouts" option to clear filter
+   - Dynamic values extracted from current data
+   - Positioned next to search input
+
+4. **Filter Integration**:
+   - Uses TanStack Table getFilteredRowModel
+   - Filters work independently and can be combined
+   - State managed via columnFilters
+   - Automatic "No results found" message when filtered
+
+**Files Modified**:
+- frontend/src/components/DataTable/DataTable.tsx
+
+**Files Created**:
+- frontend/src/components/ui/select.tsx
+
+**Dependencies Added**:
+- @radix-ui/react-select - Select component primitive
+
+**Features**:
+- ✅ Symbol name search (partial match, case-insensitive)
+- ✅ Breakout indicator filter (exact match dropdown)
+- ✅ Combined filters work together
+- ✅ Clean UI with Search and ChevronDown icons
+- ✅ Responsive layout with flex gap
+- ✅ Empty state handling ("No results found")
+
+**Testing**:
+- Build: ✓ Successful (2.6s)
+- TypeScript: ✓ No errors
+- Filter functionality: ✓ Works correctly
+- UI rendering: ✓ Clean and responsive
+
+**Blocking**: No
+
 Git commit: Pending

@@ -1,21 +1,29 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
 import {
   useReactTable,
   getCoreRowModel,
-  getSortedRowModel,
+  getFilteredRowModel,
   flexRender,
   createColumnHelper,
-  SortingState,
   ColumnDef,
+  ColumnFiltersState,
 } from '@tanstack/react-table';
-import { ArrowUpDown, ArrowUp, ArrowDown, Download } from 'lucide-react';
+import { Download, Search } from 'lucide-react';
 import Loader from '@/components/Loader/Loader';
 import Pagination from '@/components/Pagination/Pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -75,7 +83,9 @@ const DataTable: React.FC = () => {
   const [, setScriptsAnalyzed] = useAtom(scriptsAnalyzedAtom);
 
   const [data, setData] = React.useState<DataRow[]>([]);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [searchValue, setSearchValue] = useState('');
+  const [breakoutFilter, setBreakoutFilter] = useState<string>('all');
 
   const fetchData = async (page: number, limit: number) => {
     setIsLoading(true);
@@ -100,33 +110,38 @@ const DataTable: React.FC = () => {
     if (startRefresh) {
       const interval = setInterval(() => {
         fetchData(page, limit);
-      }, 10000); // Reduced from 30s to 10s for better sync with progress
+      }, 10000);
 
       return () => clearInterval(interval);
     }
-  }, [page, limit, startRefresh, refreshTrigger]); // Add refreshTrigger to trigger immediate refresh on task completion
+  }, [page, limit, startRefresh, refreshTrigger]);
+
+  // Update column filters when search or breakout filter changes
+  useEffect(() => {
+    const filters: ColumnFiltersState = [];
+
+    if (searchValue) {
+      filters.push({
+        id: 'script_name',
+        value: searchValue,
+      });
+    }
+
+    if (breakoutFilter && breakoutFilter !== 'all') {
+      filters.push({
+        id: 'breakout_indicator',
+        value: breakoutFilter,
+      });
+    }
+
+    setColumnFilters(filters);
+  }, [searchValue, breakoutFilter]);
 
   const columnHelper = createColumnHelper<DataRow>();
 
   const columns: ColumnDef<DataRow, any>[] = [
     columnHelper.accessor('group_name', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Group
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'Group',
       cell: (info) => <span className="text-xs">{info.getValue()}</span>,
     }),
     columnHelper.display({
@@ -137,67 +152,23 @@ const DataTable: React.FC = () => {
       ),
     }),
     columnHelper.accessor('script_name', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Scripts
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'Scripts',
       cell: (info) => <span className="text-xs font-medium">{info.getValue()}</span>,
+      filterFn: 'includesString',
     }),
     columnHelper.accessor('breakout_indicator', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Breakout
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'Breakout',
       cell: (info) => (
         <Badge variant={getIndicatorVariant(info.getValue(), 'breakout')} className="text-xs">
           {info.getValue()}
         </Badge>
       ),
+      filterFn: (row, id, value) => {
+        return row.getValue(id) === value;
+      },
     }),
     columnHelper.accessor('candle_indicator', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Candle
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'Candle',
       cell: (info) => (
         <Badge variant={getIndicatorVariant(info.getValue(), 'candle')} className="text-xs">
           {info.getValue()}
@@ -205,23 +176,7 @@ const DataTable: React.FC = () => {
       ),
     }),
     columnHelper.accessor('volume_indicator', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Volume Indicator
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'Volume Indicator',
       cell: (info) => (
         <Badge variant={getIndicatorVariant(info.getValue(), 'volume')} className="text-xs">
           {info.getValue()}
@@ -229,223 +184,47 @@ const DataTable: React.FC = () => {
       ),
     }),
     columnHelper.accessor('open', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Open
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'Open',
       cell: (info) => <span className="text-xs">{info.getValue()}</span>,
     }),
     columnHelper.accessor('high', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            High
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'High',
       cell: (info) => <span className="text-xs">{info.getValue()}</span>,
     }),
     columnHelper.accessor('low', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Low
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'Low',
       cell: (info) => <span className="text-xs">{info.getValue()}</span>,
     }),
     columnHelper.accessor('close', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Close
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'Close',
       cell: (info) => <span className="text-xs">{info.getValue()}</span>,
     }),
     columnHelper.accessor('previous_high', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            PDH
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'PDH',
       cell: (info) => <span className="text-xs">{info.getValue()}</span>,
     }),
     columnHelper.accessor('volume', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Volume
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'Volume',
       cell: (info) => <span className="text-xs">{info.getValue()}</span>,
     }),
     columnHelper.accessor('cpr', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            CPR
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'CPR',
       cell: (info) => <span className="text-xs">{info.getValue()}</span>,
     }),
     columnHelper.accessor('res1', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            RES-1
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'RES-1',
       cell: (info) => <span className="text-xs">{info.getValue()}</span>,
     }),
     columnHelper.accessor('res2', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            RES-2
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'RES-2',
       cell: (info) => <span className="text-xs">{info.getValue()}</span>,
     }),
     columnHelper.accessor('supp1', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            SUPP-1
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'SUPP-1',
       cell: (info) => <span className="text-xs">{info.getValue()}</span>,
     }),
     columnHelper.accessor('supp2', {
-      header: ({ column }) => {
-        return (
-          <button
-            className="flex items-center gap-1 hover:text-foreground"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            SUPP-2
-            {column.getIsSorted() === 'asc' ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === 'desc' ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3" />
-            )}
-          </button>
-        );
-      },
+      header: 'SUPP-2',
       cell: (info) => <span className="text-xs">{info.getValue()}</span>,
     }),
     columnHelper.accessor('narrow_gap', {
@@ -471,11 +250,11 @@ const DataTable: React.FC = () => {
     data,
     columns,
     state: {
-      sorting,
+      columnFilters,
     },
-    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
   });
 
   const handlePageChange = (newPage: number) => {
@@ -491,6 +270,12 @@ const DataTable: React.FC = () => {
     const date = new Date().toISOString().split('T')[0];
     exportToCSV(data, `breakout_data_${date}.csv`);
   };
+
+  // Get unique breakout indicator values for filter dropdown
+  const breakoutValues = React.useMemo(() => {
+    const unique = new Set(data.map((row) => row.breakout_indicator).filter(Boolean));
+    return Array.from(unique).sort();
+  }, [data]);
 
   return (
     <>
@@ -514,6 +299,35 @@ const DataTable: React.FC = () => {
           </Button>
         )}
       </div>
+
+      {/* Filters Section */}
+      {data.length > 0 && (
+        <div className="flex gap-4 mb-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by symbol name..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <Select value={breakoutFilter} onValueChange={setBreakoutFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Filter by Breakout" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Breakouts</SelectItem>
+              {breakoutValues.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {value}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <div className="rounded-lg border shadow-md">
         {isLoading ? (
           <Loader />
@@ -533,15 +347,23 @@ const DataTable: React.FC = () => {
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
+              {table.getRowModel().rows.length > 0 ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="text-center py-4">
+                    <span className="text-sm text-muted-foreground">No results found</span>
+                  </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         ) : (
