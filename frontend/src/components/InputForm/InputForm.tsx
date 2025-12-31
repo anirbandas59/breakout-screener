@@ -105,52 +105,60 @@ const InputForm: React.FC = () => {
 
   return (
     <div className="flex flex-col p-6">
-      {/* Input Fields */}
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1">
-          <Label htmlFor="date">Run Date</Label>
-          <Input
-            type="date"
-            id="date"
-            value={date}
-            onChange={handleDateChange}
+      <div className="flex gap-6">
+        {/* Left side: Input Fields & Button Groups */}
+        <div className="flex-1 flex flex-col gap-4">
+          {/* Input Fields - Side by side */}
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Label htmlFor="date">Run Date</Label>
+              <Input
+                type="date"
+                id="date"
+                value={date}
+                onChange={handleDateChange}
+              />
+            </div>
+            <div className="flex-1">
+              <Label htmlFor="startFrom">Start From</Label>
+              <Input
+                type="number"
+                id="startFrom"
+                value={startFrom}
+                onChange={handleStartFromChange}
+              />
+            </div>
+          </div>
+
+          {/* Button Groups */}
+          <ButtonGroups
+            onStart={handleStart}
+            onStop={handleStop}
+            onClear={handleClear}
+            onFetchList={handleFetchList}
+            onClearList={handleClearList}
           />
         </div>
+
+        {/* Vertical Separator */}
+        <Separator orientation="vertical" className="h-auto" />
+
+        {/* Right side: Display Fields */}
         <div className="flex-1">
-          <Label htmlFor="startFrom">Start From</Label>
-          <Input
-            type="number"
-            id="startFrom"
-            value={startFrom}
-            onChange={handleStartFromChange}
+          <div className="flex flex-col gap-2 mb-4">
+            <span className="text-xl font-semibold">Stock Analysis</span>
+            <Separator />
+          </div>
+          <DisplayFields
+            scriptsAnalyzed={scriptsAnalyzed}
+            startTime={startTime}
+            runningTime={runningTime || '--:--:--'}
+            fetchingTime={scriptFetchedOn || '--'}
+            pivotGap={pivotGap}
+            onPivotChange={handlePivotGap}
           />
         </div>
       </div>
-
-      {/* Buttons */}
-      <ButtonGroups
-        onStart={handleStart}
-        onStop={handleStop}
-        onClear={handleClear}
-        onFetchList={handleFetchList}
-        onClearList={handleClearList}
-      />
-
-      {/* Text with Divider */}
-      <div className="flex flex-col gap-2 mb-6">
-        <span className="text-xl font-semibold">Stock Analysis</span>
-        <Separator />
-      </div>
-
-      {/* Read-Only Fields */}
-      <DisplayFields
-        scriptsAnalyzed={scriptsAnalyzed}
-        startTime={startTime}
-        runningTime={runningTime || '--:--:--'}
-        fetchingTime={scriptFetchedOn || '--'}
-        pivotGap={pivotGap}
-        onPivotChange={handlePivotGap}
-      />
     </div>
   );
 };

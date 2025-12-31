@@ -3715,3 +3715,87 @@ Git commit: Pending
 **Blocking**: No
 
 Git commit: Pending
+
+---
+
+### [2025-12-31] [DEV] Complete UI/UX Overhaul - All Enhancements Committed
+
+**Tasks**: Table improvements, InputForm layout, filters, and controls reorganization
+
+**Status**: Complete ✅
+
+**Summary of All Changes**:
+
+**1. DataTable Enhancements**:
+- Removed Group Name and Sl. No columns (streamlined to 17 columns)
+- Two-line control layout:
+  * Line 1: Date display and Pagination controls (justify-between)
+  * Line 2: Symbol search (left) and Export CSV button (right)
+- Checkbox filter in Breakout column header with Popover
+- Multi-select filter functionality with "Clear Filter" button
+- Filter icon integration for intuitive UX
+- TanStack Table with filtering (no sorting)
+
+**2. Pagination Component**:
+- Removed duplicate Date field
+- Clean pagination controls (page navigation + rows per page)
+- Simplified component interface
+
+**3. InputForm Two-Column Layout**:
+- Left column: Run Date and Start From (side-by-side) + Button Groups
+- Right column: Display Fields with "Stock Analysis" heading
+- Vertical Separator between columns
+- Horizontal separator under heading
+- Equal width columns (flex-1)
+- Desktop-optimized (mobile version deferred to future)
+
+**4. UI Components Created**:
+- Checkbox component (Radix UI)
+- Popover component (Radix UI)
+- Select component (Radix UI)
+
+**Files Modified (5)**:
+- frontend/src/components/DataTable/DataTable.tsx
+- frontend/src/components/Pagination/Pagination.tsx
+- frontend/src/components/InputForm/InputForm.tsx
+- frontend/src/components/HomePage/HomePage.tsx
+- Planning/COMMS.md
+
+**Files Created (4)**:
+- frontend/src/components/ui/checkbox.tsx
+- frontend/src/components/ui/popover.tsx
+- frontend/src/components/ui/select.tsx
+- frontend/src/utils/csvExport.ts
+
+**Dependencies Added**:
+- papaparse@5.4.1 + @types/papaparse@5.3.15 (CSV export)
+- @radix-ui/react-checkbox (checkbox component)
+- @radix-ui/react-popover (popover component)  
+- @radix-ui/react-select (select dropdown)
+
+**Complete Feature List**:
+- ✅ CSV export with papaparse
+- ✅ Symbol name search filter (partial match)
+- ✅ Breakout indicator checkbox filter (exact match, multi-select)
+- ✅ Combined filters functionality
+- ✅ Two-line table controls layout
+- ✅ Two-column InputForm layout
+- ✅ Removed unnecessary columns
+- ✅ Removed duplicate Date field
+- ✅ Clean shadcn/ui design system
+- ✅ Badge components for color-coded indicators
+- ✅ Responsive spacing and layout
+
+**Testing**:
+- Build: ✓ Successful (3.0s compilation)
+- TypeScript: ✓ No errors
+- All routes: ✓ 6 routes generated successfully
+- UI/UX: ✓ Clean, professional, organized
+
+**Future Enhancements** (Deferred):
+- Mobile responsive layout for InputForm
+- Additional Phase 4 optional tasks (Date Range Picker, Keyboard Shortcuts)
+
+**Blocking**: No
+
+Git commits: Pending final consolidation
