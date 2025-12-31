@@ -1,0 +1,115 @@
+"""
+Pydantic schemas for request and response validation.
+
+This module provides comprehensive input validation and response schemas
+for all API endpoints, ensuring data integrity and auto-generated API documentation.
+"""
+
+from datetime import date
+from typing import List, Optional, Any
+from pydantic import BaseModel, Field, field_validator
+
+
+# ===========================
+# Request Schemas
+# ===========================
+
+class FetchScriptSymbolsRequest(BaseModel):
+    """Request schema for fetching script symbols."""
+    group_name: str = Field(..., min_length=1, max_length=100, description="Stock group name (e.g., NIFTY_50)")
+
+
+class GenerateBODataRequest(BaseModel):
+    """Request schema for generating breakout data."""
+    date: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}$', description="Analysis date in YYYY-MM-DD format")
+    pivot_val: float = Field(default=0.5, ge=0, le=10, description="Pivot gap percentage threshold (0-10)")
+    start_from: int = Field(default=1, ge=1, description="Start processing from this script index (1-based)")
+
+    @field_validator('date')
+    @classmethod
+    def validate_date_format(cls, v: str) -> str:
+        """Validate date string is in correct format."""
+        try:
+            date.fromisoformat(v)
+        except ValueError:
+            raise ValueError('Invalid date format, use YYYY-MM-DD')
+        return v
+
+
+class ClearChartRequest(BaseModel):
+    """Request schema for clearing chart data."""
+    date: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}$', description="Date to clear in YYYY-MM-DD format")
+
+    @field_validator('date')
+    @classmethod
+    def validate_date_format(cls, v: str) -> str:
+        """Validate date string is in correct format."""
+        try:
+            date.fromisoformat(v)
+        except ValueError:
+            raise ValueError('Invalid date format, use YYYY-MM-DD')
+        return v
+
+
+# ===========================
+# Response Schemas
+# ===========================
+
+class TaskStatusResponse(BaseModel):
+    """Response schema for task status endpoint."""
+    task_id: str = Field(..., description="Celery task ID")
+    message: str = Field(..., description="Status message")
+
+
+class TaskResultResponse(BaseModel):
+    """Response schema for task result polling."""
+    status: str = Field(..., description="Task status: PENDING, PROGRESS, SUCCESS, FAILURE")
+    result: Optional[Any] = Field(default=None, description="Task result data or progress metadata")
+
+
+class BreakoutDataItem(BaseModel):
+    """Schema for individual breakout data record."""
+    id: int
+    script_name: str
+    group_name: Optional[str] = None
+    date: Optional[date] = None
+    open: Optional[float] = None
+    high: Optional[float] = None
+    low: Optional[float] = None
+    close: Optional[float] = None
+    previous_high: Optional[float] = None
+    volume: Optional[float] = None
+    cpr: Optional[float] = None
+    res1: Optional[float] = None
+    res2: Optional[float] = None
+    supp1: Optional[float] = None
+    supp2: Optional[float] = None
+    narrow_gap: Optional[str] = None
+    breakout_indicator: Optional[str] = None
+    candle_indicator: Optional[str] = None
+    volume_indicator: Optional[str] = None
+    link: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class GetDataResponse(BaseModel):
+    """Response schema for get_data endpoint."""
+    total: int = Field(..., description="Total number of records")
+    data: List[BreakoutDataItem] = Field(..., description="List of breakout data records")
+    page: int = Field(..., description="Current page number")
+    limit: int = Field(..., description="Records per page")
+
+
+class SuccessResponse(BaseModel):
+    """Generic success response."""
+    success: bool = True
+    message: str
+
+
+class ErrorResponse(BaseModel):
+    """Generic error response."""
+    success: bool = False
+    error: str
+    detail: Optional[str] = None

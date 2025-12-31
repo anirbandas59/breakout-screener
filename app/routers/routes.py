@@ -16,6 +16,13 @@ from app.tasks import (
 )
 from app.utils import get_current_date, suspend_action, validate_date
 from app.models import GenerateBODataRequest
+from app.models.schemas import (
+    GetDataResponse,
+    TaskStatusResponse,
+    TaskResultResponse,
+    FetchScriptSymbolsRequest,
+    ClearChartRequest,
+)
 
 from app.celery import celery_app
 
@@ -24,7 +31,7 @@ from app.celery import celery_app
 router = APIRouter()
 
 
-@router.get("/get_data", status_code=200)
+@router.get("/get_data", status_code=200, response_model=GetDataResponse)
 def get_data(db: Session = Depends(get_db), page: int = 1, limit: int = 10):
     """
     Fetch processed breakout data.
@@ -57,7 +64,7 @@ def get_data(db: Session = Depends(get_db), page: int = 1, limit: int = 10):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.post("/fetch_script_symbols", status_code=200)
+@router.post("/fetch_script_symbols", status_code=200, response_model=TaskStatusResponse)
 def fetch_scripts():
     """
     Fetch script symbols from NSE and save to database.
@@ -83,7 +90,7 @@ def fetch_scripts():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.post("/generate_bodata", status_code=200)
+@router.post("/generate_bodata", status_code=200, response_model=TaskStatusResponse)
 def generate_bodata(request: GenerateBODataRequest):
     """
     Generate breakout data for all scripts in the breakout_data table.
@@ -127,7 +134,7 @@ def generate_bodata(request: GenerateBODataRequest):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.post("/clear_chart", status_code=202)
+@router.post("/clear_chart", status_code=202, response_model=TaskStatusResponse)
 def clear_chart():
     """
     Clear chart data for a specific date
@@ -149,7 +156,7 @@ def clear_chart():
     }
 
 
-@router.post("/clear_complete_data", status_code=202)
+@router.post("/clear_complete_data", status_code=202, response_model=TaskStatusResponse)
 def clear_complete_data():
     """
     Initiates a task to clear all data from breakout_data and push to master_table.
@@ -197,7 +204,7 @@ def simulate_error():
     raise Exception("Simulated error")
 
 
-@router.get("/task_status/{task_id}")
+@router.get("/task_status/{task_id}", response_model=TaskResultResponse)
 async def task_status(task_id: str):
     """
     Monitor the status of a Celery task.
