@@ -1,6 +1,6 @@
 from celery import Celery
 from app.config import settings
-from app.celery.BaseTask import BaseTaskWithTiming, BaseTask
+from app.celery.BaseTask import BaseTask
 
 
 def celery_init_app() -> Celery:
@@ -21,14 +21,17 @@ def celery_init_app() -> Celery:
 celery_app = celery_init_app()
 
 celery_app.conf.update(
-    task_time_limit=3600,           # 1 hour hard limit
-    task_soft_time_limit=3300,      # 55 min soft limit
+    task_time_limit=3600,  # 1 hour hard limit
+    task_soft_time_limit=3300,  # 55 min soft limit
     broker_transport_options={
-        'visibility_timeout': 3600   # 1 hour
+        "visibility_timeout": 3600  # 1 hour
     },
-    task_acks_late=True,            # Ack after completion
-    task_reject_on_worker_lost=True # Requeue if worker dies
+    task_acks_late=True,  # Ack after completion
+    task_reject_on_worker_lost=True,  # Requeue if worker dies
 )
+
+# Register tasks - import happens when celery worker starts
+celery_app.conf.update(imports=["app.tasks"])
 
 # import os
 # from celery import Celery, Task
