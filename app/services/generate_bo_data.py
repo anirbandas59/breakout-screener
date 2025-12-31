@@ -6,6 +6,7 @@ from celery import current_task
 
 from app.models.breakout_data import BreakoutData
 from app.models.enums import BreakoutIndicator, CandleIndicator, VolumeIndicator
+from app.services.cpr_calculator import calculate_cpr
 from app.services.fetch_scripts import fetch_script_historical_data
 from app.utils.suspension_flag import SUSPEND_ANALYSIS
 
@@ -113,15 +114,8 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
         logging.info("Previous High: %.2f", prev_high)
         logging.info("Avg Volume: %d", avg_volume)
 
-        # Calculate Pivot Points
-        pivot = (today_high + today_low + today_close) / 3
-        bcp = (today_high + today_low) / 2
-        tcp = (pivot - bcp) + pivot
-        res1 = (2 * pivot) - today_low
-        sup1 = (2 * pivot) - today_high
-        res2 = pivot + (res1 - sup1)
-        sup2 = pivot - (res1 - sup1)
-        gap = abs(tcp - bcp)
+        # Calculate CPR levels using dedicated calculator
+        pivot, res1, res2, sup1, sup2, gap = calculate_cpr(today_high, today_low, today_close)
 
         logging.info("Pivot: %.2f", pivot)
         logging.info("Resistance Level 1: %.2f", res1)
