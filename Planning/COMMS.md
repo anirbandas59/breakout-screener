@@ -3362,3 +3362,72 @@ Phase 5.2: State Management (Partial) ✅
 
 **Blocking**: No
 
+
+---
+
+### [2025-12-31] [DEV] Phase 5.2 Complete: Component Migration to Jotai
+
+**Task**: Phase 5.2 - Migrate all components to use Jotai state management
+
+**Status**: Complete
+
+**Changes Made**:
+
+1. **InputForm.tsx**:
+   - Removed all props (date, startTime, runningTime, scriptFetchedOn, scriptsAnalyzed, onTaskIdChange, onDateChange)
+   - Replaced with Jotai useAtom hooks for state atoms
+   - Replaced MUI Divider with shadcn Separator
+   - Replaced native inputs with shadcn Input and Label components
+   - Replaced react-hot-toast with sonner toast
+   - Simplified styling with shadcn design tokens
+
+2. **HomePage.tsx**:
+   - Removed all useState hooks, replaced with Jotai useAtom
+   - Removed props drilling to InputForm and DataTable
+   - Components now communicate through shared Jotai atoms
+   - Replaced react-hot-toast with sonner
+   - Updated progress bar styling (bg-muted, bg-primary, text-muted-foreground)
+   - Simplified component structure
+
+3. **DataTable.tsx**:
+   - Replaced local state (page, limit, totalRecords, isLoading) with Jotai atoms
+   - Removed props (date, startRefresh, refreshTrigger, onScriptsAnalyzed)
+   - Integrated scriptsAnalyzed atom for data count
+   - Component now self-contained with state from Jotai
+
+4. **Pagination.tsx**:
+   - Removed date prop, now uses Jotai dateAtom
+   - Removed MUI icons (ArrowBackIosRoundedIcon, ArrowForwardIosRoundedIcon, SyncRoundedIcon)
+   - Replaced with simple arrow characters (←, →)
+   - Updated styling with shadcn design tokens (bg-secondary, bg-background)
+   - Simplified component interface
+
+**State Management Architecture**:
+- All scanner state centralized in Jotai atoms (date, taskId, progress, times, etc.)
+- All table state centralized in Jotai atoms (page, limit, totalRecords, isLoading)
+- No more props drilling between HomePage -> InputForm/DataTable
+- Components communicate through shared atom subscriptions
+
+**Dependencies Replaced**:
+- react-hot-toast → sonner (imported from '@/components/ui/sonner')
+- MUI components → shadcn/ui components
+- Props → Jotai atoms
+
+**Files Modified (4)**:
+- frontend/src/components/InputForm/InputForm.tsx
+- frontend/src/components/HomePage/HomePage.tsx
+- frontend/src/components/DataTable/DataTable.tsx
+- frontend/src/components/Pagination/Pagination.tsx
+
+**Testing**:
+- npm run build: ✓ Successful compilation
+- TypeScript: ✓ No errors
+- Dev server: ✓ Verified running (HTTP 200 on localhost:3000)
+- All routes accessible
+
+**Next**: Phase 5.3 - Continue component migration (replace remaining MUI, migrate ButtonGroups, DisplayFields, complete shadcn migration)
+
+**Blocking**: No
+
+Git commit: 5f3f912
+
