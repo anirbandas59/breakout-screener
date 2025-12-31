@@ -11,10 +11,11 @@ import {
   SortingState,
   ColumnDef,
 } from '@tanstack/react-table';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, Download } from 'lucide-react';
 import Loader from '@/components/Loader/Loader';
 import Pagination from '@/components/Pagination/Pagination';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -25,6 +26,7 @@ import {
 } from '@/components/ui/table';
 import { DataRow } from '@/types/AppInterfaces';
 import { getData } from '@/services/api';
+import { exportToCSV } from '@/utils/csvExport';
 import {
   tablePageAtom,
   tableLimitAtom,
@@ -485,15 +487,33 @@ const DataTable: React.FC = () => {
     setPage(1);
   };
 
+  const handleExport = () => {
+    const date = new Date().toISOString().split('T')[0];
+    exportToCSV(data, `breakout_data_${date}.csv`);
+  };
+
   return (
     <>
-      <Pagination
-        currentPage={page}
-        totalPages={totalRecords}
-        limit={limit}
-        onPageChange={handlePageChange}
-        onLimitChange={handleLimitChange}
-      />
+      <div className="flex justify-between items-center mb-4">
+        <Pagination
+          currentPage={page}
+          totalPages={totalRecords}
+          limit={limit}
+          onPageChange={handlePageChange}
+          onLimitChange={handleLimitChange}
+        />
+        {data.length > 0 && (
+          <Button
+            onClick={handleExport}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        )}
+      </div>
       <div className="rounded-lg border shadow-md">
         {isLoading ? (
           <Loader />

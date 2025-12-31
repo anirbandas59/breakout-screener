@@ -89,7 +89,7 @@ YOUR WORKFLOW (Follow This Cycle):
 └────────────────────────────┬────────────────────────────────────┘
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ STEP 5: Update Checklist in INSTRUCTIONS.md                     │
+│ STEP 5: Update Checklist in INSTRUCTIONS.md                    │
 │ • Mark each completed step: [ ] → [x]                          │
 │ • Write notes in the task's "Notes" section                    │
 │ • Include uv commands you ran                                  │
@@ -109,6 +109,7 @@ YOUR WORKFLOW (Follow This Cycle):
 │ • Stage files: git add <files>                                 │
 │ • Commit: git commit -m "Task X.X: Brief description"          │
 │ • Do NOT push or merge                                         │
+│ • Do NOT use CLAUDE or CLAUDE CODE in git message              │
 │ • Stay on bo_fix_v2 branch                                     │
 └────────────────────────────┬────────────────────────────────────┘
                              ▼
@@ -116,6 +117,7 @@ YOUR WORKFLOW (Follow This Cycle):
 │ STEP 8: Hand Off to PM/Reviewer                                 │
 │ • Explicitly state "Ready for PM/Reviewer" in COMMS.md         │
 │ • Wait for PM approval before starting next task               │
+│ • Avoid chat summary or summary in chat.                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 ═══════════════════════════════════════════════════════════════
@@ -517,18 +519,12 @@ Please start by:
    ```bash
    git branch
    ```
+   
+2. **Reading** the latest entry from Planning/COMMS.md - tell me what it says
 
-2. **Verifying** uv is available and working:
-   ```bash
-   uv --version
-   uv pip list
-   ```
+3. **Identifying** which task you'll work on from Planning/INSTRUCTIONS.md
 
-3. **Reading** the latest entry from Planning/COMMS.md - tell me what it says
-
-4. **Identifying** which task you'll work on from Planning/INSTRUCTIONS.md
-
-5. **Showing** me your implementation plan including:
+4. **Showing** me your implementation plan including:
    - What dependencies need to be added/checked
    - What uv commands you'll run
    - What files you'll modify
