@@ -3271,3 +3271,94 @@ Created `docs/nse-scraping-fix.md` with:
 
 Git commit: 4331a94
 
+
+---
+
+### [2025-12-31] [DEV] Phase 5.2 Partial Complete: Jotai Store & Theme Toggle
+
+**Task**: Phase 5.2 - Implement Jotai state management and update layouts
+
+**Status**: Partial Complete (atoms created, theme toggle added, Header updated)
+
+**Changes Made**:
+
+1. **Jotai Store Created** (src/store/atoms.ts):
+   - Scanner state atoms: dateAtom, taskIdAtom, scriptsAnalyzedAtom, startRefreshAtom, progressAtom, startTimeAtom, runningTimeAtom, scriptFetchedOnAtom, refreshTriggerAtom
+   - Table state atoms: tablePageAtom, tableLimitAtom, totalRecordsAtom, isLoadingAtom
+   - UI state atoms: sidebarCollapsedAtom
+   - All atoms replace existing useState hooks in HomePage and other components
+
+2. **Theme Toggle Component** (src/components/layouts/ThemeToggle.tsx):
+   - Uses next-themes for theme management
+   - Button with sun/moon icons
+   - Handles mounted state to prevent hydration mismatch
+   - Integrates with shadcn/ui Button component
+
+3. **Header Component Updated**:
+   - Removed old dark mode logic (now handled by next-themes)
+   - Removed Navbar component reference (moved to Sidebar)
+   - Added ThemeToggle component
+   - Simplified to use shadcn design tokens (bg-card, text-foreground, border-b)
+   - Clean, minimal design
+
+**Files Created (2)**:
+- src/store/atoms.ts
+- src/components/layouts/ThemeToggle.tsx
+
+**Files Modified (1)**:
+- src/components/Header/Header.tsx
+
+**Testing**:
+- npm run build: ✓ Successful compilation
+- TypeScript: ✓ No errors
+- All routes render correctly
+
+**Remaining Phase 5.2 Tasks**:
+- Migrate InputForm to use Jotai atoms
+- Migrate HomePage to use Jotai atoms
+- Migrate DataTable to use Jotai atoms
+- Migrate ButtonGroups to use Jotai atoms
+- Migrate DisplayFields to use Jotai atoms
+- Migrate Pagination to use Jotai atoms
+
+**Next Steps**:
+- Continue with component migration to eliminate props drilling
+- Replace useState hooks with useAtom hooks
+- Test all components with Jotai state management
+
+**Blocking**: No
+
+Git commits: 4331a94, 25ab9d1
+
+---
+
+### [2025-12-31] [DEV] Phase 5 Implementation Summary
+
+**Overview**: Started Phase 5 Complete UI Redesign - Foundation and State Management
+
+**Completed So Far**:
+
+Phase 5.1: Foundation & Infrastructure ✅
+- shadcn/ui setup with 10+ components
+- Multi-page routing (Scanner, Reports, Settings, About)
+- Theme provider and dark mode support
+- Dashboard layout with sidebar navigation
+
+Phase 5.2: State Management (Partial) ✅
+- Jotai store with 15 atoms defined
+- Theme toggle component
+- Updated Header component
+
+**Progress**: Days 1-2 of 20 (10% complete)
+
+**Current Focus**: Migrating existing components to use Jotai atoms
+
+**Timeline**:
+- Days 1-2: ✅ Phase 5.1 Complete
+- Days 3-5: 🔄 Phase 5.2 In Progress
+- Days 6-8: Phase 5.3 (Component Migration)
+- Days 9-13: Phase 5.4 (TanStack Table)
+- Days 14-20: Phase 5.5 (New Pages & Polish)
+
+**Blocking**: No
+
