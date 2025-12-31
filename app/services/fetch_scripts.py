@@ -39,47 +39,58 @@ def fetch_script_symbols(db: Session):
             driver.implicitly_wait(10)
 
             try:  # Locate the data
+                # Wait for page content to load
+                time.sleep(5)
+
                 # Find the table
                 table = driver.find_element(By.ID, "equityStockTable")
-                # Find the table header
-                table_header = driver.find_element(
-                    By.ID, "equityStockTablecol0")
+                logging.info("Table found")
 
-                # Click on the header 3 times to sort the data
-                for _ in range(3):
-                    table_header.click()
-                    time.sleep(3)
-                    # driver.implicitly_wait(5)
+                # Wait for table to populate with data
+                logging.info("Waiting for table data to load...")
+                for attempt in range(15):
+                    rows = table.find_elements(By.TAG_NAME, "tr")
+                    logging.info(f"Wait attempt {attempt + 1}: {len(rows)} rows")
 
-                # Get the rows
+                    if len(rows) > 10:  # Table has loaded with data
+                        break
+
+                    time.sleep(1)
+
+                # Re-fetch rows after waiting
                 rows = table.find_elements(By.TAG_NAME, "tr")
+                logging.info(f"Total rows found: {len(rows)}")
 
                 # Create a list of dictionaries
                 data = []
-                # index = 5
 
-                # Loop through the rows
-                if len(rows) > 10:
-                    # Get the group name
-                    # cells = rows[1].find_elements(By.TAG_NAME, "td")
+                # Table structure discovered:
+                # Row 0: Header row (th elements)
+                # Row 1: Index name row (e.g., "NIFTY 50") - SKIP THIS!
+                # Rows 2+: Actual stock data rows (each has 15 td elements)
+
+                if len(rows) > 2:
+                    # Get the group name from row 1 (index name)
                     group_name = rows[1].find_elements(
                         By.TAG_NAME, "td")[0].text.strip()
+                    logging.info(f"Group name: {group_name}")
 
-                    # Loop through the rows
-                    for index in range(5, (len(rows) // 4) + 4):
-                        # Get the cells
-                        cells = rows[5 + (index - 5) *
-                                     4].find_elements(By.TAG_NAME, "td")
-                        # driver.implicitly_wait(3)
-                        if len(cells) > 10:
-                            # Get the script name
+                    # Extract stocks from rows 2 onwards (skip header and index name row)
+                    for row_index in range(2, len(rows)):
+                        cells = rows[row_index].find_elements(By.TAG_NAME, "td")
+
+                        # Each stock row has 15 cells
+                        if len(cells) >= 15:
+                            # First cell contains the script name
                             script_name = cells[0].text.strip()
-                            # Add the data to the list
-                            data.append({
-                                "group_name": group_name,
-                                "script_name": script_name
-                            })
-                            # print(script_name)
+
+                            # Skip empty names
+                            if script_name:
+                                data.append({
+                                    "group_name": group_name,
+                                    "script_name": script_name
+                                })
+                                logging.debug(f"Row {row_index}: Added {script_name}")
 
                 # Log the data
                 # print(data)
