@@ -52,9 +52,9 @@ const Pagination: React.FC<PaginationProps> = ({
       {totalPages > 0 ? (
         <div className="flex gap-4 items-center">
           <button
-            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 dark:bg-gray-600 disabled:opacity-50"
+            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handlePrevious}
-            disabled={currentPage === 1}
+            disabled={currentPage <= 1}
           >
             <ArrowBackIosRoundedIcon className="w-8 h-8" />
           </button>
@@ -62,9 +62,9 @@ const Pagination: React.FC<PaginationProps> = ({
             Page <strong>{currentPage}</strong> of <strong>{Math.ceil(totalPages / limit)}</strong>
           </span>
           <button
-            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 dark:bg-gray-600 disabled:opacity-50"
+            className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleNext}
-            disabled={currentPage === totalPages}
+            disabled={currentPage >= Math.ceil(totalPages / limit)}
           >
             <ArrowForwardIosRoundedIcon className="w-8 h-8" />
           </button>

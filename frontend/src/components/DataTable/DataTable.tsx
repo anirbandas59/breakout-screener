@@ -14,7 +14,9 @@ const generateHeaderRow = (columnName: string) => (
 );
 
 // Helper function to get indicator CSS class
-const getIndicatorClass = (value: string, type: 'breakout' | 'candle' | 'volume'): string => {
+const getIndicatorClass = (value: string | null | undefined, type: 'breakout' | 'candle' | 'volume'): string => {
+  if (!value) return '';
+
   const normalized = value.toLowerCase().trim();
 
   if (type === 'breakout') {
@@ -47,7 +49,7 @@ const DataTable: React.FC<DataTableProps> = ({ date, startRefresh, refreshTrigge
   const [data, setData] = useState<DataRow[]>([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(30);
-  const [totalPages, setTotalPages] = useState(0);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchData = async (page: number, limit: number) => {
@@ -60,7 +62,8 @@ const DataTable: React.FC<DataTableProps> = ({ date, startRefresh, refreshTrigge
       const { total, data } = response;
 
       setData(data);
-      setTotalPages(total);
+      // total is the total number of records from the API
+      setTotalRecords(total);
     } catch (error) {
       console.error('Error fetching error', error);
     } finally {
@@ -117,7 +120,7 @@ const DataTable: React.FC<DataTableProps> = ({ date, startRefresh, refreshTrigge
       <Pagination
         date={date}
         currentPage={page}
-        totalPages={totalPages}
+        totalPages={totalRecords}
         limit={limit}
         onPageChange={handlePageChange}
         onLimitChange={handleLimitChange}
