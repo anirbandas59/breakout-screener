@@ -1,9 +1,28 @@
 'use client';
 
-import React, { useEffect, JSX } from 'react';
+import React, { useEffect } from 'react';
 import { useAtom } from 'jotai';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+  createColumnHelper,
+  SortingState,
+  ColumnDef,
+} from '@tanstack/react-table';
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import Loader from '@/components/Loader/Loader';
 import Pagination from '@/components/Pagination/Pagination';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { DataRow } from '@/types/AppInterfaces';
 import { getData } from '@/services/api';
 import {
@@ -16,44 +35,33 @@ import {
   scriptsAnalyzedAtom,
 } from '@/store/atoms';
 
-// Helper function to generate header cells
-const generateHeaderRow = (columnName: string) => (
-  <th key={columnName} className="text-left text-xs px-4 py-2 font-semibold border-r">
-    {columnName}
-  </th>
-);
-
-// Helper function to get indicator CSS class
-const getIndicatorClass = (value: string | null | undefined, type: 'breakout' | 'candle' | 'volume'): string => {
-  if (!value) return '';
+// Helper function to get indicator badge variant
+const getIndicatorVariant = (
+  value: string | null | undefined,
+  type: 'breakout' | 'candle' | 'volume'
+): 'success' | 'warning' | 'danger' | 'default' => {
+  if (!value) return 'default';
 
   const normalized = value.toLowerCase().trim();
 
   if (type === 'breakout') {
-    if (normalized === 'breakout') return 'indicator-breakout';
-    if (normalized === 'red candle') return 'indicator-red-candle-breakout';
-    if (normalized === 'no breakout') return 'indicator-no-breakout';
-    if (normalized === 'big sell wick') return 'indicator-big-sell-wick';
-    if (normalized === 'no entry') return 'indicator-no-entry';
+    if (normalized === 'breakout') return 'success';
+    if (normalized === 'red candle') return 'warning';
+    if (normalized === 'no breakout') return 'default';
+    if (normalized === 'big sell wick') return 'danger';
+    if (normalized === 'no entry') return 'default';
   } else if (type === 'candle') {
-    if (normalized === 'green candle') return 'indicator-green-candle';
-    if (normalized === 'red candle') return 'indicator-red-candle';
-    if (normalized === 'doji') return 'indicator-doji';
+    if (normalized === 'green candle') return 'success';
+    if (normalized === 'red candle') return 'danger';
+    if (normalized === 'doji') return 'warning';
   } else if (type === 'volume') {
-    if (normalized === 'good') return 'indicator-good';
-    if (normalized === 'average') return 'indicator-average';
-    if (normalized === 'low') return 'indicator-low';
+    if (normalized === 'good') return 'success';
+    if (normalized === 'average') return 'warning';
+    if (normalized === 'low') return 'danger';
   }
 
-  return '';
+  return 'default';
 };
-
-// Helper function to generate data cells
-const generateDataCell = (value: string | number | JSX.Element, index: number, className?: string) => (
-  <td key={index} className={`text-xs px-2 py-1 border-r dark:text-white ${className || ''}`}>
-    {value}
-  </td>
-);
 
 const DataTable: React.FC = () => {
   const [page, setPage] = useAtom(tablePageAtom);
@@ -65,6 +73,7 @@ const DataTable: React.FC = () => {
   const [, setScriptsAnalyzed] = useAtom(scriptsAnalyzedAtom);
 
   const [data, setData] = React.useState<DataRow[]>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const fetchData = async (page: number, limit: number) => {
     setIsLoading(true);
@@ -85,7 +94,6 @@ const DataTable: React.FC = () => {
 
   useEffect(() => {
     fetchData(page, limit);
-    console.log(startRefresh);
 
     if (startRefresh) {
       const interval = setInterval(() => {
@@ -96,27 +104,377 @@ const DataTable: React.FC = () => {
     }
   }, [page, limit, startRefresh, refreshTrigger]); // Add refreshTrigger to trigger immediate refresh on task completion
 
-  const columnHeaders = [
-    'Group',
-    'Sl. No',
-    'Scripts',
-    'Breakout',
-    'Candle',
-    'Volume Indicator',
-    'Open',
-    'High',
-    'Low',
-    'Close',
-    'PDH',
-    'Volume',
-    'CPR',
-    'RES-1',
-    'RES-2',
-    'SUPP-1',
-    'SUPP-2',
-    'Narrow Gap',
-    'Chart Link',
+  const columnHelper = createColumnHelper<DataRow>();
+
+  const columns: ColumnDef<DataRow, any>[] = [
+    columnHelper.accessor('group_name', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Group
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.display({
+      id: 'sl_no',
+      header: 'Sl. No',
+      cell: ({ row }) => (
+        <span className="text-xs">{row.index + 1 + (page - 1) * limit}</span>
+      ),
+    }),
+    columnHelper.accessor('script_name', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Scripts
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs font-medium">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('breakout_indicator', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Breakout
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => (
+        <Badge variant={getIndicatorVariant(info.getValue(), 'breakout')} className="text-xs">
+          {info.getValue()}
+        </Badge>
+      ),
+    }),
+    columnHelper.accessor('candle_indicator', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Candle
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => (
+        <Badge variant={getIndicatorVariant(info.getValue(), 'candle')} className="text-xs">
+          {info.getValue()}
+        </Badge>
+      ),
+    }),
+    columnHelper.accessor('volume_indicator', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Volume Indicator
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => (
+        <Badge variant={getIndicatorVariant(info.getValue(), 'volume')} className="text-xs">
+          {info.getValue()}
+        </Badge>
+      ),
+    }),
+    columnHelper.accessor('open', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Open
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('high', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            High
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('low', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Low
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('close', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Close
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('previous_high', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            PDH
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('volume', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Volume
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('cpr', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            CPR
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('res1', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            RES-1
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('res2', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            RES-2
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('supp1', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            SUPP-1
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('supp2', {
+      header: ({ column }) => {
+        return (
+          <button
+            className="flex items-center gap-1 hover:text-foreground"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            SUPP-2
+            {column.getIsSorted() === 'asc' ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : column.getIsSorted() === 'desc' ? (
+              <ArrowDown className="h-3 w-3" />
+            ) : (
+              <ArrowUpDown className="h-3 w-3" />
+            )}
+          </button>
+        );
+      },
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('narrow_gap', {
+      header: 'Narrow Gap',
+      cell: (info) => <span className="text-xs">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('link', {
+      header: 'Chart Link',
+      cell: (info) => (
+        <a
+          href={info.getValue()}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-blue-600 dark:text-amber-200 hover:underline dark:hover:text-amber-300"
+        >
+          View Chart
+        </a>
+      ),
+    }),
   ];
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -136,66 +494,39 @@ const DataTable: React.FC = () => {
         onPageChange={handlePageChange}
         onLimitChange={handleLimitChange}
       />
-      <div className="overflow-auto shadow-md rounded-lg">
+      <div className="rounded-lg border shadow-md">
         {isLoading ? (
           <Loader />
         ) : data.length > 0 ? (
-          <table className="min-w-full bg-white border border-gray-300">
-            <thead>
-              <tr className="bg-blue-100 dark:bg-gray-900 border-b">
-                {columnHeaders.map((header) => generateHeaderRow(header))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((row: DataRow, rowIndex: number) => (
-                <tr
-                  key={rowIndex}
-                  className={`border-b ${
-                    rowIndex % 2 === 0 ? 'bg-gray-50 dark:bg-gray-500' : 'bg-white dark:bg-gray-400'
-                  }`}
-                >
-                  {generateDataCell(row.group_name, 0)}
-                  {generateDataCell(rowIndex + 1 + (page - 1) * limit, 1)}
-                  {generateDataCell(row.script_name, 2)}
-                  <td className={`text-xs px-2 py-1 border-r ${getIndicatorClass(row.breakout_indicator, 'breakout')}`}>
-                    {row.breakout_indicator}
-                  </td>
-                  <td className={`text-xs px-2 py-1 border-r ${getIndicatorClass(row.candle_indicator, 'candle')}`}>
-                    {row.candle_indicator}
-                  </td>
-                  <td className={`text-xs px-2 py-1 border-r ${getIndicatorClass(row.volume_indicator, 'volume')}`}>
-                    {row.volume_indicator}
-                  </td>
-                  {generateDataCell(row.open, 6)}
-                  {generateDataCell(row.high, 7)}
-                  {generateDataCell(row.low, 8)}
-                  {generateDataCell(row.close, 9)}
-                  {generateDataCell(row.previous_high, 10)}
-                  {generateDataCell(row.volume, 11)}
-                  {generateDataCell(row.cpr, 12)}
-                  {generateDataCell(row.res1, 13)}
-                  {generateDataCell(row.res2, 14)}
-                  {generateDataCell(row.supp1, 15)}
-                  {generateDataCell(row.supp2, 16)}
-                  {generateDataCell(row.narrow_gap, 17)}
-                  {generateDataCell(
-                    <a
-                      key={`chart_link_${row.script_name}`}
-                      href={row.link}
-                      target="_blank"
-                      className="text-blue-600 dark:text-amber-200 dark:hover:text-amber-300 hover:underline hover:text-blue-700"
-                    >
-                      View Chart
-                    </a>,
-                    18
-                  )}
-                </tr>
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} className="text-xs font-semibold">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : (
-          <div className="flex justify-center p-4 border border-gray-300 rounded-lg">
-            <span className="dark:text-white text-sm sm:text-xs">No data to display &nbsp;</span>
+          <div className="flex justify-center p-4 border rounded-lg">
+            <span className="text-sm text-muted-foreground">No data to display</span>
           </div>
         )}
       </div>

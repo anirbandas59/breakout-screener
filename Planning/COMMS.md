@@ -3479,3 +3479,67 @@ Git commit: 5f3f912
 
 Git commit: 587d7e2
 
+
+---
+
+### [2025-12-31] [DEV] Phase 5.4 Complete: TanStack Table Implementation
+
+**Task**: Phase 5.4 - Migrate DataTable to use TanStack React Table with sorting
+
+**Status**: Complete
+
+**Changes Made**:
+
+1. **DataTable.tsx Migration**:
+   - Replaced custom table rendering with TanStack React Table
+   - Integrated shadcn Table components (Table, TableHeader, TableBody, TableRow, TableHead, TableCell)
+   - Implemented useReactTable hook with core and sorting functionality
+   - Created column definitions using createColumnHelper for all 19 columns
+
+2. **Sorting Functionality**:
+   - Added sortable columns for all data fields (Group, Scripts, Breakout, Candle, Volume, OHLC, CPR levels, etc.)
+   - Interactive sort icons (ArrowUpDown, ArrowUp, ArrowDown) from lucide-react
+   - Visual feedback on sorted columns with directional arrows
+   - Click-to-sort on all column headers except Sl. No, Narrow Gap, and Chart Link
+
+3. **Badge Integration**:
+   - Replaced CSS classes with shadcn Badge component for indicators
+   - Color-coded variants:
+     * Success (green): BREAKOUT, GREEN CANDLE, GOOD volume
+     * Warning (yellow): RED CANDLE (breakout), DOJI, AVERAGE volume
+     * Danger (red): BIG SELL WICK, RED CANDLE (candle), LOW volume
+     * Default (gray): NO BREAKOUT, NO ENTRY
+   - Consistent styling across all indicator columns
+
+4. **Improved UX**:
+   - Sortable table headers with hover states
+   - Clean shadcn design tokens (text-muted-foreground, border, rounded-lg)
+   - Maintained pagination, loading states, and auto-refresh functionality
+   - Preserved Jotai state management for page, limit, totalRecords, isLoading
+
+**Files Modified (1)**:
+- frontend/src/components/DataTable/DataTable.tsx
+
+**Dependencies Used**:
+- @tanstack/react-table@8.21.3 (already installed)
+- lucide-react icons (ArrowUpDown, ArrowUp, ArrowDown)
+- shadcn/ui Badge component
+- shadcn/ui Table components
+
+**Testing**:
+- Build: ✓ Successful (3.3s compilation)
+- TypeScript: ✓ No errors
+- Static pages: ✓ All 6 routes generated
+
+**Key Features**:
+- 19 columns with 16 sortable (excluding Sl. No, Narrow Gap, Chart Link)
+- Persistent sorting state with visual indicators
+- Badge-based color coding for quick pattern recognition
+- Full integration with existing Jotai atoms and pagination
+- Responsive design with overflow handling
+
+**Next**: Phase 5 complete or additional enhancements as needed
+
+**Blocking**: No
+
+Git commit: Pending
