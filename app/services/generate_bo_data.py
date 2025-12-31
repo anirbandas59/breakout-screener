@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from celery import current_task
 
 from app.models.breakout_data import BreakoutData
+from app.models.enums import BreakoutIndicator, CandleIndicator, VolumeIndicator
 from app.services.fetch_scripts import fetch_script_historical_data
 from app.utils.suspension_flag import SUSPEND_ANALYSIS
 
@@ -131,37 +132,37 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
 
         # Determine Candle Indicator
         if today_close < today_open:
-            candle_indicator = "Red candle"
+            candle_indicator = CandleIndicator.RED_CANDLE
         elif today_close > today_open:
-            candle_indicator = "Green candle"
+            candle_indicator = CandleIndicator.GREEN_CANDLE
         else:
-            candle_indicator = "Doji"
+            candle_indicator = CandleIndicator.DOJI
 
-        logging.info("Candle Indicator: %s", candle_indicator)
+        logging.info("Candle Indicator: %s", candle_indicator.value)
 
         # Determine Breakout Indicator
         if today_close <= today_open:
-            breakout_indicator = "Red candle"
+            breakout_indicator = BreakoutIndicator.RED_CANDLE
         elif today_close <= prev_high:
-            breakout_indicator = "no breakout"
+            breakout_indicator = BreakoutIndicator.NO_BREAKOUT
         elif (today_high - today_open) >= (5 * (today_high - today_close)):
-            breakout_indicator = "Breakout"
+            breakout_indicator = BreakoutIndicator.BREAKOUT
         elif (today_high - today_open) < (5 * (today_high - today_close)):
-            breakout_indicator = "Big Sell Wick"
+            breakout_indicator = BreakoutIndicator.BIG_SELL_WICK
         else:
-            breakout_indicator = "No Entry"
+            breakout_indicator = BreakoutIndicator.NO_ENTRY
 
-        logging.info("Breakout Indicator: %s", breakout_indicator)
+        logging.info("Breakout Indicator: %s", breakout_indicator.value)
 
         # Determine Volume Indicator
         if today_volume > (avg_volume * 2):
-            volume_indicator = "Good"
+            volume_indicator = VolumeIndicator.GOOD
         elif today_volume > avg_volume:
-            volume_indicator = "Average"
+            volume_indicator = VolumeIndicator.AVERAGE
         else:
-            volume_indicator = "Low"
+            volume_indicator = VolumeIndicator.LOW
 
-        logging.info("Volume Indicator: %s", volume_indicator)
+        logging.info("Volume Indicator: %s", volume_indicator.value)
 
         if gap <= (pivot_percentage * today_close):
             is_narrow_gap = "Yes"
@@ -200,9 +201,9 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
                 db_record.supp1 = round(float(sup1), 2)
                 db_record.supp2 = round(float(sup2), 2)
                 db_record.narrow_gap = is_narrow_gap
-                db_record.candle_indicator = candle_indicator
-                db_record.breakout_indicator = breakout_indicator
-                db_record.volume_indicator = volume_indicator
+                db_record.candle_indicator = candle_indicator.value
+                db_record.breakout_indicator = breakout_indicator.value
+                db_record.volume_indicator = volume_indicator.value
                 db_record.date = analysis_date_val.date()
 
                 db.commit()
