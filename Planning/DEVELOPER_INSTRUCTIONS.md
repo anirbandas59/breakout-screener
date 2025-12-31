@@ -37,7 +37,7 @@ YOUR WORKFLOW (Follow This Cycle):
 └────────────────────────────┬────────────────────────────────────┘
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ STEP 2: Manage or Verify Dependencies (CRITICAL - Use uv)                 │
+│ STEP 2: Manage or Verify Dependencies (OPTIONAL IN CASE OF ERRORS)                 │
 │                                                                 │
 │ IF task adds new Python packages:                              │
 │   • Update requirements.txt with new package                   │
@@ -547,3 +547,4 @@ REMEMBER:
 - Read PLAN.md to understand the context! Do NOT change this document.
 - Update COMMS.md and INSTRUCTIONS.md with necessary information only.
 - Never give summary in chat to user.
+- Never commit with text like Claude or Claude Code.
