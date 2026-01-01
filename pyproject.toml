@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "breakout-screener"
+version = "0.1.0"
+description = "A full-stack financial application for analyzing and screening stocks for breakout patterns"
+requires-python = ">=3.13"
+
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pandas",
+    "requests",
+    "sqlalchemy",
+    "selenium",
+    "webdriver-manager",
+    "python-dotenv",
+    "psycopg2-binary",
+    "alembic",
+    "celery",
+    "redis",
+    "pydantic-settings",
+    "invoke",
+    "yfinance",
+    "tenacity",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "isort",
+]
+
+[tool.setuptools]
+packages = ["app"]

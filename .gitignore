@@ -1,16 +1,123 @@
 # Claude Code
 .claude/
 
-# Dependencies
-node_modules
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 venv/
 .venv/
-__pycache__/
+env/
+ENV/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+
+# Next.js / Frontend
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
+frontend/node_modules/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
+.env*.local
+.vercel
+.turbo
+
+# Node.js
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDEs and Editors
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
 
-.pytest*
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+logs/
+*.log.*
 
 # Backup files
-/*.bkp
+*.bkp
+*.backup
+*~
 docs/.$wireframe.drawio.bkp
+
+# Testing
+coverage/
+.nyc_output/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis dump
+dump.rdb
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Documentation build
+docs/_build/
+site/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts

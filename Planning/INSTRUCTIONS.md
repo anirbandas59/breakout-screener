@@ -1523,11 +1523,13 @@ The Breakout Screener application is now **production-ready** with:
 
 ## Phase 4: Frontend Enhancements (Optional)
 
-**Status**: Not Started (Awaiting Phase 3 Completion & Stakeholder Approval)
-**Priority**: LOW
+**Status**: MERGED INTO PHASE 5 - 75% Complete (6 of 8 tasks)
+**Priority**: MEDIUM (Originally LOW, elevated due to Phase 5 integration)
 **Goal**: Improve user experience and data visualization
 
-**Prerequisites**: Phase 3 must be complete (or stakeholder approves proceeding without Phase 3)
+**Important Note**: Per PLAN.md, Phase 4 was merged into Phase 5 Complete UI Redesign for better integration and consistency. Most Phase 4 features were implemented as part of Phase 5.1-5.4. See Phase 4 Completion Checklist (bottom of this section) for mapping to Phase 5 sub-phases.
+
+**Prerequisites**: Phase 3 complete ✅ (COMPLETED)
 
 ---
 
@@ -2187,19 +2189,28 @@ const shortcuts = [
 
 ## Phase 4 Completion Checklist
 
-- [ ] Task 4.1: Breakout indicators color-coded
-- [ ] Task 4.2: Button loading states added
-- [ ] Task 4.3: Table filtering and sorting implemented
-- [ ] Task 4.4: CSV export functionality working
-- [ ] Task 4.5: Date range picker integrated
-- [ ] Task 4.6: Column visibility toggle functional
-- [ ] Task 4.7: Dark mode toggle working
-- [ ] Task 4.8: Keyboard shortcuts implemented
-- [ ] All dependencies installed correctly
-- [ ] All tests pass
-- [ ] Code review completed
-- [ ] Documentation updated
-- [ ] **Phase 4 Approved by PM**
+**Note**: Phase 4 was merged into Phase 5 Complete UI Redesign per PLAN.md. Most tasks were implemented as part of Phase 5 sub-phases.
+
+**Completed as Part of Phase 5**:
+- [✓] Task 4.1: Breakout indicators color-coded ✅ (Phase 5.4 - Badge components)
+- [✓] Task 4.2: Button loading states added ✅ (Phase 5.3 - shadcn Button variants)
+- [✓] Task 4.3: Table filtering and sorting implemented ✅ (Phase 5.4 - TanStack Table with intelligent filtering)
+- [✓] Task 4.4: CSV export functionality working ✅ (Phase 5.4 - papaparse integration)
+- [ ] Task 4.5: Date range picker integrated ⏳ (Deferred to Phase 5.5 - Reports page)
+- [✓] Task 4.6: Column visibility toggle functional ✅ (Phase 5.4 - Checkbox popover in column headers)
+- [✓] Task 4.7: Dark mode toggle working ✅ (Phase 5.2 - next-themes with Header toggle)
+- [ ] Task 4.8: Keyboard shortcuts implemented ⏳ (Deferred - not implemented)
+
+**Implementation Summary**:
+- [✓] 6 of 8 tasks completed (75%)
+- [✓] All dependencies installed correctly ✅
+- [✓] All tests pass ✅
+- [✓] Code review completed ✅
+- [✓] Documentation updated ✅
+- [✓] **Phase 4 Tasks Approved by PM** (as part of Phase 5 reviews)
+
+**Status**: Phase 4 features were successfully integrated into Phase 5 Complete UI Redesign
+**Deferred Tasks**: 4.5 (Date Range Picker) and 4.8 (Keyboard Shortcuts) pending in Phase 5.5
 
 ---
 
@@ -2234,3 +2245,316 @@ cd frontend
 npm run build
 npm run lint
 ```
+
+---
+
+## Phase 5: Complete UI Redesign
+
+**Status**: IN PROGRESS (Phases 5.1-5.4 Complete)
+**Priority**: HIGH
+**Goal**: Transform into modern multi-page dashboard with comprehensive design system
+
+**Prerequisites**: Phases 1-3 complete (Phases 1-3 are COMPLETE ✅)
+
+---
+
+### Phase 5.1: Foundation & Infrastructure
+
+**Objective**: Set up shadcn/ui, establish design system, create multi-page routing
+
+**Developer Checklist**:
+- [x] Install shadcn/ui and dependencies
+- [x] Create multi-page routing structure (/, /about, /reports, /settings)
+- [x] Integrate next-themes for theme management
+- [x] Define CSS variables for design system
+- [x] Create base UI components (Button, Card, Input, Label, Separator, Badge, Table)
+- [x] **Developer Done**
+- [✓] **PM Verified**
+
+**Dependencies Installed**:
+- class-variance-authority, clsx, tailwind-merge
+- lucide-react (icons)
+- next-themes
+- @radix-ui primitives (dialog, dropdown, label, separator, slot, switch)
+
+**Routes Created**:
+- / (Scanner - main page)
+- /about (About page)
+- /reports (Reports page)
+- /settings (Settings page)
+
+**Notes**:
+```
+Developer: Phase 5.1 Complete
+- shadcn/ui installed and configured
+- Multi-page routing created with Next.js App Router
+- Theme provider integrated
+- Base components created from shadcn/ui templates
+- All routes build successfully
+
+PM: ✅ APPROVED
+Date: 2025-12-31
+```
+
+---
+
+### Phase 5.2: State Management & Layout
+
+**Objective**: Implement Jotai state atoms, create dashboard layout, migrate Header
+
+**Developer Checklist**:
+- [x] Create Jotai store with atoms (scanner state, table state, UI state)
+- [x] Add theme toggle to Header component
+- [x] Migrate all components to use Jotai atoms
+- [x] Eliminate props drilling throughout application
+- [x] **Developer Done**
+- [✓] **PM Verified**
+
+**Atoms Created**:
+- Scanner state: dateAtom, taskIdAtom, scriptsAnalyzedAtom, startRefreshAtom, progressAtom, startTimeAtom, runningTimeAtom, scriptFetchedOnAtom
+- Table state: tablePageAtom, tableLimitAtom, totalRecordsAtom, isLoadingAtom
+- UI state: refreshTriggerAtom
+
+**Notes**:
+```
+Developer: Phase 5.2 Complete
+- Jotai atoms created in frontend/src/store/atoms.ts
+- Theme toggle added to Header with next-themes
+- All components migrated from local state to Jotai
+- Props drilling completely eliminated
+- Clean state management architecture
+
+PM: ✅ APPROVED
+Date: 2025-12-31
+```
+
+---
+
+### Phase 5.3: Component Migration to shadcn/ui
+
+**Objective**: Replace custom components with shadcn/ui components
+
+**Developer Checklist**:
+- [x] Migrate InputForm to shadcn/ui components
+- [x] Migrate ButtonGroups to shadcn/ui Button variants
+- [x] Migrate DisplayFields to shadcn/ui Card components
+- [x] Migrate Pagination to shadcn/ui components
+- [x] Replace MUI Divider with shadcn/ui Separator
+- [x] Ensure full dark mode support on all components
+- [x] **Developer Done**
+- [✓] **PM Verified**
+
+**Components Updated**:
+- InputForm: Uses shadcn Input, Label, Card
+- ButtonGroups: Uses shadcn Button with variants
+- DisplayFields: Uses shadcn Card
+- Pagination: Uses shadcn Button and components
+- All components support dark mode
+
+**Notes**:
+```
+Developer: Phase 5.3 Complete
+- All major components migrated to shadcn/ui
+- Consistent design language across application
+- Full dark mode support implemented
+- MUI components partially replaced (icons remain)
+
+PM: ✅ APPROVED
+Date: 2025-12-31
+```
+
+---
+
+### Phase 5.4: Advanced Table Implementation
+
+**Objective**: Replace basic table with TanStack Table + advanced features
+
+**Developer Checklist**:
+- [x] Install @tanstack/react-table@8.21.3
+- [x] Install papaparse for CSV export
+- [x] Create column definitions with type safety
+- [x] Create custom Badge components for color-coded indicators
+- [x] Implement intelligent filtering (symbol search + breakout checkboxes)
+- [x] Create CSV export utility
+- [x] Implement two-line table control layout
+- [x] Implement two-column InputForm layout
+- [x] Remove unnecessary columns (Group Name, Sl. No)
+- [x] Remove duplicate Date field from Pagination
+- [x] Create UI components (Checkbox, Popover, Select)
+- [x] Simplify HomePage component
+- [x] **Developer Done**
+- [✓] **PM Verified** - Score: 72/75 (96%)
+
+**Dependencies Installed**:
+- @tanstack/react-table@8.21.3
+- papaparse@5.5.3
+- @types/papaparse@5.5.2
+- @radix-ui/react-checkbox@1.3.3
+- @radix-ui/react-popover@1.1.15
+- @radix-ui/react-select@2.2.6 (added by PM - missing from initial commit)
+
+**Features Implemented**:
+1. **TanStack Table**: Full migration with intelligent filtering
+2. **Symbol Search Filter**: Partial match filtering on script names
+3. **Breakout Filter**: Multi-select checkbox filter (exact match)
+4. **CSV Export**: Export all data with proper formatting
+5. **Badge Components**: Color-coded indicators (success/warning/danger/default)
+6. **Layout Improvements**:
+   - DataTable: Two-line controls (Date/Pagination | Search/Export)
+   - InputForm: Two-column layout with vertical separator
+   - Streamlined to 17 essential columns (removed Group Name, Sl. No)
+7. **Code Cleanup**: Removed duplicate Date field from Pagination
+
+**Files Modified**:
+- frontend/src/components/DataTable/DataTable.tsx (complete rewrite)
+- frontend/src/components/Pagination/Pagination.tsx (simplified)
+- frontend/src/components/InputForm/InputForm.tsx (two-column layout)
+- frontend/src/components/HomePage/HomePage.tsx (simplified)
+
+**Files Created**:
+- frontend/src/components/ui/checkbox.tsx
+- frontend/src/components/ui/popover.tsx
+- frontend/src/components/ui/select.tsx
+- frontend/src/utils/csvExport.ts
+
+**Notes**:
+```
+Developer: Phase 5.4 Complete
+- TanStack Table v8.21.3 fully integrated
+- Intelligent filtering: Symbol search (partial) + Breakout checkboxes (exact, multi-select)
+- CSV export with papaparse
+- Professional shadcn/ui components throughout
+- Comprehensive UI/UX improvements
+- 5 commits on branch bo_fix_v2
+
+Commits:
+- f93cf8c: Phase 5.4 Partial - Install TanStack Table and add Badge/Table UI components
+- d660ca1: Phase 5.4 Complete - TanStack Table implementation with sorting and Badge integration
+- a2ed964: Phase 4.4 & 5.4 Complete - Add CSV Export and finalize TanStack Table
+- ed8c075: Replace table sorting with intelligent filtering
+- 402903e: Table UI/UX enhancements - two-line layout and checkbox filters
+- 3fd6a65: Complete UI/UX overhaul - table improvements and InputForm layout
+- f15b61d: Update COMMS.md with Phase 5.4 completion status
+
+PM: ✅ APPROVED WITH MINOR ISSUE - Score: 72/75 (96%)
+- Missing @radix-ui/react-select dependency (installed by PM)
+- Otherwise excellent implementation
+- Professional code quality with type safety
+- All features working as specified
+Date: 2025-12-31
+
+CRITICAL ISSUE FIXED:
+- @radix-ui/react-select was missing from package.json
+- Caused initial build failure
+- PM installed manually: npm install @radix-ui/react-select
+- Build now succeeds (3.1s compilation)
+- Dependency now in package.json@2.2.6
+```
+
+---
+
+### Phase 5.5: New Pages & Final Polish
+
+**Objective**: Implement new pages, complete dark mode, add accessibility
+
+**Status**: NOT STARTED - Pending
+
+**Developer Checklist**:
+- [ ] Create Reports page with date range picker
+- [ ] Create Settings page with theme toggle and app settings
+- [ ] Create About page with documentation
+- [ ] Complete dark mode coverage audit (100%)
+- [ ] Add accessibility improvements (ARIA, keyboard navigation)
+- [ ] Remove MUI dependencies completely
+- [ ] Optimize bundle size (~500KB → ~120KB)
+- [ ] Performance optimization
+- [ ] **Developer Done**
+- [ ] **PM Verified**
+
+**Tasks Remaining**:
+1. **Reports Page** (frontend/src/app/(dashboard)/reports/page.tsx)
+   - Date range picker for historical data
+   - Summary statistics cards
+   - Historical data table (reuse DataTable)
+   - Export to CSV functionality
+
+2. **Settings Page** (frontend/src/app/(dashboard)/settings/page.tsx)
+   - Appearance: Theme toggle (Light/Dark/System)
+   - Scanner settings: Default pivot gap, rows per page, auto-refresh
+   - Data management: Clear cache, clear all data (with confirmation)
+
+3. **About Page** (frontend/src/app/(dashboard)/about/page.tsx)
+   - App description
+   - Technical indicators explanation
+   - Version info
+   - Credits/documentation links
+
+4. **Dark Mode Completion**
+   - Audit all components for 100% dark mode coverage
+   - Ensure all Cards use bg-card
+   - Ensure all text uses proper foreground colors
+   - Ensure all borders use border-border
+   - Table alternating row colors with bg-muted/50
+
+5. **Accessibility Improvements**
+   - ARIA labels on all buttons and interactive elements
+   - Keyboard navigation (arrow keys, tab navigation)
+   - Screen reader support (aria-live regions)
+   - Focus trap in dialogs
+   - WCAG 2.1 AA compliance
+
+6. **Remove MUI Dependencies**
+   ```bash
+   npm uninstall @mui/material @mui/icons-material @emotion/react @emotion/styled
+   ```
+   - Verify no imports remain
+   - Bundle size reduction: ~380KB savings
+
+7. **Performance Optimization**
+   - Code splitting with dynamic imports
+   - Memoization for heavy computations
+   - Debouncing for search (already using use-debounce)
+   - Consider virtual scrolling for large tables
+
+**Expected Deliverables**:
+- All 4 pages functional (/, /about, /reports, /settings)
+- 100% dark mode coverage
+- WCAG 2.1 AA compliance
+- MUI removed, bundle optimized
+- Performance targets met
+
+---
+
+## Phase 5 Completion Checklist
+
+- [✓] Phase 5.1: Foundation & Infrastructure - COMPLETE ✅
+- [✓] Phase 5.2: State Management & Layout - COMPLETE ✅
+- [✓] Phase 5.3: Component Migration - COMPLETE ✅
+- [✓] Phase 5.4: Advanced Table Implementation - COMPLETE ✅ (72/75 - 96%)
+- [ ] Phase 5.5: New Pages & Final Polish - NOT STARTED
+- [ ] All pages implemented and functional
+- [ ] 100% dark mode coverage verified
+- [ ] Accessibility audit completed
+- [ ] MUI dependencies removed
+- [ ] Bundle size optimized
+- [ ] Performance targets met
+- [ ] All tests pass
+- [ ] Code review completed
+- [ ] Documentation updated
+- [ ] **Phase 5 Fully Approved by PM**
+
+---
+
+## Phase 5 Status Summary
+
+**Completed Sub-Phases**: 5.1, 5.2, 5.3, 5.4 (80% of Phase 5)
+**Remaining**: 5.5 (New Pages & Final Polish)
+**Overall Phase 5 Progress**: 80%
+
+**Current Score**: 72/75 for Phase 5.4 (one minor dependency issue)
+**Production Readiness**: Application is functional with modern UI, missing only new pages
+
+**Next Action**: Developer may proceed to Phase 5.5 or await stakeholder decision
+
+---
+
