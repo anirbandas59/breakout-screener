@@ -22,6 +22,7 @@ import {
   scriptFetchedOnAtom,
   scriptsAnalyzedAtom,
 } from '@/store/atoms';
+import { formatDateTime } from '@/utils/helperFn';
 
 const InputForm: React.FC = () => {
   const [date, setDate] = useAtom(dateAtom);
@@ -151,9 +152,9 @@ const InputForm: React.FC = () => {
           </div>
           <DisplayFields
             scriptsAnalyzed={scriptsAnalyzed}
-            startTime={startTime}
+            startTime={formatDateTime(startTime)}
             runningTime={runningTime || '--:--:--'}
-            fetchingTime={scriptFetchedOn || '--'}
+            fetchingTime={formatDateTime(scriptFetchedOn)}
             pivotGap={pivotGap}
             onPivotChange={handlePivotGap}
           />

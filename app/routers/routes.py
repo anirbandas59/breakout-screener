@@ -1,7 +1,8 @@
 """ Application Routes """
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from celery.result import AsyncResult
 from sqlalchemy.orm import Session
@@ -32,13 +33,21 @@ router = APIRouter()
 
 
 @router.get("/get_data", status_code=200, response_model=GetDataResponse)
-def get_data(db: Session = Depends(get_db), page: int = 1, limit: int = 10):
+def get_data(
+    db: Session = Depends(get_db),
+    page: int = 1,
+    limit: int = 10,
+    search: Optional[str] = None,
+    breakout_filters: Optional[List[str]] = Query(None)
+):
     """
-    Fetch processed breakout data.
+    Fetch processed breakout data with optional search and filters.
 
     Args:
         page (int): Page number for pagination.
         limit (int): Number of records per page.
+        search (str, optional): Search term for filtering by script name.
+        breakout_filters (List[str], optional): List of breakout indicator values to filter by.
         db (Session): SQLAlchemy database session.
 
     Returns:
@@ -46,7 +55,7 @@ def get_data(db: Session = Depends(get_db), page: int = 1, limit: int = 10):
     """
     try:
         logging.info("Fetching processed breakout data...")
-        result = get_breakout_data(db, page, limit)
+        result = get_breakout_data(db, page, limit, search, breakout_filters)
 
         # total, data = result["total"], result["data"]
 
@@ -223,4 +232,60 @@ async def task_status(task_id: str):
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error retrieving task status {str(e)}"
+        ) from e
+
+
+@router.get("/current_task", response_model=TaskResultResponse)
+async def get_current_task():
+    """
+    Get the currently running task (if any).
+
+    This endpoint checks for active Celery tasks and returns the most recent
+    one that is still in PENDING or PROGRESS state. This allows the frontend
+    to resume monitoring after a page refresh.
+
+    Returns:
+        TaskResultResponse with task_id, status, and result (or None if no active task)
+    """
+    try:
+        # Get all active tasks from Celery
+        inspect = celery_app.control.inspect()
+        active_tasks = inspect.active()
+
+        if not active_tasks:
+            return JSONResponse({
+                "task_id": None,
+                "status": "NO_ACTIVE_TASK",
+                "result": None
+            })
+
+        # Get the first active task from any worker
+        for worker, tasks in active_tasks.items():
+            if tasks:
+                task_info = tasks[0]  # Get the first active task
+                task_id = task_info['id']
+
+                # Get detailed task status
+                task_result = AsyncResult(task_id, app=celery_app)
+
+                response = {
+                    "task_id": task_id,
+                    "status": task_result.status,
+                    "result": task_result.result,
+                }
+
+                logging.info(f"Found active task: {task_id} with status {task_result.status}")
+                return JSONResponse(response)
+
+        # No active tasks found
+        return JSONResponse({
+            "task_id": None,
+            "status": "NO_ACTIVE_TASK",
+            "result": None
+        })
+
+    except Exception as e:
+        logging.error(f"Error retrieving current task: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving current task {str(e)}"
         ) from e

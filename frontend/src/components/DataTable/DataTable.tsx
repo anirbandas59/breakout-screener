@@ -2,14 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAtom } from 'jotai';
+import { useDebounce } from 'use-debounce';
 import {
   useReactTable,
   getCoreRowModel,
-  getFilteredRowModel,
   flexRender,
   createColumnHelper,
   ColumnDef,
-  ColumnFiltersState,
 } from '@tanstack/react-table';
 import { Download, Search, Filter } from 'lucide-react';
 import Loader from '@/components/Loader/Loader';
@@ -84,15 +83,25 @@ const DataTable: React.FC = () => {
   const [, setScriptsAnalyzed] = useAtom(scriptsAnalyzedAtom);
 
   const [data, setData] = React.useState<DataRow[]>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [searchValue, setSearchValue] = useState('');
   const [selectedBreakouts, setSelectedBreakouts] = useState<string[]>([]);
 
-  const fetchData = async (page: number, limit: number) => {
+  // Debounce search value to avoid excessive API calls
+  const [debouncedSearch] = useDebounce(searchValue, 300);
+
+  // Hardcoded breakout indicator values (must match database values exactly)
+  const breakoutValues = ['Breakout', 'Red candle', 'no breakout', 'Big Sell Wick'];
+
+  const fetchData = async (
+    page: number,
+    limit: number,
+    search?: string,
+    breakoutFilters?: string[]
+  ) => {
     setIsLoading(true);
 
     try {
-      const response = await getData(page, limit);
+      const response = await getData(page, limit, search, breakoutFilters);
       const { total, data } = response;
 
       setData(data);
@@ -105,46 +114,34 @@ const DataTable: React.FC = () => {
     }
   };
 
+  // Main data fetching effect - triggers on page, limit, or refreshTrigger changes
   useEffect(() => {
-    fetchData(page, limit);
+    fetchData(page, limit, debouncedSearch, selectedBreakouts);
 
     if (startRefresh) {
       const interval = setInterval(() => {
-        fetchData(page, limit);
+        fetchData(page, limit, debouncedSearch, selectedBreakouts);
       }, 10000);
 
       return () => clearInterval(interval);
     }
-  }, [page, limit, startRefresh, refreshTrigger]);
+  }, [page, limit, startRefresh, refreshTrigger, debouncedSearch, selectedBreakouts]);
 
-  // Update column filters when search or breakout filter changes
+  // Reset to page 1 when search changes
   useEffect(() => {
-    const filters: ColumnFiltersState = [];
-
-    if (searchValue) {
-      filters.push({
-        id: 'script_name',
-        value: searchValue,
-      });
+    if (page !== 1) {
+      setPage(1);
     }
+  }, [debouncedSearch]);
 
-    if (selectedBreakouts.length > 0) {
-      filters.push({
-        id: 'breakout_indicator',
-        value: selectedBreakouts,
-      });
+  // Reset to page 1 when breakout filters change
+  useEffect(() => {
+    if (page !== 1 && selectedBreakouts.length > 0) {
+      setPage(1);
     }
-
-    setColumnFilters(filters);
-  }, [searchValue, selectedBreakouts]);
+  }, [selectedBreakouts]);
 
   const columnHelper = createColumnHelper<DataRow>();
-
-  // Get unique breakout indicator values for filter
-  const breakoutValues = React.useMemo(() => {
-    const unique = new Set(data.map((row) => row.breakout_indicator).filter(Boolean));
-    return Array.from(unique).sort();
-  }, [data]);
 
   const handleBreakoutToggle = (value: string) => {
     setSelectedBreakouts((prev) =>
@@ -156,7 +153,6 @@ const DataTable: React.FC = () => {
     columnHelper.accessor('script_name', {
       header: 'Scripts',
       cell: (info) => <span className="text-xs font-medium">{info.getValue()}</span>,
-      filterFn: 'includesString',
     }),
     columnHelper.accessor('breakout_indicator', {
       header: () => (
@@ -206,10 +202,6 @@ const DataTable: React.FC = () => {
           {info.getValue()}
         </Badge>
       ),
-      filterFn: (row, id, value: string[]) => {
-        if (!value || value.length === 0) return true;
-        return value.includes(row.getValue(id));
-      },
     }),
     columnHelper.accessor('candle_indicator', {
       header: 'Candle',
@@ -293,12 +285,7 @@ const DataTable: React.FC = () => {
   const table = useReactTable({
     data,
     columns,
-    state: {
-      columnFilters,
-    },
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
   });
 
   const handlePageChange = (newPage: number) => {

@@ -65,12 +65,31 @@ export const getTaskStatus = async (id: string): Promise<TaskResponse> => {
   }
 };
 
-export const getData = async (page: number, limit: number): Promise<DataResponse> => {
+export const getData = async (
+  page: number,
+  limit: number,
+  search?: string,
+  breakoutFilters?: string[]
+): Promise<DataResponse> => {
   try {
+    const params: any = {
+      page,
+      limit,
+    };
+
+    // Only include search and breakout_filters if they have values
+    if (search) {
+      params.search = search;
+    }
+    if (breakoutFilters && breakoutFilters.length > 0) {
+      params.breakout_filters = breakoutFilters;
+    }
+
     const response = await axiosInstance.get<DataResponse>('/get_data', {
-      params: {
-        page,
-        limit,
+      params,
+      paramsSerializer: {
+        // Use 'repeat' format for arrays: ?key=val1&key=val2 instead of ?key[]=val1&key[]=val2
+        indexes: null, // This tells axios to use repeat format for arrays
       },
     });
 
@@ -90,6 +109,17 @@ export const suspendAction = async () => {
     return response.data;
   } catch (error) {
     console.error('Error suspending action ${error}');
+    throw error;
+  }
+};
+
+export const getCurrentTask = async (): Promise<TaskResponse> => {
+  try {
+    const response = await axiosInstance.get<TaskResponse>('/current_task');
+    console.log('getCurrentTask Response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching current task', error);
     throw error;
   }
 };
