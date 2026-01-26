@@ -14,7 +14,7 @@ export const refreshTriggerAtom = atom(0);
 
 // Table state atoms
 export const tablePageAtom = atom(1);
-export const tableLimitAtom = atom(50);
+export const tableLimitAtom = atom(10);
 export const totalRecordsAtom = atom(0);
 export const isLoadingAtom = atom(false);
 

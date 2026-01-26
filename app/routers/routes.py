@@ -38,35 +38,38 @@ def get_data(
     page: int = 1,
     limit: int = 10,
     search: Optional[str] = None,
-    breakout_filters: Optional[List[str]] = Query(None)
+    breakout_filters: Optional[List[str]] = Query(None),
+    date: Optional[str] = None
 ):
     """
-    Fetch processed breakout data with optional search and filters.
+    Fetch processed breakout data with optional search, filters, and date.
 
     Args:
         page (int): Page number for pagination.
         limit (int): Number of records per page.
         search (str, optional): Search term for filtering by script name.
         breakout_filters (List[str], optional): List of breakout indicator values to filter by.
+        date (str, optional): Date filter in YYYY-MM-DD format.
         db (Session): SQLAlchemy database session.
 
     Returns:
-        JSON response with breakout data.
+        JSON response with breakout data, including data_date and data_source.
     """
     try:
         logging.info("Fetching processed breakout data...")
-        result = get_breakout_data(db, page, limit, search, breakout_filters)
-
-        # total, data = result["total"], result["data"]
+        result = get_breakout_data(db, page, limit, search, breakout_filters, date)
 
         response = {
             "total": result["total"],
             "data": result["data"],
             "page": page,
             "limit": limit,
+            "data_date": result.get("data_date"),
+            "data_source": result.get("data_source"),
         }
 
-        logging.info("Fetched processed breakout data successfully.")
+        logging.info("Fetched processed breakout data successfully. Date: %s, Source: %s",
+                     result.get("data_date"), result.get("data_source"))
         return response
     except Exception as e:
         logging.error("Error fetching processed breakout data: %s", str(e))
@@ -116,9 +119,9 @@ def generate_bodata(request: GenerateBODataRequest):
     pivot_val = request.pivot_val
     start_from = request.start_from
 
-    # Validate the date format
+    # Validate the date format - use request.date if valid, otherwise fallback to current date
     analysis_date_val = (
-        request.date if not validate_date(request.date) else get_current_date()
+        request.date if validate_date(request.date) else get_current_date()
     )
 
     try:

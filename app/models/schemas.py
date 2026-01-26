@@ -100,6 +100,8 @@ class GetDataResponse(BaseModel):
     data: List[BreakoutDataItem] = Field(..., description="List of breakout data records")
     page: int = Field(..., description="Current page number")
     limit: int = Field(..., description="Records per page")
+    data_date: Optional[str] = Field(default=None, description="Date of the data in YYYY-MM-DD format")
+    data_source: Optional[str] = Field(default=None, description="Source table: 'breakout_data' or 'master_breakout_data'")
 
 
 class SuccessResponse(BaseModel):

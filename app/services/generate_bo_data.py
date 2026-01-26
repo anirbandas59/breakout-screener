@@ -27,11 +27,10 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
     Returns:
         dict: Status of the analysis.
     """
-    # global SUSPEND_ANALYSIS
+    # Clear any previous suspension flag at the start of a new task
+    SUSPEND_ANALYSIS.clear()
+    logging.info("Suspension flag cleared at task start.")
 
-    # SUSPEND_ANALYSIS = False
-
-    # pivot_val = 0.5
     pivot_percentage = pivot_val / 100
 
     # Validate the date format

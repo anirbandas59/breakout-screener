@@ -69,22 +69,33 @@ def generate_bo_data_task(date, pivot, start_from=1):
             "Starting Celery task to generate BO data for all symbols ...")
         result = generate_BOData(db, date, pivot, start_from)
 
-        logging.info("Celery task completed: Generate BO Data task")
+        status = result.get("status")
+        message = result.get("message", "")
+        error = result.get("error", "")
 
-        if result["status"] != "SUCCESS":
-            raise ValueError(
-                f"BO data generation task failed: {
-                    result['error']}"
-            )
+        if status == "SUCCESS":
+            logging.info("Celery task completed successfully: %s", message)
+            return {
+                "status": "SUCCESS",
+                "message": f"BO data generation completed: {message}",
+            }
+        elif status == "SUSPENDED":
+            logging.warning("Celery task suspended by user: %s", message)
+            return {
+                "status": "SUSPENDED",
+                "message": f"BO data generation suspended: {message}",
+            }
+        else:
+            logging.error("Celery task failed: %s", error or message)
+            return {
+                "status": "FAIL",
+                "message": f"BO data generation failed: {error or message}",
+            }
 
-        return {
-            "status": "SUCCESS",
-            "message": f"BO data generation task {result['status']}: {result['message']}",
-        }
     except Exception as e:
         logging.error(
-            "Error in Celery task for fetching script symbols: %s", str(e))
-        return {"status": "FAIL", "message": f"Failed to run Celery task. {e}"}
+            "Error in Celery task for generating BO data: %s", str(e))
+        return {"status": "FAIL", "message": f"Failed to run Celery task: {e}"}
     finally:
         db.close()
 

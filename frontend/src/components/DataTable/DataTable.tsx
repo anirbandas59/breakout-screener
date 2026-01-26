@@ -85,6 +85,8 @@ const DataTable: React.FC = () => {
   const [data, setData] = React.useState<DataRow[]>([]);
   const [searchValue, setSearchValue] = useState('');
   const [selectedBreakouts, setSelectedBreakouts] = useState<string[]>([]);
+  const [dataDate, setDataDate] = useState<string | null>(null);
+  const [dataSource, setDataSource] = useState<string | null>(null);
 
   // Debounce search value to avoid excessive API calls
   const [debouncedSearch] = useDebounce(searchValue, 300);
@@ -102,11 +104,13 @@ const DataTable: React.FC = () => {
 
     try {
       const response = await getData(page, limit, search, breakoutFilters);
-      const { total, data } = response;
+      const { total, data, data_date, data_source } = response;
 
       setData(data);
       setTotalRecords(total);
       setScriptsAnalyzed(total);
+      setDataDate(data_date || null);
+      setDataSource(data_source || null);
     } catch (error) {
       console.error('Error fetching error', error);
     } finally {
@@ -298,9 +302,31 @@ const DataTable: React.FC = () => {
   };
 
   const handleExport = () => {
-    const exportDate = date || new Date().toISOString().split('T')[0];
+    const exportDate = dataDate || date || new Date().toISOString().split('T')[0];
     exportToCSV(data, `breakout_data_${exportDate}.csv`);
   };
+
+  // Format date for display (YYYY-MM-DD to DD-MMM-YYYY)
+  const formatDisplayDate = (dateStr: string | null): string => {
+    if (!dateStr) return 'Not available';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Check if any filters or search are active
+  const hasFiltersOrSearch = searchValue !== '' || selectedBreakouts.length > 0;
+
+  // Determine if we should show the table:
+  // - Show table when data exists OR when filters/search are active (so user can clear them)
+  const shouldShowTable = data.length > 0 || hasFiltersOrSearch;
 
   return (
     <>
@@ -308,7 +334,13 @@ const DataTable: React.FC = () => {
         {/* Line 1: Date and Pagination */}
         <div className="flex items-center justify-between gap-4">
           <div className="text-sm font-medium">
-            Date: <span className="text-muted-foreground">{date || 'Not set'}</span>
+            Data Date:{' '}
+            <span className="text-muted-foreground">
+              {formatDisplayDate(dataDate)}
+            </span>
+            {dataSource === 'master_breakout_data' && (
+              <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">(Historical)</span>
+            )}
           </div>
           <Pagination
             currentPage={page}
@@ -319,8 +351,8 @@ const DataTable: React.FC = () => {
           />
         </div>
 
-        {/* Line 2: Search and Export */}
-        {data.length > 0 && (
+        {/* Line 2: Search and Export - show when data exists or filters are active */}
+        {shouldShowTable && (
           <div className="flex items-center justify-between gap-4">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -337,6 +369,7 @@ const DataTable: React.FC = () => {
               variant="outline"
               size="sm"
               className="gap-2"
+              disabled={data.length === 0}
             >
               <Download className="h-4 w-4" />
               Export CSV
@@ -348,7 +381,7 @@ const DataTable: React.FC = () => {
       <div className="rounded-lg border shadow-md">
         {isLoading ? (
           <Loader />
-        ) : data.length > 0 ? (
+        ) : shouldShowTable ? (
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -377,7 +410,9 @@ const DataTable: React.FC = () => {
               ) : (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="text-center py-4">
-                    <span className="text-sm text-muted-foreground">No results found</span>
+                    <span className="text-sm text-muted-foreground">
+                      No results found for the selected filters
+                    </span>
                   </TableCell>
                 </TableRow>
               )}

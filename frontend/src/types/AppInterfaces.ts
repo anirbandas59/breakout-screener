@@ -26,6 +26,8 @@ export interface DataResponse {
   limit: number;
   page: number;
   data: DataRow[];
+  data_date?: string;
+  data_source?: string;
 }
 
 export interface ButtonGroupsProps {

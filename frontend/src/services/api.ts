@@ -69,7 +69,8 @@ export const getData = async (
   page: number,
   limit: number,
   search?: string,
-  breakoutFilters?: string[]
+  breakoutFilters?: string[],
+  date?: string
 ): Promise<DataResponse> => {
   try {
     const params: any = {
@@ -83,6 +84,9 @@ export const getData = async (
     }
     if (breakoutFilters && breakoutFilters.length > 0) {
       params.breakout_filters = breakoutFilters;
+    }
+    if (date) {
+      params.date = date;
     }
 
     const response = await axiosInstance.get<DataResponse>('/get_data', {
