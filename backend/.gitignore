@@ -1,7 +1,0 @@
-# Dependencies
-venv/
-__pycache__/
-.vscode/
-.idea/
-
-.pytest*

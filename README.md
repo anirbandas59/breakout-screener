@@ -62,10 +62,11 @@ A production-ready web application to screen and analyze positional breakout sto
 
 ## Prerequisites
 
-- Python 3.10+
+- Python 3.13+
 - Node.js 18+
 - PostgreSQL 14+
 - Redis 6+
+- uv (Python package manager) - Install: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 ## Installation
 
@@ -79,12 +80,14 @@ cd breakout-screener
 ### 2. Backend Setup
 
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Create virtual environment (using uv)
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+uv pip install -e .
+# OR
+uv pip install -r requirements.txt
 
 # Set up environment variables
 cp .env.example .env
@@ -159,11 +162,11 @@ Use tmux or separate terminals:
 redis-server
 
 # Terminal 2: Backend API
-source venv/bin/activate
+source .venv/bin/activate
 uvicorn app.main:app --reload --port 8000
 
 # Terminal 3: Celery Worker
-source venv/bin/activate
+source .venv/bin/activate
 celery -A app.celery.celery_app worker --loglevel=info
 
 # Terminal 4: Frontend
@@ -223,8 +226,8 @@ Interactive API documentation available at: `http://localhost:8000/docs`
 ### Running Tests
 
 ```bash
-# Install test dependencies
-pip install -r test-requirements.txt
+# Install dev dependencies (includes test tools)
+uv pip install -e ".[dev]"
 
 # Run tests
 pytest app/tests/
