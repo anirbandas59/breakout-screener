@@ -5,14 +5,24 @@ from sqlalchemy import pool
 
 from alembic import context
 from app.db.session import Base
+<<<<<<< HEAD
 from app.config import settings
+=======
+from app.config import settings  # SECURITY FIX: Load database URL from settings
+>>>>>>> 05941eb (Implement critical performance optimizations and security hardening)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
+<<<<<<< HEAD
 # Set sqlalchemy.url from environment variable
 config.set_main_option("sqlalchemy.url", settings.database_url)
+=======
+# SECURITY FIX: Override sqlalchemy.url from environment variable
+# This prevents hardcoding credentials in alembic.ini
+config.set_main_option('sqlalchemy.url', settings.database_url)
+>>>>>>> 05941eb (Implement critical performance optimizations and security hardening)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

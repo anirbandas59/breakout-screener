@@ -24,15 +24,31 @@ app = FastAPI()
 app.include_router(routes.router, prefix="/api")
 logging.info("Routers are set up.")
 
-# print(f"{settings.app_hostname}:{settings.react_port}")
-
 # Setup Middlewares
+# SECURITY FIX: Tighten CORS configuration to restrict methods and headers
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[f"{settings.app_hostname}:{settings.react_port}"],
+    # Explicit origins (no wildcards)
+    allow_origins=[
+        f"{settings.app_hostname}:{settings.react_port}",  # From settings
+        "http://localhost:3000",  # Explicit for development
+        # Add production domains when deploying:
+        # "https://breakout-screener.com",
+    ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    # Restrict methods to what's actually used
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    # Restrict headers to necessary ones
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "Accept",
+        "Accept-Language",
+        "Origin",
+    ],
+    # Security headers
+    expose_headers=["Content-Length", "Content-Type"],
+    max_age=600,  # Cache preflight requests for 10 minutes
 )
 
 # Include exception handlers

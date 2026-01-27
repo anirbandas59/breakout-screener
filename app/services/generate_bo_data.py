@@ -11,9 +11,6 @@ from app.services.fetch_scripts import fetch_script_historical_data
 from app.utils.suspension_flag import SUSPEND_ANALYSIS
 from app.utils.error_handlers import log_error_with_context, DatabaseError, CPRCalculationError
 
-# Batch size for commits (reduces disk syncs from 500 to ~10)
-BATCH_SIZE = 50
-
 # logging.basicConfig(level=logging.INFO)
 
 
@@ -58,6 +55,11 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
     scripts_to_process = scripts[start_from - 1:]
     total_scripts = len(scripts_to_process)
 
+    # PERFORMANCE FIX: Batch commits to reduce disk I/O
+    # Commit every BATCH_SIZE records instead of after each record
+    BATCH_SIZE = 50
+    commit_counter = 0
+
     logging.info("Starting analysis from script %d (total: %d scripts)", start_from, total_scripts)
     for i, script in enumerate(scripts_to_process):
         # Update progress (show absolute position: start_from + current index)
@@ -73,6 +75,10 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
             )
         # Check suspension
         if SUSPEND_ANALYSIS.is_set():
+            # PERFORMANCE FIX: Commit pending changes before suspending
+            if commit_counter > 0:
+                db.commit()
+                logging.info("Committed %d pending records before suspension", commit_counter)
             logging.warning(
                 "Analysis suspended. Halting analysis at script: %s", script.script_name)
             return {
@@ -215,10 +221,12 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
                 db_record.volume_indicator = volume_indicator.value
                 db_record.date = analysis_date_val.date()
 
-                # Batch commit every BATCH_SIZE records (reduces disk syncs)
-                if (i + 1) % BATCH_SIZE == 0:
+                # PERFORMANCE FIX: Batch commits every BATCH_SIZE records
+                commit_counter += 1
+                if commit_counter >= BATCH_SIZE:
                     db.commit()
-                    logging.info("Committed batch %d (%d records)", (i + 1) // BATCH_SIZE, i + 1)
+                    logging.info("Batch committed %d records at position %d", commit_counter, current_position)
+                    commit_counter = 0
 
                 logging.info("Data updated for script %s", script_name)
             else:
@@ -231,11 +239,13 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
                 operation="database_update"
             )
             db.rollback()
+            commit_counter = 0  # Reset counter after rollback
             # Continue processing other scripts instead of failing entirely
 
-    # Final commit for remaining records
-    db.commit()
-    logging.info("Final commit completed")
+    # PERFORMANCE FIX: Final commit for remaining records
+    if commit_counter > 0:
+        db.commit()
+        logging.info("Final batch committed %d records", commit_counter)
 
     logging.info("BO Analysis completed successfully")
     return {

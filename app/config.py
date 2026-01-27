@@ -47,6 +47,47 @@ class Settings(BaseSettings):
             self.nse_url_nifty_smallcap_250,
         ]
 
+    def get_safe_config(self) -> dict:
+        """
+        Return configuration with sensitive fields masked.
+        Use this for logging instead of model_dump() to prevent credential exposure.
+
+        Returns:
+            dict: Configuration dictionary with passwords masked as '***'
+        """
+        config = self.model_dump()
+
+        # Mask sensitive fields
+        sensitive_fields = ['database_url', 'celery_broker_url', 'celery_result_backend', 'redis_url']
+        for field in sensitive_fields:
+            if field in config and config[field]:
+                config[field] = self._mask_connection_string(config[field])
+
+        return config
+
+    @staticmethod
+    def _mask_connection_string(url: str) -> str:
+        """
+        Mask password in connection string.
+
+        Examples:
+            postgresql://user:password@host/db -> postgresql://user:***@host/db
+            redis://localhost:6379/0 -> redis://localhost:6379/0 (no password)
+
+        Args:
+            url: Connection string URL
+
+        Returns:
+            str: URL with masked password
+        """
+        import re
+        # Pattern matches: ://username:password@
+        # Group 1: ://username:
+        # Group 2: password
+        # Group 3: @
+        pattern = r'(://[^:]+:)([^@]+)(@)'
+        return re.sub(pattern, r'\1***\3', url)
+
     class Config:
         env_file = ".env"
 
@@ -54,12 +95,20 @@ class Settings(BaseSettings):
 # Instantiate settings
 settings = Settings()
 
+<<<<<<< HEAD
 # Filter out sensitive fields before logging
 _safe_settings = {
     k: v for k, v in settings.model_dump().items()
     if not any(sensitive in k.lower() for sensitive in ['password', 'secret', 'url'])
 }
 logging.info("Environment variables loaded successfully. %s", _safe_settings)
+=======
+# SECURITY FIX: Use safe config to prevent credential exposure in logs
+safe_config = settings.get_safe_config()
+logging.info("Environment variables loaded successfully. %s", safe_config)
+print("Configuration loaded:", safe_config)
+# print(settings.nse_urls)
+>>>>>>> 05941eb (Implement critical performance optimizations and security hardening)
 # except ValidationError as e:
 # try:
 #     logging.error("Error loading environment variables: %s", str(e))

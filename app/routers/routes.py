@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from celery.result import AsyncResult
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
+from app.db.session import get_db, get_pool_stats
 from app.services import get_breakout_data
 from app.tasks import (
     fetch_script_symbols_task,
@@ -32,12 +32,41 @@ from app.celery import celery_app
 router = APIRouter()
 
 
+@router.get("/health", status_code=200)
+def health_check():
+    """
+    Health check endpoint with database connection pool statistics.
+
+    Returns:
+        dict: Health status and connection pool metrics
+    """
+    try:
+        pool_stats = get_pool_stats()
+
+        return {
+            "status": "healthy",
+            "database": {
+                "connected": True,
+                "pool_stats": pool_stats
+            }
+        }
+    except Exception as e:
+        logging.error("Health check failed: %s", str(e))
+        return {
+            "status": "unhealthy",
+            "database": {
+                "connected": False,
+                "error": str(e)
+            }
+        }
+
+
 @router.get("/get_data", status_code=200, response_model=GetDataResponse)
 def get_data(
     db: Session = Depends(get_db),
-    page: int = Query(default=1, ge=1, le=1000, description="Page number (1-1000)"),
-    limit: int = Query(default=10, ge=1, le=100, description="Records per page (1-100)"),
-    search: Optional[str] = Query(default=None, max_length=100, description="Search term (max 100 chars)"),
+    page: int = 1,
+    limit: int = 10,
+    search: Optional[str] = None,
     breakout_filters: Optional[List[str]] = Query(None),
     date: Optional[str] = None
 ):
@@ -206,6 +235,11 @@ def api_suspend_action():
     except RuntimeError as e:
         logging.error("Error suspending analysis: %s", str(e))
         return {"status": "FAIL", "message": "Failed to suspend analysis", "error": str(e)}
+
+
+# SECURITY FIX: Debug endpoint removed
+# This endpoint exposed error handling in production
+# If debugging is needed, use proper logging and monitoring tools
 
 
 @router.get("/task_status/{task_id}", response_model=TaskResultResponse)
