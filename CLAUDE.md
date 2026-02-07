@@ -155,13 +155,13 @@ uv pip install -e .
 uv pip install -r requirements.txt
 
 # Run development server
-uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --port 8000
 
 # Run database migrations
 alembic upgrade head
 
 # Start Celery worker
-celery -A app.celery.celery_app worker --loglevel=info
+uv run celery -A app.celery.celery_app worker --loglevel=info
 ```
 
 ### Frontend Commands

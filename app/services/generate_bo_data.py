@@ -11,6 +11,9 @@ from app.services.fetch_scripts import fetch_script_historical_data
 from app.utils.suspension_flag import SUSPEND_ANALYSIS
 from app.utils.error_handlers import log_error_with_context, DatabaseError, CPRCalculationError
 
+# Batch size for commits (reduces disk syncs from 500 to ~10)
+BATCH_SIZE = 50
+
 # logging.basicConfig(level=logging.INFO)
 
 
@@ -212,7 +215,11 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
                 db_record.volume_indicator = volume_indicator.value
                 db_record.date = analysis_date_val.date()
 
-                db.commit()
+                # Batch commit every BATCH_SIZE records (reduces disk syncs)
+                if (i + 1) % BATCH_SIZE == 0:
+                    db.commit()
+                    logging.info("Committed batch %d (%d records)", (i + 1) // BATCH_SIZE, i + 1)
+
                 logging.info("Data updated for script %s", script_name)
             else:
                 logging.info("Update skipped for script %s", script_name)
@@ -225,6 +232,10 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
             )
             db.rollback()
             # Continue processing other scripts instead of failing entirely
+
+    # Final commit for remaining records
+    db.commit()
+    logging.info("Final commit completed")
 
     logging.info("BO Analysis completed successfully")
     return {
