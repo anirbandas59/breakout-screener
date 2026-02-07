@@ -35,9 +35,9 @@ router = APIRouter()
 @router.get("/get_data", status_code=200, response_model=GetDataResponse)
 def get_data(
     db: Session = Depends(get_db),
-    page: int = 1,
-    limit: int = 10,
-    search: Optional[str] = None,
+    page: int = Query(default=1, ge=1, le=1000, description="Page number (1-1000)"),
+    limit: int = Query(default=10, ge=1, le=100, description="Records per page (1-100)"),
+    search: Optional[str] = Query(default=None, max_length=100, description="Search term (max 100 chars)"),
     breakout_filters: Optional[List[str]] = Query(None),
     date: Optional[str] = None
 ):
@@ -206,14 +206,6 @@ def api_suspend_action():
     except RuntimeError as e:
         logging.error("Error suspending analysis: %s", str(e))
         return {"status": "FAIL", "message": "Failed to suspend analysis", "error": str(e)}
-
-
-@router.get("/simulate_error")
-def simulate_error():
-    """
-    Simulate an error
-    """
-    raise Exception("Simulated error")
 
 
 @router.get("/task_status/{task_id}", response_model=TaskResultResponse)

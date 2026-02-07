@@ -53,10 +53,13 @@ class Settings(BaseSettings):
 
 # Instantiate settings
 settings = Settings()
-logging.info("Environment variables loaded successfully. %s",
-             settings.model_dump())
-print(settings.model_dump())
-# print(settings.nse_urls)
+
+# Filter out sensitive fields before logging
+_safe_settings = {
+    k: v for k, v in settings.model_dump().items()
+    if not any(sensitive in k.lower() for sensitive in ['password', 'secret', 'url'])
+}
+logging.info("Environment variables loaded successfully. %s", _safe_settings)
 # except ValidationError as e:
 # try:
 #     logging.error("Error loading environment variables: %s", str(e))

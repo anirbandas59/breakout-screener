@@ -31,8 +31,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[f"{settings.app_hostname}:{settings.react_port}"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # Include exception handlers

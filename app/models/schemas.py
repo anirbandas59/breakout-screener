@@ -23,7 +23,7 @@ class GenerateBODataRequest(BaseModel):
     """Request schema for generating breakout data."""
     date: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}$', description="Analysis date in YYYY-MM-DD format")
     pivot_val: float = Field(default=0.5, ge=0, le=10, description="Pivot gap percentage threshold (0-10)")
-    start_from: int = Field(default=1, ge=1, description="Start processing from this script index (1-based)")
+    start_from: int = Field(default=1, ge=1, le=10000, description="Start processing from this script index (1-based, max 10000)")
 
     @field_validator('date')
     @classmethod
