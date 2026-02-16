@@ -17,13 +17,6 @@ POOL_PRE_PING = True     # Verify connection health before use
 # SQLAlchemy engine with connection pooling
 engine = create_engine(
     settings.database_url,
-<<<<<<< HEAD
-    pool_size=10,
-    max_overflow=20,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-)
-=======
     pool_size=POOL_SIZE,
     max_overflow=MAX_OVERFLOW,
     pool_timeout=POOL_TIMEOUT,
@@ -49,7 +42,6 @@ def receive_connect(dbapi_conn, connection_record):
 def receive_checkout(dbapi_conn, connection_record, connection_proxy):
     """Log when connection is checked out from pool"""
     logging.debug(f"Connection checked out from pool")
->>>>>>> 05941eb (Implement critical performance optimizations and security hardening)
 
 # Session Local for database connections
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

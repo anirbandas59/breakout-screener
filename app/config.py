@@ -98,20 +98,11 @@ class Settings(BaseSettings):
 # Instantiate settings
 settings = Settings()
 
-<<<<<<< HEAD
-# Filter out sensitive fields before logging
-_safe_settings = {
-    k: v for k, v in settings.model_dump().items()
-    if not any(sensitive in k.lower() for sensitive in ['password', 'secret', 'url'])
-}
-logging.info("Environment variables loaded successfully. %s", _safe_settings)
-=======
 # SECURITY FIX: Use safe config to prevent credential exposure in logs
 safe_config = settings.get_safe_config()
 logging.info("Environment variables loaded successfully. %s", safe_config)
 print("Configuration loaded:", safe_config)
 # print(settings.nse_urls)
->>>>>>> 05941eb (Implement critical performance optimizations and security hardening)
 # except ValidationError as e:
 # try:
 #     logging.error("Error loading environment variables: %s", str(e))
