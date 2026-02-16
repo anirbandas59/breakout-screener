@@ -11,6 +11,8 @@ from app.utils import (
 
 from app.config import settings
 from app.routers import routes
+from app.routers import config_routes
+from app.routers import enum_routes
 from app.db.session import Base, engine
 # from app.tasks import example_task
 
@@ -22,6 +24,8 @@ app = FastAPI()
 
 # Include API Routers
 app.include_router(routes.router, prefix="/api")
+app.include_router(config_routes.router, prefix="/api")
+app.include_router(enum_routes.router, prefix="/api")
 logging.info("Routers are set up.")
 
 # Setup Middlewares

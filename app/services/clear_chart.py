@@ -1,8 +1,8 @@
 import logging
 from sqlalchemy.orm import Session
-from sqlalchemy import update
 
-from app.models.breakout_data import BreakoutData
+from app.repositories import BreakoutRepository
+from app.utils.error_handlers import DatabaseError
 
 
 def clear_chart_data(db: Session, date: str) -> bool:
@@ -13,34 +13,17 @@ def clear_chart_data(db: Session, date: str) -> bool:
         db (Session): SQLAlchemy database session
         date(str): Date for which data should be cleared
     """
+    repo = BreakoutRepository(db)
     try:
-        # Check if the record exists
-        record_count = (
-            db.query(BreakoutData)
-            .filter(BreakoutData.date == date)
-            .count()
-        )
+        count = repo.clear_chart_data_fields(date)
 
-        if record_count == 0:
-            logging.info("%d records found for date %s. Skipping ...",
-                         record_count, date)
+        if count == 0:
             return False
 
-        logging.info("%d records found for date %s", record_count, date)
-
-        db.execute(
-            update(BreakoutData).where(BreakoutData.date == date).values(
-                open=None, high=None, low=None, close=None, previous_high=None, volume=None,
-                cpr=None, res1=None, res2=None, supp1=None, supp2=None,
-                candle_indicator="", volume_indicator="", narrow_gap="", breakout_indicator=""
-            )
-        )
-
-        db.commit()
-        logging.info("%d records cleared", record_count)
-
+        repo.commit()
+        logging.info("%d records cleared", count)
         return True
+
     except Exception as e:
-        db.rollback()
-        logging.error("An error occurred: %s", e)
-        raise
+        repo.rollback()
+        raise DatabaseError(str(e), operation="clear_chart_data", table="breakout_data") from e

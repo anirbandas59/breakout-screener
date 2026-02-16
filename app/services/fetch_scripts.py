@@ -10,6 +10,7 @@ from selenium.webdriver.common.by import By
 from sqlalchemy.orm import Session
 
 from app.models.breakout_data import BreakoutData
+from app.repositories import BreakoutRepository, ConfigRepository
 from app.utils.selenium_driver import get_chrome_driver
 from app.config import settings
 # from app.config import NSE_URL
@@ -19,15 +20,14 @@ def fetch_script_symbols(db: Session):
     """
     Fetches the script symbols from NSE and saves it into the database.
     """
-    # Get NSE URL from environment variables
-    # logging.basicConfig(level=logging.INFO)
-    nse_urls = settings.nse_urls
-    # nse_url = os.getenv(settings.nse_url)
-    # print(NSE_URL)
-    # driver.get(NSE_URL)
+    # Get NSE URLs: prefer DB-stored values, fall back to env vars
+    config_repo = ConfigRepository(db)
+    nse_urls = config_repo.get_nse_urls() or settings.nse_urls
+    logging.info("Using %d NSE URLs", len(nse_urls))
 
     # Get the chrome driver
     driver = get_chrome_driver()
+    repo = BreakoutRepository(db)
 
     try:
         # Loop through the NSE URLs
@@ -103,10 +103,7 @@ def fetch_script_symbols(db: Session):
                     chart_link = f"https://gocharting.com/terminal?ticker=NSE:{
                         item['script_name']}&layout=1"
                     # Check if the record exists
-                    db_record = db.query(BreakoutData).filter_by(
-                        script_name=item["script_name"],
-                        # group_name=item["group_name"]
-                    ).first()
+                    db_record = repo.get_by_script_name(item["script_name"])
 
                     if not db_record:
                         # Insert new record
@@ -116,17 +113,17 @@ def fetch_script_symbols(db: Session):
                             link=chart_link,
                             date=None  # Placeholder
                         )
-                        db.add(db_record)
+                        repo.add(db_record)
                     else:
                         # Update the record
                         db_record.link = chart_link
 
                 # Commit the changes
-                db.commit()
+                repo.commit()
 
             except Exception as e:
-                # Log the error
                 logging.error("Error fetching data from %s: %s", url, e)
+                raise DataFetchError(str(e), source=url) from e
                 # print("------------------------------------------------------>")
                 # print(f"Error fetching script symbols: {e}")
 

@@ -4,8 +4,8 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from celery import current_task
 
-from app.models.breakout_data import BreakoutData
 from app.models.enums import BreakoutIndicator, CandleIndicator, VolumeIndicator
+from app.repositories import BreakoutRepository
 from app.services.cpr_calculator import calculate_cpr
 from app.services.fetch_scripts import fetch_script_historical_data
 from app.utils.suspension_flag import SUSPEND_ANALYSIS
@@ -41,8 +41,10 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
             "error": "Invalid date format. Use YYYY-MM-DD"
         }
 
+    repo = BreakoutRepository(db)
+
     # Fetch all scripts
-    scripts = db.query(BreakoutData).all()
+    scripts = repo.get_all()
 
     if not scripts:
         logging.warning("No scripts available for analysis")
@@ -77,7 +79,7 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
         if SUSPEND_ANALYSIS.is_set():
             # PERFORMANCE FIX: Commit pending changes before suspending
             if commit_counter > 0:
-                db.commit()
+                repo.commit()
                 logging.info("Committed %d pending records before suspension", commit_counter)
             logging.warning(
                 "Analysis suspended. Halting analysis at script: %s", script.script_name)
@@ -196,10 +198,7 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
 
         # Update db record
         try:
-            db_record = (
-                db.query(BreakoutData).filter_by(
-                    script_name=script_name).first()
-            )
+            db_record = repo.get_by_script_name(script_name)
 
             logging.info("Record found: %s", script_name)
 
@@ -224,7 +223,7 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
                 # PERFORMANCE FIX: Batch commits every BATCH_SIZE records
                 commit_counter += 1
                 if commit_counter >= BATCH_SIZE:
-                    db.commit()
+                    repo.commit()
                     logging.info("Batch committed %d records at position %d", commit_counter, current_position)
                     commit_counter = 0
 
@@ -238,13 +237,13 @@ def generate_BOData(db: Session, analysis_date: str, pivot_val: float, start_fro
                 date=analysis_date,
                 operation="database_update"
             )
-            db.rollback()
+            repo.rollback()
             commit_counter = 0  # Reset counter after rollback
             # Continue processing other scripts instead of failing entirely
 
     # PERFORMANCE FIX: Final commit for remaining records
     if commit_counter > 0:
-        db.commit()
+        repo.commit()
         logging.info("Final batch committed %d records", commit_counter)
 
     logging.info("BO Analysis completed successfully")

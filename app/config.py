@@ -1,5 +1,6 @@
 # import os
 import logging
+from typing import Optional
 # from pydantic import ValidationError
 from pydantic_settings import BaseSettings
 # from dotenv import load_dotenv
@@ -18,12 +19,13 @@ class Settings(BaseSettings):
     # Database configuration
     database_url: str
 
-    # NSE URLs
-    nse_url_nifty_50: str
-    nse_url_nifty_200: str
-    nse_url_nifty_midcap_150: str
-    nse_url_nifty_midsmallcap_400: str
-    nse_url_nifty_smallcap_250: str
+    # NSE URLs — Optional: values are migrated to the app_config DB table.
+    # Kept here as fallback in case the DB table is empty.
+    nse_url_nifty_50: Optional[str] = None
+    nse_url_nifty_200: Optional[str] = None
+    nse_url_nifty_midcap_150: Optional[str] = None
+    nse_url_nifty_midsmallcap_400: Optional[str] = None
+    nse_url_nifty_smallcap_250: Optional[str] = None
 
     # YFinance URLs
     yfin_hist_url: str
@@ -38,14 +40,15 @@ class Settings(BaseSettings):
 
     @property
     def nse_urls(self) -> list[str]:
-        """Returns a list"""
-        return [
+        """Returns a list of configured NSE URLs (env var fallback, excludes None values)."""
+        candidates = [
             self.nse_url_nifty_50,
             self.nse_url_nifty_200,
             self.nse_url_nifty_midcap_150,
             self.nse_url_nifty_midsmallcap_400,
             self.nse_url_nifty_smallcap_250,
         ]
+        return [url for url in candidates if url]
 
     def get_safe_config(self) -> dict:
         """
